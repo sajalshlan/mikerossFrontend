@@ -1,6 +1,6 @@
 import './App.css';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, MessageSquare, FileText, Loader, ChevronDown, ChevronUp, Check, X, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useCallback, } from 'react';
+import { Upload, FileText, Loader, ChevronDown, ChevronUp, Check, X, Trash2 } from 'lucide-react';
 
 const API_BASE_URL = 'https://mikerossbackend.onrender.com/api';
 
@@ -34,7 +34,7 @@ const LegalDocumentAnalyzer = () => {
     structure: false
   });
   const [isFileProcessing, setIsFileProcessing] = useState(false);
-  const [expandedFiles, setExpandedFiles] = useState({});
+  // const [expandedFiles, setExpandedFiles] = useState({});
   const [processedFiles, setProcessedFiles] = useState({
     summary: [],
     risky: [],
@@ -293,12 +293,12 @@ const LegalDocumentAnalyzer = () => {
     }
   };
 
-  const toggleFileExpansion = (filename) => {
-    setExpandedFiles(prev => ({
-      ...prev,
-      [filename]: !prev[filename]
-    }));
-  };
+  // const toggleFileExpansion = (filename) => {
+  //   setExpandedFiles(prev => ({
+  //     ...prev,
+  //     [filename]: !prev[filename]
+  //   }));
+  // };
 
   const renderAnalysisResult = (type, data) => {
     switch (type) {
