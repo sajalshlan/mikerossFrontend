@@ -1,6 +1,7 @@
 import './App.css';
-import React, { useState, useRef, useCallback, } from 'react';
+import React, { useState, useRef, useCallback, useEffect} from 'react';
 import { Upload, FileText, Loader, ChevronDown, ChevronUp, Check, X, Trash2 } from 'lucide-react';
+import { Helmet } from 'react-helmet';
 
 const API_BASE_URL = 'https://mikerossbackend.onrender.com/api';
 
@@ -48,6 +49,15 @@ const LegalDocumentAnalyzer = () => {
     conflict: false,
     structure: false
   });
+
+   useEffect(() => {
+    // Force favicon update
+    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/x-icon';
+    link.rel = 'shortcut icon';
+    link.href = '/favicon.ico?v=' + new Date().getTime();
+    document.getElementsByTagName('head')[0].appendChild(link);
+  }, []);
 
   const handleFileChange = async (event) => {
     const newFiles = Array.from(event.target.files);
@@ -325,6 +335,13 @@ const LegalDocumentAnalyzer = () => {
 
   return (
     <div className="legal-document-analyzer">
+
+      <Helmet>
+        <title>Mike Ross</title>
+        <meta property="og:title" content="Your super intelligent legal assistant" />
+        <meta property="og:description" content="AI-powered legal document analysis tool" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+      </Helmet>
       <div className="column document-view">
         <h2>Mike Ross</h2>
         <p>Upload Contract</p>
