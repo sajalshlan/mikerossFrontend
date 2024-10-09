@@ -295,3 +295,222 @@ h2 {
     width: 100%;
   }
 }
+
+.file-content {
+  background-color: #2a2a2a;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.file-content pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: #e0e0e0;
+}
+
+.file-info button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  margin-left: 5px;
+}
+
+.file-info button:hover {
+  color: #3498db;
+}
+
+/* Add these styles to your existing App.css file */
+
+.analysis-result {
+  background-color: #2a2a2a;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #3a3a3a;
+  cursor: pointer;
+}
+
+.result-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.result-body {
+  padding: 15px;
+}
+
+.file-result {
+  margin-bottom: 20px;
+}
+
+.file-result h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #3498db;
+}
+
+.result-content p {
+  margin: 5px 0;
+}
+
+.result-list {
+  list-style-type: none;
+  padding-left: 20px;
+}
+
+.result-object {
+  margin-left: 20px;
+}
+
+.result-item {
+  margin-bottom: 5px;
+}
+
+.result-item strong {
+  color: #3498db;
+}
+
+.result-content ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.result-content li {
+  margin-bottom: 5px;
+}
+
+.result-content strong {
+  font-weight: bold;
+  color: #3498db;
+}
+
+.file-result {
+  background-color: #2c3e50;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.file-result h4 {
+  color: #3498db;
+  margin-top: 0;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #3498db;
+  padding-bottom: 5px;
+}
+
+/* Add or update these styles in your App.css file */
+
+.analysis-result, .chat-message {
+  background-color: #2a2a2a;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #3a3a3a;
+  cursor: pointer;
+}
+
+.result-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.result-body, .message-content {
+  padding: 15px;
+}
+
+.file-result {
+  background-color: #2c3e50;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.file-result h4 {
+  color: #3498db;
+  margin-top: 0;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #3498db;
+  padding-bottom: 5px;
+}
+
+.result-content p, .message-content p {
+  margin: 5px 0;
+}
+
+.result-content ul, .message-content ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.result-content li, .message-content li {
+  margin-bottom: 5px;
+}
+
+.result-content strong, .message-content strong {
+  font-weight: bold;
+  color: #3498db;
+}
+
+.chat-message.user {
+  background-color: #34495e;
+}
+
+.chat-message.assistant {
+  background-color: #2c3e50;
+}
+
+.chat-input {
+  display: flex;
+  margin-top: 15px;
+}
+
+.chat-input input {
+  flex-grow: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 5px 0 0 5px;
+  background-color: #34495e;
+  color: #ffffff;
+}
+
+.chat-input button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 0 5px 5px 0;
+  background-color: #3498db;
+  color: white;
+  cursor: pointer;
+}
+
+.chat-input button:hover {
+  background-color: #2980b9;
+}
+
+.chat-input button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
