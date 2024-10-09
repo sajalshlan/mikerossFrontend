@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState, useRef, useCallback, useEffect} from 'react';
-import { Upload, Loader, ChevronDown, ChevronUp, Check, X, Trash2, FileText, File, Maximize2, Minimize2} from 'lucide-react';
+import { Upload, Loader, ChevronDown, ChevronUp, File} from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { AnalysisResult, ChatMessage } from './AnalysisResult';
 
@@ -15,7 +15,6 @@ const LegalDocumentAnalyzer = () => {
   const [conflictCheckResult, setConflictCheckResult] = useState('');
   const [documentStructures, setDocumentStructures] = useState({});
   const [expandedFiles, setExpandedFiles] = useState({});
-  const [expandedDocument, setExpandedDocument] = useState(null);
   const [fileContents, setFileContents] = useState({});
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
@@ -62,10 +61,6 @@ const LegalDocumentAnalyzer = () => {
     link.href = '/favicon.ico?v=' + new Date().getTime();
     document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
-
-    const toggleDocumentExpansion = (fileName) => {
-    setExpandedDocument(prev => prev === fileName ? null : fileName);
-  };
 
   const handleFileChange = async (event) => {
     const newFiles = Array.from(event.target.files);
