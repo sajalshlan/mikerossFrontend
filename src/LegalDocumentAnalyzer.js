@@ -2,8 +2,9 @@ import './App.css';
 import React, { useState, useRef, useCallback, useEffect} from 'react';
 import { Upload, FileText, Loader, ChevronDown, ChevronUp, Check, X, Trash2 } from 'lucide-react';
 import { Helmet } from 'react-helmet';
+import { AnalysisResult, ChatMessage } from './AnalysisResult';
 
-const API_BASE_URL = 'https://mikerossbackend.onrender.com/api';
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 const LegalDocumentAnalyzer = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -13,6 +14,8 @@ const LegalDocumentAnalyzer = () => {
   const [riskyAnalyses, setRiskyAnalyses] = useState({});
   const [conflictCheckResult, setConflictCheckResult] = useState('');
   const [documentStructures, setDocumentStructures] = useState({});
+  const [expandedFiles, setExpandedFiles] = useState({});
+  const [fileContents, setFileContents] = useState({});
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
@@ -66,6 +69,7 @@ const LegalDocumentAnalyzer = () => {
     
     const newExtractedTexts = { ...extractedTexts };
     const newFileProgress = { ...fileProgress };
+    const newFileContents = { ...fileContents };
 
     for (const file of newFiles) {
       newFileProgress[file.name] = { progress: 0, status: 'uploading' };
@@ -83,6 +87,7 @@ const LegalDocumentAnalyzer = () => {
         const result = await response.json();
         if (result.success) {
           newExtractedTexts[file.name] = result.text;
+          newFileContents[file.name] = result.text;
           setFileProgress(prev => ({
             ...prev,
             [file.name]: { progress: 100, status: 'complete' }
@@ -104,6 +109,7 @@ const LegalDocumentAnalyzer = () => {
     }
     
     setExtractedTexts(newExtractedTexts);
+    setFileContents(newFileContents);
     setIsFileProcessing(false);
     
     // Reset analysis states when new files are uploaded
@@ -119,6 +125,13 @@ const LegalDocumentAnalyzer = () => {
       conflict: false,
       structure: false
     });
+  };
+
+  const toggleFileExpansion = (filename) => {
+    setExpandedFiles(prev => ({
+      ...prev,
+      [filename]: !prev[filename]
+    }));
   };
 
   const removeFile = (fileName) => {
@@ -303,13 +316,6 @@ const LegalDocumentAnalyzer = () => {
     }
   };
 
-  // const toggleFileExpansion = (filename) => {
-  //   setExpandedFiles(prev => ({
-  //     ...prev,
-  //     [filename]: !prev[filename]
-  //   }));
-  // };
-
   const renderAnalysisResult = (type, data) => {
     switch (type) {
       case 'summary':
@@ -334,8 +340,7 @@ const LegalDocumentAnalyzer = () => {
   };
 
   return (
-    <div className="legal-document-analyzer">
-
+     <div className="legal-document-analyzer">
       <Helmet>
         <title>Mike Ross</title>
         <meta property="og:title" content="Your super intelligent legal assistant" />
@@ -357,7 +362,7 @@ const LegalDocumentAnalyzer = () => {
           onChange={handleFileChange}
           style={{ display: 'none' }}
           multiple
-          accept=".pdf,.doc,.docx,.txt,.zip"
+          accept=".pdf,.doc,.docx,.txt,.zip,.jpg,.jpeg,.png"
         />
         {uploadedFiles.length > 0 && (
           <div className="uploaded-files">
@@ -375,6 +380,9 @@ const LegalDocumentAnalyzer = () => {
                     </div>
                     {fileProgress[file.name]?.status === 'complete' && <Check size={16} color="green" />}
                     {fileProgress[file.name]?.status === 'error' && <X size={16} color="red" />}
+                    <button onClick={() => toggleFileExpansion(file.name)}>
+                      {expandedFiles[file.name] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
                   </div>
                   <button className="remove-file" onClick={() => removeFile(file.name)}>
                     <Trash2 size={16} />
@@ -385,12 +393,20 @@ const LegalDocumentAnalyzer = () => {
           </div>
         )}
         {isFileProcessing && <p>Processing files...</p>}
+        {uploadedFiles.map((file, index) => (
+          expandedFiles[file.name] && (
+            <div key={`content-${index}`} className="file-content">
+              <h4>{file.name} Contents:</h4>
+              <pre>{fileContents[file.name]}</pre>
+            </div>
+          )
+        ))}
       </div>
       
       <div className="column analysis-results">
         <h2>Analysis Results</h2>
         <div className="analysis-options">
-          {['summary', 'risky', 'structure', uploadedFiles.length > 1 ? 'conflict' : null].filter(Boolean).map((type) => (
+          {['summary', 'risky', 'structure', 'conflict'].map((type) => (
             <button 
               key={type}
               onClick={() => {
@@ -400,7 +416,7 @@ const LegalDocumentAnalyzer = () => {
                   handleAnalysis(type);
                 }
               }} 
-              disabled={isLoading[type] || isFileProcessing || Object.keys(extractedTexts).length === 0}
+              disabled={isLoading[type] || isFileProcessing || Object.keys(extractedTexts).length === 0 || (type === 'conflict' && uploadedFiles.length <= 1)}
               className={`analysis-button ${isLoading[type] ? 'loading' : ''}`}
             >
               {isLoading[type] ? <Loader className="spinner" /> : null}
@@ -410,21 +426,38 @@ const LegalDocumentAnalyzer = () => {
                  type === 'structure' ? 'Document Structure' :
                  'Conflict Check'}
               </span>
-              {isAnalysisPerformed[type] && (isResultVisible[type] ? <ChevronUp /> : <ChevronDown />)}
             </button>
           ))}
         </div>
         <div className="results-content">
-          {isResultVisible.summary && renderAnalysisResult('summary', summaries)}
-          {isResultVisible.risky && renderAnalysisResult('risky', riskyAnalyses)}
-          {isResultVisible.structure && renderAnalysisResult('structure', documentStructures)}
-          {isResultVisible.conflict && renderAnalysisResult('conflict', conflictCheckResult)}
-          {!isResultVisible.summary && !isResultVisible.risky && !isResultVisible.structure && !isResultVisible.conflict && (
-            <div className="placeholder">
-              <FileText size={48} />
-              <p>Analysis results will appear here</p>
-            </div>
-          )}
+          <AnalysisResult 
+            type="summary"
+            data={summaries}
+            isVisible={isResultVisible.summary}
+            onToggle={() => toggleAnalysisVisibility('summary')}
+            fileCount={uploadedFiles.length}
+          />
+          <AnalysisResult 
+            type="risky"
+            data={riskyAnalyses}
+            isVisible={isResultVisible.risky}
+            onToggle={() => toggleAnalysisVisibility('risky')}
+            fileCount={uploadedFiles.length}
+          />
+          <AnalysisResult 
+            type="structure"
+            data={documentStructures}
+            isVisible={isResultVisible.structure}
+            onToggle={() => toggleAnalysisVisibility('structure')}
+            fileCount={uploadedFiles.length}
+          />
+          <AnalysisResult 
+            type="conflict"
+            data={conflictCheckResult}
+            isVisible={isResultVisible.conflict}
+            onToggle={() => toggleAnalysisVisibility('conflict')}
+            fileCount={uploadedFiles.length}
+          />
         </div>
       </div>
       
@@ -433,13 +466,13 @@ const LegalDocumentAnalyzer = () => {
         <p>Ask anything about the document:</p>
         <div className="chat-messages">
           {chatMessages.map((message, index) => (
-            <div key={index} className={`message ${message.role}`}>
-              {message.content}
-            </div>
+            <ChatMessage key={index} message={message} />
           ))}
           {isChatLoading && (
-            <div className="message assistant">
-              <Loader className="spinner" /> Thinking...
+            <div className="chat-message assistant">
+              <div className="message-content">
+                <p><Loader className="spinner" /> Thinking...</p>
+              </div>
             </div>
           )}
         </div>
