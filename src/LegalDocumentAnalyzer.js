@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState, useRef, useCallback, useEffect} from 'react';
-import { Upload, Loader, ChevronDown, ChevronUp, Check, X, Trash2 } from 'lucide-react';
+import { Upload, Loader, ChevronDown, ChevronUp, File} from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { AnalysisResult, ChatMessage } from './AnalysisResult';
 
@@ -316,6 +316,29 @@ const LegalDocumentAnalyzer = () => {
     }
   };
 
+  const renderFilePreview = (file) => {
+    const fileType = file.type.split('/')[0];
+    const fileUrl = URL.createObjectURL(file);
+
+    switch (fileType) {
+      case 'image':
+        return <img src={fileUrl} alt={file.name} className="file-preview-image" />;
+      case 'application':
+        if (file.type === 'application/pdf') {
+          return <embed src={fileUrl} type="application/pdf" width="100%" height="600px" />;
+        }
+        // For other application types, fall through to default
+      default:
+        return (
+          <div className="file-preview-text">
+            <File size={48} />
+            <p>Preview not available. Showing extracted text:</p>
+            <pre className="extracted-text">{extractedTexts[file.name]}</pre>
+          </div>
+        );
+    }
+  };
+
   return (
      <div className="legal-document-analyzer">
       <Helmet>
@@ -348,6 +371,9 @@ const LegalDocumentAnalyzer = () => {
               {uploadedFiles.map((file, index) => (
                 <li key={index} className="file-item">
                   <div className="file-info">
+                    <button onClick={() => toggleFileExpansion(file.name)} className="file-toggle">
+                      {expandedFiles[file.name] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
                     <span>{file.name}</span>
                     <div className="file-progress">
                       <div 
@@ -355,29 +381,28 @@ const LegalDocumentAnalyzer = () => {
                         style={{width: `${fileProgress[file.name]?.progress || 0}%`}}
                       ></div>
                     </div>
-                    {fileProgress[file.name]?.status === 'complete' && <Check size={16} color="green" />}
-                    {fileProgress[file.name]?.status === 'error' && <X size={16} color="red" />}
-                    <button onClick={() => toggleFileExpansion(file.name)}>
-                      {expandedFiles[file.name] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
+                    {fileProgress[file.name]?.status === 'complete' && <span className="file-status complete">✓</span>}
+                    {fileProgress[file.name]?.status === 'error' && <span className="file-status error">✗</span>}
                   </div>
                   <button className="remove-file" onClick={() => removeFile(file.name)}>
-                    <Trash2 size={16} />
+                    Remove
                   </button>
                 </li>
               ))}
             </ul>
           </div>
         )}
-        {isFileProcessing && <p>Processing files...</p>}
         {uploadedFiles.map((file, index) => (
           expandedFiles[file.name] && (
             <div key={`content-${index}`} className="file-content">
-              <h4>{file.name} Contents:</h4>
-              <pre>{fileContents[file.name]}</pre>
+              <h4>{file.name} Preview:</h4>
+              <div className="file-preview">
+                {renderFilePreview(file)}
+              </div>
             </div>
           )
         ))}
+        {isFileProcessing && <p>Processing files...</p>}
       </div>
       
       <div className="column analysis-results">
