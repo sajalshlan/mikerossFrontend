@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState, useRef, useCallback, useEffect} from 'react';
-import { Upload, FileText, Loader, ChevronDown, ChevronUp, Check, X, Trash2 } from 'lucide-react';
+import { Upload, Loader, ChevronDown, ChevronUp, Check, X, Trash2 } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { AnalysisResult, ChatMessage } from './AnalysisResult';
 
@@ -313,29 +313,6 @@ const LegalDocumentAnalyzer = () => {
       } finally {
         setIsChatLoading(false);
       }
-    }
-  };
-
-  const renderAnalysisResult = (type, data) => {
-    switch (type) {
-      case 'summary':
-      case 'risky':
-      case 'structure':
-        return Object.entries(data).map(([filename, content]) => (
-          <div key={filename} className="analysis-result">
-            <h4>{filename}</h4>
-            <div className="result-content">{content}</div>
-          </div>
-        ));
-      case 'conflict':
-        return (
-          <div className="analysis-result">
-            <h4>Conflict Check Results</h4>
-            <div className="result-content">{data}</div>
-          </div>
-        );
-      default:
-        return null;
     }
   };
 
