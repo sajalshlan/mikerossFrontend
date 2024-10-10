@@ -10,11 +10,10 @@ const AnalysisSection = ({
   isLoading, 
   isAnalysisPerformed, 
   isResultVisible, 
-  onToggleVisibility,
   extractedTexts,
   isFileProcessing
 }) => {
-  const analysisTypes = ['summary', 'risky', 'structure', 'conflict'];
+  const analysisTypes = ['summary', 'risky', 'conflict'];
 
   return (
     <div className="column analysis-results">
@@ -23,21 +22,14 @@ const AnalysisSection = ({
         {analysisTypes.map((type) => (
           <button 
             key={type}
-            onClick={() => {
-              if (isAnalysisPerformed[type]) {
-                onToggleVisibility(type);
-              } else {
-                onAnalysis(type);
-              }
-            }} 
+            onClick={() => onAnalysis(type)}
             disabled={isLoading[type] || isFileProcessing || Object.keys(extractedTexts).length === 0 || (type === 'conflict' && uploadedFiles.length <= 1)}
-            className={`analysis-button ${isLoading[type] ? 'loading' : ''}`}
+            className={`analysis-button ${isLoading[type] ? 'loading' : ''} ${isAnalysisPerformed[type] ? 'performed' : ''}`}
           >
             {isLoading[type] ? <Loader className="spinner" /> : null}
             <span>
               {type === 'summary' ? 'Summary' : 
                type === 'risky' ? 'Risk Analysis' : 
-               type === 'structure' ? 'Document Structure' :
                'Conflict Check'}
             </span>
           </button>
@@ -45,14 +37,14 @@ const AnalysisSection = ({
       </div>
       <div className="results-content">
         {analysisTypes.map((type) => (
-          <AnalysisResult 
-            key={type}
-            type={type}
-            data={analysisResults[type]}
-            isVisible={isResultVisible[type]}
-            onToggle={() => onToggleVisibility(type)}
-            fileCount={uploadedFiles.length}
-          />
+          isAnalysisPerformed[type] && isResultVisible[type] && (
+            <AnalysisResult 
+              key={type}
+              type={type}
+              data={analysisResults[type]}
+              fileCount={uploadedFiles.length}
+            />
+          )
         ))}
       </div>
     </div>

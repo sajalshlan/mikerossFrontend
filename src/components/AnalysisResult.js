@@ -2,7 +2,7 @@ import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import '../styles/AnalysisResult.css'
 
-const AnalysisResult = ({ type, data, isVisible, onToggle, fileCount }) => {
+const AnalysisResult = ({ type, data, fileCount }) => {
   const renderContent = (content) => {
     if (typeof content === 'string') {
       return (
@@ -52,8 +52,6 @@ const AnalysisResult = ({ type, data, isVisible, onToggle, fileCount }) => {
         return 'Document Summary';
       case 'risky':
         return 'Risk Analysis';
-      case 'structure':
-        return 'Document Structure';
       case 'conflict':
         return 'Conflict Check Results';
       default:
@@ -67,25 +65,22 @@ const AnalysisResult = ({ type, data, isVisible, onToggle, fileCount }) => {
   }
 
   return (
-    <div className={`analysis-result ${isVisible ? 'expanded' : ''}`}>
-      <div className="result-header" onClick={onToggle}>
+    <div className="analysis-result">
+      <div className="result-header">
         <h3>{getTitle()}</h3>
-        {isVisible ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
       </div>
-      {isVisible && (
-        <div className="result-body">
-          {type === 'conflict' ? (
-            renderContent(data)
-          ) : (
-            Object.entries(data).map(([filename, content]) => (
-              <div key={filename} className="file-result">
-                <h4>{filename}</h4>
-                {renderContent(content)}
-              </div>
-            ))
-          )}
-        </div>
-      )}
+      <div className="result-body">
+        {type === 'conflict' ? (
+          renderContent(data)
+        ) : (
+          Object.entries(data).map(([filename, content]) => (
+            <div key={filename} className="file-result">
+              <h4>{filename}</h4>
+              {renderContent(content)}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };

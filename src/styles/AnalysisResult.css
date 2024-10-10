@@ -1,83 +1,79 @@
 .analysis-result {
-    background-color: #2a2a2a;
-    border-radius: 5px;
-    margin-bottom: 15px;
-    overflow: hidden;
-  }
-  
-  .result-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    background-color: #3a3a3a;
-    cursor: pointer;
-  }
-  
-  .result-header h3 {
-    margin: 0;
-    font-size: 18px;
-  }
-  
-  .result-body {
-    padding: 15px;
-  }
-  
-  .file-result {
-    background-color: #2c3e50;
-    border-radius: 5px;
-    padding: 15px;
-    margin-bottom: 15px;
-  }
-  
-  .file-result h4 {
-    color: #3498db;
-    margin-top: 0;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #3498db;
-    padding-bottom: 5px;
-  }
-  
-  .result-content {
-    white-space: pre-wrap;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #e0e0e0;
-  }
-  
-  .result-content p {
-    margin: 5px 0;
-  }
-  
-  .result-content ul {
-    list-style-type: disc;
-    padding-left: 20px;
-    margin: 10px 0;
-  }
-  
-  .result-content li {
-    margin-bottom: 5px;
-  }
-  
-  .result-content strong {
-    font-weight: bold;
-    color: #3498db;
-  }
-  
-  .result-list {
-    list-style-type: none;
-    padding-left: 20px;
-  }
-  
-  .result-object {
-    margin-left: 20px;
-  }
-  
-  .result-item {
-    margin-bottom: 5px;
-  }
-  
-  .result-item strong {
-    color: #3498db;
-  }
+  background-color: #2a2a2a;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+
+.result-header {
+  padding: 10px 15px;
+  background-color: #3a3a3a;
+}
+
+.result-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.result-body {
+  padding: 15px;
+}
+
+.file-result {
+  background-color: #2c3e50;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.file-result h4 {
+  color: #3498db;
+  margin-top: 0;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #3498db;
+  padding-bottom: 5px;
+}
+
+.result-content {
+  white-space: pre-wrap;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #e0e0e0;
+}
+
+.result-content p {
+  margin: 5px 0;
+}
+
+.result-content ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.result-content li {
+  margin-bottom: 5px;
+}
+
+.result-content strong {
+  font-weight: bold;
+  color: #3498db;
+}
+
+.result-list {
+  list-style-type: none;
+  padding-left: 20px;
+}
+
+.result-object {
+  margin-left: 20px;
+}
+
+.result-item {
+  margin-bottom: 5px;
+}
+
+.result-item strong {
+  color: #3498db;
+}

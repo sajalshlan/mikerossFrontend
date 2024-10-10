@@ -38,6 +38,7 @@
     flex: 1;
     margin: 5px;
     font-size: 14px;
+    transition: all 0.3s ease;
   }
   
   .analysis-button:hover {
@@ -73,4 +74,16 @@
     .analysis-button {
       margin: 5px 0;
     }
+  }
+
+  .analysis-button.performed {
+    background-color: #2ecc71;
+  }
+  
+  .analysis-button.performed:hover {
+    background-color: #27ae60;
+  }
+  
+  .results-content {
+    margin-top: 20px;
   }

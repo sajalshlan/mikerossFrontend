@@ -14,39 +14,33 @@ const LegalAnalyzer = () => {
   const [analysisResults, setAnalysisResults] = useState({
     summary: {},
     risky: {},
-    structure: {},
     conflict: ''
   });
   const [isFileProcessing, setIsFileProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState({
     summary: false,
     risky: false,
-    conflict: false,
-    structure: false
+    conflict: false
   });
   const [isAnalysisPerformed, setIsAnalysisPerformed] = useState({
     summary: false,
     risky: false,
-    conflict: false,
-    structure: false
+    conflict: false
   });
   const [isResultVisible, setIsResultVisible] = useState({
     summary: false,
     risky: false,
-    conflict: false,
-    structure: false
+    conflict: false
   });
   const [processedFiles, setProcessedFiles] = useState({
     summary: [],
     risky: [],
-    structure: [],
     conflict: []
   });
   const analysisInProgress = useRef({
     summary: false,
     risky: false,
-    conflict: false,
-    structure: false
+    conflict: false
   });
 
   useEffect(() => {
@@ -58,12 +52,12 @@ const LegalAnalyzer = () => {
   }, []);
 
   const handleFileUpload = async (files) => {
-    setUploadedFiles(prevFiles => [...prevFiles, ...files]);
     setIsFileProcessing(true);
     
     const newExtractedTexts = { ...extractedTexts };
     const newFileProgress = { ...fileProgress };
     const newFileContents = { ...fileContents };
+    const newUploadedFiles = [...uploadedFiles];
 
     for (const file of files) {
       newFileProgress[file.name] = { progress: 0, status: 'uploading' };
@@ -74,30 +68,35 @@ const LegalAnalyzer = () => {
       try {
         const result = await uploadFile(file);
         if (result.success) {
-          newExtractedTexts[file.name] = result.text;
-          newFileContents[file.name] = result.text;
-          setFileProgress(prev => ({
-            ...prev,
-            [file.name]: { progress: 100, status: 'complete' }
-          }));
+          if (result.texts) {
+            // Handle ZIP file
+            Object.entries(result.texts).forEach(([filename, text]) => {
+              newExtractedTexts[filename] = text;
+              newFileContents[filename] = text;
+              newUploadedFiles.push({ name: filename });
+              newFileProgress[filename] = { progress: 100, status: 'complete' };
+            });
+          } else {
+            // Handle single file
+            newExtractedTexts[file.name] = result.text;
+            newFileContents[file.name] = result.text;
+            newUploadedFiles.push(file);
+            newFileProgress[file.name] = { progress: 100, status: 'complete' };
+          }
         } else {
           console.error(`Error extracting text from ${file.name}: ${result.error}`);
-          setFileProgress(prev => ({
-            ...prev,
-            [file.name]: { progress: 100, status: 'error' }
-          }));
+          newFileProgress[file.name] = { progress: 100, status: 'error' };
         }
       } catch (error) {
         console.error(`Error uploading ${file.name}:`, error);
-        setFileProgress(prev => ({
-          ...prev,
-          [file.name]: { progress: 100, status: 'error' }
-        }));
+        newFileProgress[file.name] = { progress: 100, status: 'error' };
       }
     }
     
     setExtractedTexts(newExtractedTexts);
     setFileContents(newFileContents);
+    setUploadedFiles(newUploadedFiles);
+    setFileProgress(newFileProgress);
     setIsFileProcessing(false);
     
     setIsAnalysisPerformed({
