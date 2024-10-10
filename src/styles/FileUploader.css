@@ -1,0 +1,132 @@
+.file-upload-area {
+    border: 2px dashed #4a4a4a;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 15px;
+  }
+  
+  .file-upload-area:hover {
+    background-color: #3a3a3a;
+  }
+  
+  .file-limit {
+    font-size: 12px;
+    color: #888888;
+  }
+  
+  .browse-button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .browse-button:hover {
+    background-color: #2980b9;
+  }
+  
+  .uploaded-files {
+    background-color: #3a3a3a;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 15px;
+  }
+  
+  .uploaded-files ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: #4a4a4a;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  
+  .file-info {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+  }
+  
+  .file-progress {
+    flex-grow: 1;
+    height: 5px;
+    background-color: #e0e0e0;
+    margin: 0 10px;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background-color: #4CAF50;
+    transition: width 0.3s ease;
+  }
+  
+  .remove-file {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #f44336;
+    margin-left: 10px;
+  }
+  
+  .remove-file:hover {
+    color: #d32f2f;
+  }
+  
+  .file-content {
+    background-color: #34495e;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 10px;
+  }
+  
+  .file-preview {
+    margin-bottom: 15px;
+    max-height: 600px;
+    overflow: auto;
+    background-color: #2c3e50;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  .file-preview-image {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .file-preview-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #ecf0f1;
+  }
+  
+  .file-preview-text p {
+    margin: 10px 0;
+  }
+  
+  .extracted-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    background-color: #2c3e50;
+    padding: 10px;
+    border-radius: 5px;
+    max-height: 300px;
+    overflow: auto;
+    width: 100%;
+  }

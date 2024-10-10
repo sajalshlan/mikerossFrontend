@@ -1,28 +1,29 @@
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import '../styles/AnalysisResult.css'
 
 const AnalysisResult = ({ type, data, isVisible, onToggle, fileCount }) => {
-    const renderContent = (content) => {
-        if (typeof content === 'string') {
-          return (
-            <div className="result-content">
-              {content.split('\n').map((line, index) => {
-                if (line.trim().startsWith('•')) {
-                  return <li key={index}>{line.substring(1).trim()}</li>;
-                } else if (line.includes('**')) {
-                  return (
-                    <p key={index}>
-                      {line.split('**').map((part, i) => 
-                        i % 2 === 0 ? part : <strong key={i}>{part}</strong>
-                      )}
-                    </p>
-                  );
-                } else {
-                  return <p key={index}>{line}</p>;
-                }
-              })}
-            </div>
-          );
+  const renderContent = (content) => {
+    if (typeof content === 'string') {
+      return (
+        <div className="result-content">
+          {content.split('\n').map((line, index) => {
+            if (line.trim().startsWith('•')) {
+              return <li key={index}>{line.substring(1).trim()}</li>;
+            } else if (line.includes('**')) {
+              return (
+                <p key={index}>
+                  {line.split('**').map((part, i) => 
+                    i % 2 === 0 ? part : <strong key={i}>{part}</strong>
+                  )}
+                </p>
+              );
+            } else {
+              return <p key={index}>{line}</p>;
+            }
+          })}
+        </div>
+      );
     } else if (Array.isArray(content)) {
       return (
         <ul className="result-list">
@@ -89,28 +90,4 @@ const AnalysisResult = ({ type, data, isVisible, onToggle, fileCount }) => {
   );
 };
 
-const ChatMessage = ({ message }) => {
-  return (
-    <div className={`chat-message ${message.role}`}>
-      <div className="message-content">
-        {message.content.split('\n').map((line, index) => {
-          if (line.trim().startsWith('•')) {
-            return <li key={index}>{line.substring(1).trim()}</li>;
-          } else if (line.includes('**')) {
-            return (
-              <p key={index}>
-                {line.split('**').map((part, i) => 
-                  i % 2 === 0 ? part : <strong key={i}>{part}</strong>
-                )}
-              </p>
-            );
-          } else {
-            return <p key={index}>{line}</p>;
-          }
-        })}
-      </div>
-    </div>
-  );
-};
-
-export { AnalysisResult, ChatMessage };
+export default AnalysisResult;

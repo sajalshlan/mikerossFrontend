@@ -1,9 +1,9 @@
-import LegalDocumentAnalyzer from './LegalDocumentAnalyzer';
+import LegalAnalyzer from './components/LegalAnalyzer';
 
 function App() {
   return (
     <div className="App">
-      <LegalDocumentAnalyzer />
+      <LegalAnalyzer />
     </div>
   );
 }
