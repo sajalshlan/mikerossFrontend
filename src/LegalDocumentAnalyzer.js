@@ -4,7 +4,7 @@ import { Upload, Loader, MessageSquare, X, File } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { AnalysisResult, ChatMessage, FilePreview } from './components';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL = 'https://mikerossbackend.onrender.com/api';
 
 const LegalDocumentAnalyzer = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]); 
