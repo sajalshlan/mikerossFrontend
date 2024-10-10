@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { Upload, Loader, MessageSquare, X, Trash2, File } from 'lucide-react';
+import { Upload, Loader, MessageSquare, X, File } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { AnalysisResult, ChatMessage, FilePreview } from './components';
 
@@ -8,7 +8,6 @@ const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 const LegalDocumentAnalyzer = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]); 
-  const [showUploadedFiles, setShowUploadedFiles] = useState([]); 
   const [fileProgress, setFileProgress] = useState({});
   const [extractedTexts, setExtractedTexts] = useState({});
   const [summaries, setSummaries] = useState({});
@@ -125,7 +124,6 @@ const LegalDocumentAnalyzer = () => {
       structure: false
     });
   
-    setShowUploadedFiles(true);
   }, [extractedTexts, fileProgress]);
 
   const handleRemoveFile = useCallback((fileName) => {
@@ -322,6 +320,7 @@ const LegalDocumentAnalyzer = () => {
         if (file.type === 'application/pdf') {
           return <embed src={fileUrl} type="application/pdf" width="100%" height="600px" />;
         }
+        break;
       default:
         return (
           <div className="file-preview-text">
@@ -373,15 +372,6 @@ const LegalDocumentAnalyzer = () => {
       />
     ));
   }, [summaries, riskyAnalyses, documentStructures, conflictCheckResult, isResultVisible, uploadedFiles.length, toggleAnalysisVisibility]);
-
-  const memoizedFilePreview = useMemo(() => (
-    <FilePreview
-      files={uploadedFiles}
-      renderFilePreview={renderFilePreview}
-      selectedIndex={selectedFileIndex}
-      onSelectFile={setSelectedFileIndex}
-    />
-  ), [uploadedFiles, renderFilePreview, selectedFileIndex]);
 
   return (
     <div className="legal-document-analyzer">

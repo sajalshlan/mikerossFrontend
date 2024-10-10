@@ -88,6 +88,7 @@ h2 {
 }
 
 /* File Preview */
+/* File Preview */
 .file-preview {
   flex-grow: 1;
   display: flex;
@@ -96,12 +97,13 @@ h2 {
   margin: 5px;
   border-radius: 5px;
   overflow: hidden;
+  height: 90vh; /* Increase to 90% of the viewport height */
 }
 
 .file-preview-content {
   flex-grow: 1;
   overflow: auto;
-  padding: 5px;
+  padding: 10px; /* Reduced padding to increase viewable area */
 }
 
 .file-preview-image {
@@ -109,6 +111,7 @@ h2 {
   height: auto;
   object-fit: contain;
 }
+
 
 .file-preview-text {
   white-space: pre-wrap;
