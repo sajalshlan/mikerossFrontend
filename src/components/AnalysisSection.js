@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader } from 'lucide-react';
+import { Loader, ChevronDown, ChevronUp } from 'lucide-react';
 import AnalysisResult from './AnalysisResult';
 import '../styles/AnalysisSection.css';
 
@@ -9,11 +9,20 @@ const AnalysisSection = ({
   onAnalysis, 
   isLoading, 
   isAnalysisPerformed, 
-  isResultVisible, 
+  isResultVisible,
+  onToggleVisibility,
   extractedTexts,
   isFileProcessing
 }) => {
   const analysisTypes = ['summary', 'risky', 'conflict'];
+
+  const handleAnalysisClick = (type) => {
+    if (isAnalysisPerformed[type]) {
+      onToggleVisibility(type);
+    } else {
+      onAnalysis(type);
+    }
+  };
 
   return (
     <div className="column analysis-results">
@@ -22,7 +31,7 @@ const AnalysisSection = ({
         {analysisTypes.map((type) => (
           <button 
             key={type}
-            onClick={() => onAnalysis(type)}
+            onClick={() => handleAnalysisClick(type)}
             disabled={isLoading[type] || isFileProcessing || Object.keys(extractedTexts).length === 0 || (type === 'conflict' && uploadedFiles.length <= 1)}
             className={`analysis-button ${isLoading[type] ? 'loading' : ''} ${isAnalysisPerformed[type] ? 'performed' : ''}`}
           >
@@ -32,6 +41,9 @@ const AnalysisSection = ({
                type === 'risky' ? 'Risk Analysis' : 
                'Conflict Check'}
             </span>
+            {isAnalysisPerformed[type] && (
+              isResultVisible[type] ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+            )}
           </button>
         ))}
       </div>
