@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { Upload, ChevronDown, ChevronUp, File } from 'lucide-react';
+import ZipPreview from './ZipPreview';
 import mammoth from 'mammoth';
 import '../styles/FileUploader.css';
 
-const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcessing, extractedTexts, onRemoveFile }) => {
+const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcessing, extractedTexts, onRemoveFile, apiResponse }) => {
   const fileInputRef = useRef(null);
   const [expandedFiles, setExpandedFiles] = useState({});
   const [docxPreviews, setDocxPreviews] = useState({});
@@ -21,6 +22,7 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
   };
 
   const renderFilePreview = (file, content) => {
+
     const fileType = file.type ? file.type.split('/')[0] : 'unknown';
     const fileUrl = file instanceof Blob ? URL.createObjectURL(file) : null;
 
@@ -29,9 +31,12 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
         return fileUrl ? <img src={fileUrl} alt={file.name} className="file-preview-image" /> : <p>Image preview not available</p>;
       case 'application':
         if (file.type === 'application/pdf') {
+          console.log("i am getting rendered")
           return fileUrl ? <embed src={fileUrl} type="application/pdf" width="100%" height="600px" /> : <p>PDF preview not available</p>;
         } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
           return renderDocxPreview(file);
+        } else if (file.type === 'application/zip' || file.name.toLowerCase().endsWith('.zip')) {
+          return <ZipPreview zipFile={file} apiResponse={apiResponse} />;
         }
       // falls through
       default:
@@ -119,6 +124,7 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
           <div key={`content-${index}`} className="file-content">
             <h4>{file.name} Preview:</h4>
             <div className="file-preview">
+
               {renderFilePreview(file, extractedTexts[file.name])}
             </div>
           </div>

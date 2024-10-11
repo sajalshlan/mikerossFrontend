@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL = 'http://127.0.0.1:8002/api';
 
 export const performAnalysis = async (type, text) => {
   console.log(`Performing ${type} analysis...`);
@@ -27,12 +27,12 @@ export const uploadFile = async (file) => {
       method: 'POST',
       body: formData,
     });
-    const result = await response.json();
+    const rawResponse = await response.text();
+    console.log('Raw API response:', rawResponse);
+    const result = JSON.parse(rawResponse);
+    console.log('Parsed API response:', result);
     if (result.success) {
-      return {
-        success: true,
-        text: result.text
-      };
+      return result;
     } else {
       throw new Error(result.error || 'Unknown error occurred during file upload');
     }

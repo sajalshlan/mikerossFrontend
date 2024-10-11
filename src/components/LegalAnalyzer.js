@@ -11,6 +11,7 @@ const LegalAnalyzer = () => {
   const [fileProgress, setFileProgress] = useState({});
   const [extractedTexts, setExtractedTexts] = useState({});
   const [fileContents, setFileContents] = useState({});
+  const [apiResponse, setApiResponse] = useState(null);
   const [analysisResults, setAnalysisResults] = useState({
     summary: {},
     risky: {},
@@ -68,6 +69,7 @@ const LegalAnalyzer = () => {
       try {
         const result = await uploadFile(file);
         if (result.success) {
+          setApiResponse(result);
           if (result.texts) {
             // Handle ZIP file
             Object.entries(result.texts).forEach(([filename, text]) => {
@@ -215,6 +217,7 @@ const LegalAnalyzer = () => {
         isFileProcessing={isFileProcessing}
         extractedTexts={extractedTexts}
         onRemoveFile={removeFile}
+        apiResponse={apiResponse}
       />
       <AnalysisSection
         uploadedFiles={uploadedFiles}
