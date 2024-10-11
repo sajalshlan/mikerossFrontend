@@ -70,11 +70,12 @@ const LegalAnalyzer = () => {
         const result = await uploadFile(file);
         if (result.success) {
           setApiResponse(result);
-          if (result.texts) {
+          if (result.files) {
             // Handle ZIP file
-            Object.entries(result.texts).forEach(([filename, text]) => {
-              newExtractedTexts[filename] = text;
-              newFileContents[filename] = text;
+            Object.entries(result.files).forEach(([filename, fileData]) => {
+              console.log(filename, fileData)
+              newExtractedTexts[filename] = fileData.content;
+              newFileContents[filename] = fileData.content;
               newUploadedFiles.push({ name: filename });
               newFileProgress[filename] = { progress: 100, status: 'complete' };
             });
@@ -104,14 +105,12 @@ const LegalAnalyzer = () => {
     setIsAnalysisPerformed({
       summary: false,
       risky: false,
-      conflict: false,
-      structure: false
+      conflict: false
     });
     setIsResultVisible({
       summary: false,
       risky: false,
-      conflict: false,
-      structure: false
+      conflict: false
     });
   };
 
@@ -121,8 +120,12 @@ const LegalAnalyzer = () => {
       return;
     }
     
-    if (Object.keys(extractedTexts).length === 0) {
-      console.log('No extracted texts available for analysis');
+    const textsToAnalyze = apiResponse && apiResponse.files 
+      ? apiResponse.files 
+      : extractedTexts;
+    
+    if (Object.keys(textsToAnalyze).length === 0) {
+      console.log('No texts available for analysis');
       return;
     }
 
@@ -130,11 +133,13 @@ const LegalAnalyzer = () => {
     setIsLoading(prev => ({ ...prev, [type]: true }));
     
     let results = {};
-    const filesToProcess = uploadedFiles.filter(file => !processedFiles[type].includes(file.name));
+    const filesToProcess = Object.keys(textsToAnalyze).filter(fileName => !processedFiles[type].includes(fileName));
 
-    for (const file of filesToProcess) {
-      const fileName = file.name;
-      const text = extractedTexts[fileName];
+    for (const fileName of filesToProcess) {
+      const text = apiResponse && apiResponse.files 
+        ? textsToAnalyze[fileName].content 
+        : textsToAnalyze[fileName];
+      
       if (text) {
         console.log(`Performing ${type} analysis for ${fileName}...`);
         const result = await performAnalysis(type, text);
@@ -197,7 +202,19 @@ const LegalAnalyzer = () => {
       return newResults;
     });
 
-    if (uploadedFiles.length <= 2) {
+    if (apiResponse && apiResponse.files) {
+      setApiResponse(prev => {
+        const newFiles = { ...prev.files };
+        delete newFiles[fileName];
+        return { ...prev, files: newFiles };
+      });
+    }
+
+    const remainingFiles = apiResponse && apiResponse.files 
+      ? Object.keys(apiResponse.files) 
+      : Object.keys(extractedTexts);
+    
+    if (remainingFiles.length <= 2) {
       setAnalysisResults(prev => ({ ...prev, conflict: '' }));
     }
   };

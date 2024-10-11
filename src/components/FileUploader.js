@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
-import { Upload, ChevronDown, ChevronUp, File } from 'lucide-react';
+import { Upload, File } from 'lucide-react';
 import ZipPreview from './ZipPreview';
 import mammoth from 'mammoth';
 import '../styles/FileUploader.css';
 
 const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcessing, extractedTexts, onRemoveFile, apiResponse }) => {
+  console.log("API Response:", apiResponse);
   const fileInputRef = useRef(null);
   const [expandedFiles, setExpandedFiles] = useState({});
   const [docxPreviews, setDocxPreviews] = useState({});
@@ -22,7 +23,8 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
   };
 
   const renderFilePreview = (file, content) => {
-
+    console.log("Rendering preview for:", file.name);
+    
     const fileType = file.type ? file.type.split('/')[0] : 'unknown';
     const fileUrl = file instanceof Blob ? URL.createObjectURL(file) : null;
 
@@ -31,12 +33,9 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
         return fileUrl ? <img src={fileUrl} alt={file.name} className="file-preview-image" /> : <p>Image preview not available</p>;
       case 'application':
         if (file.type === 'application/pdf') {
-          console.log("i am getting rendered")
           return fileUrl ? <embed src={fileUrl} type="application/pdf" width="100%" height="600px" /> : <p>PDF preview not available</p>;
         } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
           return renderDocxPreview(file);
-        } else if (file.type === 'application/zip' || file.name.toLowerCase().endsWith('.zip')) {
-          return <ZipPreview zipFile={file} apiResponse={apiResponse} />;
         }
       // falls through
       default:
@@ -73,6 +72,38 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
     return <p>Loading docx preview...</p>;
   };
 
+  const renderUploadedFiles = () => {
+    if (apiResponse && apiResponse.files && Object.keys(apiResponse.files).length > 1) {
+      return (
+        <li className="file-item zip-item">
+          <ZipPreview zipFile={uploadedFiles[0]} apiResponse={apiResponse} />
+        </li>
+      );
+    } else {
+      return uploadedFiles.map((file, index) => (
+        <li key={index} className="file-item">
+          <div className="file-header">
+            <span className="file-name">{file.name}</span>
+            <button className="remove-file" onClick={() => onRemoveFile(file.name)}>
+              Remove
+            </button>
+          </div>
+          <div className="file-progress">
+            <div 
+              className="progress-bar" 
+              style={{width: `${fileProgress[file.name]?.progress || 0}%`}}
+            ></div>
+          </div>
+          {fileProgress[file.name]?.status === 'complete' && <span className="file-status complete">✓</span>}
+          {fileProgress[file.name]?.status === 'error' && <span className="file-status error">✗</span>}
+          <div className="file-preview">
+            {renderFilePreview(file, extractedTexts[file.name])}
+          </div>
+        </li>
+      ));
+    }
+  };
+
   return (
     <div className="column document-view">
       <h2>Mike Ross</h2>
@@ -95,41 +126,10 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
         <div className="uploaded-files">
           <h3>Uploaded Files:</h3>
           <ul>
-            {uploadedFiles.map((file, index) => (
-              <li key={index} className="file-item">
-                <div className="file-info">
-                  <button onClick={() => toggleFileExpansion(file.name)} className="file-toggle">
-                    {expandedFiles[file.name] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </button>
-                  <span>{file.name}</span>
-                  <div className="file-progress">
-                    <div 
-                      className="progress-bar" 
-                      style={{width: `${fileProgress[file.name]?.progress || 0}%`}}
-                    ></div>
-                  </div>
-                  {fileProgress[file.name]?.status === 'complete' && <span className="file-status complete">✓</span>}
-                  {fileProgress[file.name]?.status === 'error' && <span className="file-status error">✗</span>}
-                </div>
-                <button className="remove-file" onClick={() => onRemoveFile(file.name)}>
-                  Remove
-                </button>
-              </li>
-            ))}
+            {renderUploadedFiles()}
           </ul>
         </div>
       )}
-      {uploadedFiles.map((file, index) => (
-        expandedFiles[file.name] && (
-          <div key={`content-${index}`} className="file-content">
-            <h4>{file.name} Preview:</h4>
-            <div className="file-preview">
-
-              {renderFilePreview(file, extractedTexts[file.name])}
-            </div>
-          </div>
-        )
-      ))}
       {isFileProcessing && <p>Processing files...</p>}
     </div>
   );
