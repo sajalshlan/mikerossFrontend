@@ -20,7 +20,13 @@ const AnalysisSection = ({
     if (isAnalysisPerformed[type]) {
       onToggleVisibility(type);
     } else {
-      onAnalysis(type);
+      if (type === 'conflict') {
+        // For conflict check, pass all file contents
+        onAnalysis(type, extractedTexts);
+      } else {
+        // For other types, pass null to use the existing logic
+        onAnalysis(type, null);
+      }
     }
   };
 
@@ -32,7 +38,7 @@ const AnalysisSection = ({
           <button 
             key={type}
             onClick={() => handleAnalysisClick(type)}
-            disabled={isLoading[type] || isFileProcessing || Object.keys(extractedTexts).length === 0 || (type === 'conflict' && uploadedFiles.length <= 1)}
+            disabled={isLoading[type] || isFileProcessing || Object.keys(extractedTexts).length === 0 || (type === 'conflict' && Object.keys(extractedTexts).length <= 1)}
             className={`analysis-button ${isLoading[type] ? 'loading' : ''} ${isAnalysisPerformed[type] ? 'performed' : ''}`}
           >
             {isLoading[type] ? <Loader className="spinner" /> : null}
@@ -54,7 +60,7 @@ const AnalysisSection = ({
               key={type}
               type={type}
               data={analysisResults[type]}
-              fileCount={uploadedFiles.length}
+              fileCount={Object.keys(extractedTexts).length}
             />
           )
         ))}

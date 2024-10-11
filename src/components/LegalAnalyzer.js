@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import FileUploader from './FileUploader';
 import AnalysisSection from './AnalysisSection';
 import ChatWidget from './ChatWidget';
-import { performAnalysis, uploadFile } from '../api';
+import { performAnalysis, uploadFile, performConflictCheck } from '../api';
 import '../styles/App.css';
 
 const LegalAnalyzer = () => {
@@ -114,57 +114,57 @@ const LegalAnalyzer = () => {
     });
   };
 
-  const handleAnalysis = async (type) => {
+  const handleAnalysis = async (type, texts = null) => {
     if (analysisInProgress.current[type]) {
       console.log(`${type} analysis is already in progress, returning`);
       return;
     }
     
-    const textsToAnalyze = apiResponse && apiResponse.files 
-      ? apiResponse.files 
-      : extractedTexts;
-    
-    if (Object.keys(textsToAnalyze).length === 0) {
-      console.log('No texts available for analysis');
-      return;
-    }
-
     analysisInProgress.current[type] = true;
     setIsLoading(prev => ({ ...prev, [type]: true }));
     
-    let results = {};
-    const filesToProcess = Object.keys(textsToAnalyze).filter(fileName => !processedFiles[type].includes(fileName));
+    try {
+      let results;
+      if (type === 'conflict') {
+        // Use the new conflict check API
+        results = await performConflictCheck(texts);
+      } else {
+        const textsToAnalyze = texts || extractedTexts;
+        results = {};
+        const filesToProcess = Object.keys(textsToAnalyze).filter(fileName => !processedFiles[type].includes(fileName));
 
-    for (const fileName of filesToProcess) {
-      const text = apiResponse && apiResponse.files 
-        ? textsToAnalyze[fileName].content 
-        : textsToAnalyze[fileName];
-      
-      if (text) {
-        console.log(`Performing ${type} analysis for ${fileName}...`);
-        const result = await performAnalysis(type, text);
-        if (result) {
-          results[fileName] = result;
+        for (const fileName of filesToProcess) {
+          const text = textsToAnalyze[fileName];
+          if (text) {
+            console.log(`Performing ${type} analysis for ${fileName}...`);
+            const result = await performAnalysis(type, text);
+            if (result) {
+              results[fileName] = result;
+            }
+          }
         }
       }
+      
+      console.log(`Analysis results for ${type}:`, results);
+
+      setAnalysisResults(prev => ({
+        ...prev,
+        [type]: results
+      }));
+      
+      setProcessedFiles(prev => ({
+        ...prev,
+        [type]: [...prev[type], ...Object.keys(results)]
+      }));
+
+      setIsAnalysisPerformed(prev => ({ ...prev, [type]: true }));
+      setIsResultVisible(prev => ({ ...prev, [type]: true }));
+    } catch (error) {
+      console.error(`Error performing ${type} analysis:`, error);
+    } finally {
+      setIsLoading(prev => ({ ...prev, [type]: false }));
+      analysisInProgress.current[type] = false;
     }
-    
-    console.log(`Analysis results for ${type}:`, results);
-
-    setAnalysisResults(prev => ({
-      ...prev,
-      [type]: type === 'conflict' ? results : { ...prev[type], ...results }
-    }));
-    
-    setProcessedFiles(prev => ({
-      ...prev,
-      [type]: [...prev[type], ...Object.keys(results)]
-    }));
-
-    setIsLoading(prev => ({ ...prev, [type]: false }));
-    setIsAnalysisPerformed(prev => ({ ...prev, [type]: true }));
-    setIsResultVisible(prev => ({ ...prev, [type]: true }));
-    analysisInProgress.current[type] = false;
   };
 
   const toggleAnalysisVisibility = (type) => {

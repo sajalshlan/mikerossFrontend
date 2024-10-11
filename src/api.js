@@ -19,6 +19,24 @@ export const performAnalysis = async (type, text) => {
   }
 };
 
+export const performConflictCheck = async (texts) => {
+  console.log('Performing conflict check...');
+  try {
+    const response = await fetch(`${API_BASE_URL}/perform_conflict_check/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ texts }),
+    });
+    const result = await response.json();
+    console.log('Conflict check result:', result);
+    return result.success ? result.result : null;
+  } catch (error) {
+    console.error('Error performing conflict check:', error);
+    return null;
+  }
+};
 export const uploadFile = async (file) => {
   try {
     const formData = new FormData();

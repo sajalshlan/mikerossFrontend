@@ -9,12 +9,17 @@ const ChatWidget = ({ extractedTexts }) => {
   const [chatInput, setChatInput] = useState('');
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const chatMessagesRef = useRef(null);
+  const latestMessageRef = useRef(null);
 
   useEffect(() => {
-    if (chatMessagesRef.current) {
-      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
-    }
+    scrollToLatestMessage();
   }, [chatMessages]);
+
+  const scrollToLatestMessage = () => {
+    if (latestMessageRef.current) {
+      latestMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
@@ -59,6 +64,16 @@ const ChatWidget = ({ extractedTexts }) => {
     }
   };
 
+  const renderMessageContent = (content) => {
+    const parts = content.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
   return (
     <div className={`chat-widget ${isChatOpen ? 'open' : ''}`}>
       <button className="chat-toggle" onClick={toggleChat}>
@@ -71,8 +86,14 @@ const ChatWidget = ({ extractedTexts }) => {
           </div>
           <div className="chat-messages" ref={chatMessagesRef}>
             {chatMessages.map((message, index) => (
-              <div key={index} className={`chat-message ${message.role}`}>
-                <div className="message-content">{message.content}</div>
+              <div 
+                key={index} 
+                className={`chat-message ${message.role}`}
+                ref={index === chatMessages.length - 1 ? latestMessageRef : null}
+              >
+                <div className="message-content">
+                  {renderMessageContent(message.content)}
+                </div>
                 <div className="message-timestamp">{message.timestamp}</div>
               </div>
             ))}
