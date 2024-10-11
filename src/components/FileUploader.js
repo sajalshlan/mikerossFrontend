@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { Upload, File, Menu, Loader } from 'lucide-react';
+import { Upload, File, Menu, Loader, X } from 'lucide-react';
 import ZipPreview from './ZipPreview';
 import mammoth from 'mammoth';
 import '../styles/FileUploader.css';
+import '../styles/HamburgerMenu.css';
+
 
 const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcessing, extractedTexts, onRemoveFile, apiResponse }) => {
   console.log("API Response:", apiResponse);
@@ -121,40 +123,55 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
 
   return (
     <div className="column document-view">
-      <div className="hamburger-menu">
-        <button onClick={toggleMenu} className="menu-toggle" disabled={isFileProcessing}>
-          <Menu size={24} />
-        </button>
-        {isMenuOpen && (
-          <div className="menu-content">
-            <h2>Mike Ross</h2>
-            <p>Upload Contract</p>
-            <div 
-              className={`file-upload-area ${isFileProcessing ? 'disabled' : ''}`} 
-              onClick={() => !isFileProcessing && fileInputRef.current.click()}
-            >
-              {isFileProcessing ? (
-                <Loader size={24} className="spinner" />
-              ) : (
-                <Upload size={24} />
-              )}
-              <p>{isFileProcessing ? 'Processing file...' : 'Drag and drop file here'}</p>
-              <p className="file-limit">Limit 200MB per file • DOCX, PDF, JPG, PNG</p>
-              <button className="browse-button" disabled={isFileProcessing}>
-                {isFileProcessing ? 'Processing...' : 'Browse files'}
+      <button onClick={toggleMenu} className="menu-toggle" disabled={isFileProcessing}>
+        <Menu size={24} />
+      </button>
+      <div className={`menu-backdrop ${isMenuOpen ? 'open' : ''}`} onClick={toggleMenu}></div>
+      <div className={`hamburger-menu ${isMenuOpen ? 'open' : ''}`}>
+        <div className="menu-header">
+          <h2>Mike Ross</h2>
+          <button className="close-menu" onClick={toggleMenu}>
+            <X size={24} />
+          </button>
+        </div>
+        <p>Upload Contract</p>
+        <div 
+          className={`file-upload-area ${isFileProcessing ? 'disabled' : ''}`} 
+          onClick={() => !isFileProcessing && fileInputRef.current.click()}
+        >
+          {isFileProcessing ? (
+            <Loader size={24} className="spinner" />
+          ) : (
+            <Upload size={24} />
+          )}
+          <p>{isFileProcessing ? 'Processing file...' : 'Drag and drop file here'}</p>
+          <p className="file-limit">Limit 200MB per file • DOCX, PDF, JPG, PNG</p>
+          <button className="browse-button" disabled={isFileProcessing}>
+            {isFileProcessing ? 'Processing...' : 'Browse files'}
+          </button>
+        </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+          multiple
+          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+          disabled={isFileProcessing}
+        />
+        <div className="file-list">
+          {uploadedFiles.map((file, index) => (
+            <div key={index} className="file-list-item">
+              <label className="file-label">
+                <input type="checkbox" className="file-checkbox" />
+                <span className="file-name">{file.name}</span>
+              </label>
+              <button className="remove-file" onClick={() => onRemoveFile(file.name)} disabled={isFileProcessing}>
+                <X size={16} />
               </button>
             </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-              multiple
-              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-              disabled={isFileProcessing}
-            />
-          </div>
-        )}
+          ))}
+        </div>
       </div>
       {renderUploadedFiles()}
       {isFileProcessing && <p className="processing-message">Processing files...</p>}
