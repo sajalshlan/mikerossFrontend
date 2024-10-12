@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Upload, File, Menu, Loader, X } from 'lucide-react';
+import { Upload, File, Menu, Loader} from 'lucide-react';
 import mammoth from 'mammoth';
 import '../styles/FileUploader.css';
 import '../styles/HamburgerMenu.css';
@@ -9,7 +9,6 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
   console.log("FileUploader - Props:", { uploadedFiles, fileProgress, isFileProcessing, extractedTexts, apiResponse, fileBase64, isAnalysisInProgress });
   
   const fileInputRef = useRef(null);
-  const [expandedFiles, setExpandedFiles] = useState({});
   const [docxPreviews, setDocxPreviews] = useState({});
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -88,12 +87,12 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const toggleFileExpansion = (filename) => {
-    setExpandedFiles(prev => ({
-      ...prev,
-      [filename]: !prev[filename]
-    }));
-  };
+  // const toggleFileExpansion = (filename) => {
+  //   setExpandedFiles(prev => ({
+  //     ...prev,
+  //     [filename]: !prev[filename]
+  //   }));
+  // };
 
   const getFileTypeFromName = (fileName) => {
     const extension = fileName.split('.').pop().toLowerCase();
@@ -206,42 +205,42 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
     return <p>Loading docx preview...</p>;
   };
 
-const renderUploadedFiles = () => {
-  if (uploadedFiles.length > 0) {
-    return (
-      <div className="file-preview-container">
-        {uploadedFiles.map((file, index) => (
-          <div key={index} className="file-item">
-            <div className="file-header">
-              <span className="file-name">{file.name}</span>
-              <button className="remove-file" onClick={() => onRemoveFile(file.name)} disabled={isFileProcessing}>
-                Remove
-              </button>
-            </div>
-            <div className="file-progress">
-              <div 
-                className="progress-bar" 
-                style={{width: `${fileProgress[file.name]?.progress || 0}%`}}
-              ></div>
-            </div>
-            {fileProgress[file.name]?.status === 'complete' && <span className="file-status complete">✓</span>}
-            {fileProgress[file.name]?.status === 'error' && <span className="file-status error">✗</span>}
-            <div className="file-preview">
-              {/* {console.log('-----------------------------------')}
-              {console.log("File Name:", file.name)}
-              {console.log("File:", file)}
-              {console.log("Extracted Texts:", extractedTexts)} */}
-              {renderFilePreview(file, extractedTexts[file.name])}
-              {/* {console.log('-----------------------------------')} */}
+// const renderUploadedFiles = () => {
+//   if (uploadedFiles.length > 0) {
+//     return (
+//       <div className="file-preview-container">
+//         {uploadedFiles.map((file, index) => (
+//           <div key={index} className="file-item">
+//             <div className="file-header">
+//               <span className="file-name">{file.name}</span>
+//               <button className="remove-file" onClick={() => onRemoveFile(file.name)} disabled={isFileProcessing}>
+//                 Remove
+//               </button>
+//             </div>
+//             <div className="file-progress">
+//               <div 
+//                 className="progress-bar" 
+//                 style={{width: `${fileProgress[file.name]?.progress || 0}%`}}
+//               ></div>
+//             </div>
+//             {fileProgress[file.name]?.status === 'complete' && <span className="file-status complete">✓</span>}
+//             {fileProgress[file.name]?.status === 'error' && <span className="file-status error">✗</span>}
+//             <div className="file-preview">
+//               {/* {console.log('-----------------------------------')}
+//               {console.log("File Name:", file.name)}
+//               {console.log("File:", file)}
+//               {console.log("Extracted Texts:", extractedTexts)} */}
+//               {renderFilePreview(file, extractedTexts[file.name])}
+//               {/* {console.log('-----------------------------------')} */}
 
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+//             </div>
+//           </div>
+//         ))}
+//       </div>
+//     );
+//   }
+//   return null;
+// };
 
 const renderPlaceholder = () => (
   <div className="file-preview-placeholder">
