@@ -282,7 +282,7 @@ return (
           onChange={handleFileChange}
           style={{ display: 'none' }}
           multiple
-          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png, .zip"
+          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
           disabled={isFileProcessing}
         />
            

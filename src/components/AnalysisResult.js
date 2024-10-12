@@ -1,21 +1,10 @@
 import React from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import '../styles/AnalysisResult.css'
 
 const AnalysisResult = ({ type, data, fileCount }) => {
 
-  console.log('####################################')
-  console.log(type)
-  console.log('####################################')
-  console.log(data)
-  console.log('####################################')
-  console.log(fileCount)
-
-
   const renderContent = (content) => {
     if (typeof content === 'string') {
-      {console.log("SINGLE STRING HAI")}
-
       return (
         <div className="result-content">
           {content.split('\n').map((line, index) => {
@@ -36,8 +25,6 @@ const AnalysisResult = ({ type, data, fileCount }) => {
         </div>
       );
     } else if (Array.isArray(content)) {
-
-      {console.log("ARRAY HAI")}
       return (
         <ul className="result-list">
           {content.map((item, index) => (
@@ -46,8 +33,6 @@ const AnalysisResult = ({ type, data, fileCount }) => {
         </ul>
       );
     } else if (typeof content === 'object') {
-      {console.log("OBJECT HAI")}
-
       return (
         <div className="result-object">
           {Object.entries(content).map(([key, value]) => (
