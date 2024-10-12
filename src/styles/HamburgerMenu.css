@@ -59,7 +59,7 @@
 
 .menu-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 30px;
   padding-bottom: 15px;
@@ -70,19 +70,7 @@
   margin: 0;
   color: #ffffff;
   font-size: 24px;
-}
-
-.close-menu {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #ffffff;
-  font-size: 24px;
-  transition: transform 0.3s ease;
-}
-
-.close-menu:hover {
-  transform: rotate(90deg);
+  margin-top: 30px;
 }
 
 /* File upload area within hamburger menu */

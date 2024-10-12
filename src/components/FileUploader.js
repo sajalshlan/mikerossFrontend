@@ -209,19 +209,16 @@ const renderUploadedFiles = () => {
   return null;
 };
 
-  return (
-    <div className="column document-view">
-      <button onClick={toggleMenu} className="menu-toggle" disabled={isFileProcessing}>
-        <Menu size={24} />
-      </button>
-      <div className={`menu-backdrop ${isMenuOpen ? 'open' : ''}`} onClick={toggleMenu}></div>
-      <div className={`hamburger-menu ${isMenuOpen ? 'open' : ''}`}>
-        <div className="menu-header">
-          <h2>Mike Ross</h2>
-          <button className="close-menu" onClick={toggleMenu}>
-            <X size={24} />
-          </button>
-        </div>
+return (
+  <div className="column document-view">
+    <button onClick={toggleMenu} className="menu-toggle" disabled={isFileProcessing}>
+      <Menu size={24} />
+    </button>
+    <div className={`menu-backdrop ${isMenuOpen ? 'open' : ''}`} onClick={toggleMenu}></div>
+    <div className={`hamburger-menu ${isMenuOpen ? 'open' : ''}`}>
+      <div className="menu-header">
+        <h2>Mike Ross</h2>
+      </div>
         <p>Upload Contract</p>
         <div 
           className={`file-upload-area ${isFileProcessing ? 'disabled' : ''}`} 
