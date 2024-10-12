@@ -6,22 +6,24 @@ import '../styles/FileUploader.css';
 import '../styles/HamburgerMenu.css';
 
 
-const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcessing, extractedTexts, onRemoveFile, apiResponse }) => {
+const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcessing, extractedTexts, onRemoveFile, apiResponse, fileBase64 }) => {
   console.log("API Response:", apiResponse);
   const fileInputRef = useRef(null);
   const [expandedFiles, setExpandedFiles] = useState({});
   const [docxPreviews, setDocxPreviews] = useState({});
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const handleFileChange = (event) => {
-    const files = Array.from(event.target.files).filter(file => !file.name.toLowerCase().endsWith('.zip'));
+    const files = Array.from(event.target.files); // No filtering, allows all file types including .zip
+    
     if (files.length > 0) {
-      onFileUpload(files);
-      setIsMenuOpen(false);
+      onFileUpload(files); // Pass all selected files including .zip to the upload handler
+      // setIsMenuOpen(false);
     } else {
-      alert("ZIP files are not allowed. Please select other file types.");
+      alert("No files selected. Please select valid file types.");
     }
   };
+  
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -34,38 +36,86 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
     }));
   };
 
+  const getFileTypeFromName = (fileName) => {
+    const extension = fileName.split('.').pop().toLowerCase();
+    const extensionMap = {
+      jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', bmp: 'image',
+      pdf: 'pdf',
+      doc: 'document', docx: 'document',
+      txt: 'text',
+      // Add more mappings as needed
+    };
+    return extensionMap[extension] || 'unknown';
+  };
+
   const renderFilePreview = (file, content) => {
     console.log("Rendering preview for:", file.name);
-    
-    const fileType = file.type ? file.type.split('/')[0] : 'unknown';
-    const fileUrl = file instanceof Blob ? URL.createObjectURL(file) : null;
-
+    console.log("File:", file);
+  
+    const fileType = getFileTypeFromName(file.name);
+    console.log("File Type:", fileType);
+    console.log("MIME type:", getMimeType(fileType));
+    let fileUrl;
+  
+    console.log("File Base64 available:", !!fileBase64[file.name]);
+  
+    if (file instanceof Blob) {
+      fileUrl = URL.createObjectURL(file);
+      console.log("Created Blob URL:", fileUrl);
+    } else if (fileBase64[file.name]) {
+      fileUrl = `data:${getMimeType(fileType)};base64,${fileBase64[file.name]}`;
+      console.log("Created Base64 URL:", fileUrl.substring(0, 100) + "...");
+    } else {
+      console.error('Unsupported file type or missing base64 data');
+      return <p>Unable to preview file</p>;
+    }
+  
+    const cleanup = () => {
+      if (file instanceof Blob) {
+        URL.revokeObjectURL(fileUrl);
+      }
+    };
+  
     switch (fileType) {
       case 'image':
-        return fileUrl ? <img src={fileUrl} alt={file.name} className="file-preview-image" /> : <p>Image preview not available</p>;
-      case 'application':
-        if (file.type === 'application/pdf') {
-          return fileUrl ? <embed src={fileUrl} type="application/pdf" width="100%" height="600px" /> : <p>PDF preview not available</p>;
-        } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-          return renderDocxPreview(file);
-        }
-      // falls through
+        return <img src={fileUrl} alt={file.name} className="file-preview-image" onLoad={cleanup} />;
+      case 'pdf':
+        return <embed src={fileUrl} type="application/pdf" width="100%" height="600px" onLoad={cleanup} />;
+      case 'document':
+        return renderDocxPreview(file, fileUrl);
       default:
+        cleanup();
         return (
           <div className="file-preview-text">
             <File size={48} />
-            <p>Preview not available. Showing extracted text:</p>
-            <pre className="extracted-text">{content}</pre>
+            <p>Preview not available. Showing file name:</p>
+            <pre className="file-name">{file.name || 'Unnamed file'}</pre>
+            {content && <pre className="extracted-text">{content}</pre>}
           </div>
         );
     }
   };
-
-  const renderDocxPreview = (file) => {
+  
+  // Helper function to get the correct MIME type
+  const getMimeType = (fileType) => {
+    switch (fileType) {
+      case 'image':
+        return 'image/png'; // Adjust based on actual image type if needed
+      case 'pdf':
+        return 'application/pdf';
+      case 'document':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      default:
+        return 'application/octet-stream';
+    }
+  };
+  
+  // Update renderDocxPreview to handle both Blob and base64
+  const renderDocxPreview = (file, fileUrl) => {
     if (docxPreviews[file.name]) {
       return <div className="docx-preview" dangerouslySetInnerHTML={{ __html: docxPreviews[file.name] }} />;
     }
-
+  
     if (file instanceof Blob) {
       mammoth.convertToHtml({ arrayBuffer: file.arrayBuffer() })
         .then(result => {
@@ -77,49 +127,62 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
         .catch(error => {
           console.error('Error converting docx to html:', error);
         });
+    } else if (fileUrl) {
+      fetch(fileUrl)
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => mammoth.convertToHtml({ arrayBuffer }))
+        .then(result => {
+          setDocxPreviews(prev => ({
+            ...prev,
+            [file.name]: result.value
+          }));
+        })
+        .catch(error => {
+          console.error('Error converting docx to html:', error);
+        });
     } else {
-      return <p>DOCX preview not available for extracted files</p>;
+      return <p>DOCX preview not available</p>;
     }
-
+  
     return <p>Loading docx preview...</p>;
   };
 
-  const renderUploadedFiles = () => {
-    if (apiResponse && apiResponse.files && Object.keys(apiResponse.files).length > 1) {
-      return (
-        <div className="file-preview-container">
-          <ZipPreview zipFile={uploadedFiles[0]} apiResponse={apiResponse} />
-        </div>
-      );
-    } else if (uploadedFiles.length > 0) {
-      return (
-        <div className="file-preview-container">
-          {uploadedFiles.map((file, index) => (
-            <div key={index} className="file-item">
-              <div className="file-header">
-                <span className="file-name">{file.name}</span>
-                <button className="remove-file" onClick={() => onRemoveFile(file.name)} disabled={isFileProcessing}>
-                  Remove
-                </button>
-              </div>
-              <div className="file-progress">
-                <div 
-                  className="progress-bar" 
-                  style={{width: `${fileProgress[file.name]?.progress || 0}%`}}
-                ></div>
-              </div>
-              {fileProgress[file.name]?.status === 'complete' && <span className="file-status complete">✓</span>}
-              {fileProgress[file.name]?.status === 'error' && <span className="file-status error">✗</span>}
-              <div className="file-preview">
-                {renderFilePreview(file, extractedTexts[file.name])}
-              </div>
+const renderUploadedFiles = () => {
+  if (uploadedFiles.length > 0) {
+    return (
+      <div className="file-preview-container">
+        {uploadedFiles.map((file, index) => (
+          <div key={index} className="file-item">
+            <div className="file-header">
+              <span className="file-name">{file.name}</span>
+              <button className="remove-file" onClick={() => onRemoveFile(file.name)} disabled={isFileProcessing}>
+                Remove
+              </button>
             </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+            <div className="file-progress">
+              <div 
+                className="progress-bar" 
+                style={{width: `${fileProgress[file.name]?.progress || 0}%`}}
+              ></div>
+            </div>
+            {fileProgress[file.name]?.status === 'complete' && <span className="file-status complete">✓</span>}
+            {fileProgress[file.name]?.status === 'error' && <span className="file-status error">✗</span>}
+            <div className="file-preview">
+              {console.log('-----------------------------------')}
+              {console.log("File Name:", file.name)}
+              {console.log("File:", file)}
+              {console.log("Extracted Texts:", extractedTexts)}
+              {renderFilePreview(file, extractedTexts[file.name])}
+              {console.log('-----------------------------------')}
+
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
   return (
     <div className="column document-view">
@@ -156,7 +219,7 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
           onChange={handleFileChange}
           style={{ display: 'none' }}
           multiple
-          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png, .zip"
           disabled={isFileProcessing}
         />
         <div className="file-list">

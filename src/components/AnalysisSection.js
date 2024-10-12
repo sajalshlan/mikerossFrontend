@@ -14,6 +14,7 @@ const AnalysisSection = ({
   extractedTexts,
   isFileProcessing
 }) => {
+  
   const analysisTypes = ['summary', 'risky', 'conflict'];
 
   const handleAnalysisClick = (type) => {

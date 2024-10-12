@@ -12,6 +12,7 @@ const LegalAnalyzer = () => {
   const [extractedTexts, setExtractedTexts] = useState({});
   const [fileContents, setFileContents] = useState({});
   const [apiResponse, setApiResponse] = useState(null);
+  const [fileBase64, setFileBase64] = useState({});
   const [analysisResults, setAnalysisResults] = useState({
     summary: {},
     risky: {},
@@ -48,7 +49,7 @@ const LegalAnalyzer = () => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/x-icon';
     link.rel = 'shortcut icon';
-    link.href = '/favicon.ico?v=' + new Date().getTime();
+    link.href = '/favicon.ico?v=';
     document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
 
@@ -59,25 +60,28 @@ const LegalAnalyzer = () => {
     const newFileProgress = { ...fileProgress };
     const newFileContents = { ...fileContents };
     const newUploadedFiles = [...uploadedFiles];
-
+    const newFileBase64 = { ...fileBase64 };
+  
     for (const file of files) {
       newFileProgress[file.name] = { progress: 0, status: 'uploading' };
     }
     setFileProgress(newFileProgress);
-
+  
     for (const file of files) {
       try {
         const result = await uploadFile(file);
         if (result.success) {
           setApiResponse(result);
           if (result.files) {
-            // Handle ZIP file
+            // Handle ZIP file or multiple files
             Object.entries(result.files).forEach(([filename, fileData]) => {
-              console.log(filename, fileData)
               newExtractedTexts[filename] = fileData.content;
               newFileContents[filename] = fileData.content;
               newUploadedFiles.push({ name: filename });
               newFileProgress[filename] = { progress: 100, status: 'complete' };
+              if (fileData.base64) {
+                newFileBase64[filename] = fileData.base64;
+              }
             });
           } else {
             // Handle single file
@@ -85,6 +89,9 @@ const LegalAnalyzer = () => {
             newFileContents[file.name] = result.text;
             newUploadedFiles.push(file);
             newFileProgress[file.name] = { progress: 100, status: 'complete' };
+            if (result.base64) {
+              newFileBase64[file.name] = result.base64;
+            }
           }
         } else {
           console.error(`Error extracting text from ${file.name}: ${result.error}`);
@@ -95,23 +102,12 @@ const LegalAnalyzer = () => {
         newFileProgress[file.name] = { progress: 100, status: 'error' };
       }
     }
-    
     setExtractedTexts(newExtractedTexts);
     setFileContents(newFileContents);
     setUploadedFiles(newUploadedFiles);
     setFileProgress(newFileProgress);
+    setFileBase64(newFileBase64);
     setIsFileProcessing(false);
-    
-    setIsAnalysisPerformed({
-      summary: false,
-      risky: false,
-      conflict: false
-    });
-    setIsResultVisible({
-      summary: false,
-      risky: false,
-      conflict: false
-    });
   };
 
   const handleAnalysis = async (type, texts = null) => {
@@ -126,7 +122,6 @@ const LegalAnalyzer = () => {
     try {
       let results;
       if (type === 'conflict') {
-        // Use the new conflict check API
         results = await performConflictCheck(texts);
       } else {
         const textsToAnalyze = texts || extractedTexts;
@@ -192,6 +187,12 @@ const LegalAnalyzer = () => {
       return newProcessedFiles;
     });
 
+    setFileBase64(prev => {
+      const newFileBase64 = { ...prev };
+      delete newFileBase64[fileName];
+      return newFileBase64;
+    });
+
     setAnalysisResults(prev => {
       const newResults = { ...prev };
       Object.keys(newResults).forEach(type => {
@@ -235,6 +236,7 @@ const LegalAnalyzer = () => {
         extractedTexts={extractedTexts}
         onRemoveFile={removeFile}
         apiResponse={apiResponse}
+        fileBase64={fileBase64}
       />
       <AnalysisSection
         uploadedFiles={uploadedFiles}
