@@ -1,6 +1,5 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Upload, File, Menu, Loader, X } from 'lucide-react';
-import ZipPreview from './ZipPreview';
 import mammoth from 'mammoth';
 import '../styles/FileUploader.css';
 import '../styles/HamburgerMenu.css';
@@ -12,6 +11,9 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
   const [expandedFiles, setExpandedFiles] = useState({});
   const [docxPreviews, setDocxPreviews] = useState({});
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [checkedFiles, setCheckedFiles] = useState({});
+
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files); // No filtering, allows all file types including .zip
@@ -23,6 +25,29 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
       alert("No files selected. Please select valid file types.");
     }
   };
+
+  const handleFileClick = (fileName, event) => {
+    // Prevent the click from propagating to parent elements
+    event.stopPropagation();
+    setSelectedFile(fileName === selectedFile ? null : fileName);
+  };
+
+  const handleCheckboxChange = (fileName, event) => {
+    // Prevent the click from propagating to parent elements
+    event.stopPropagation();
+    setCheckedFiles(prev => ({
+      ...prev,
+      [fileName]: !prev[fileName]
+    }));
+  };
+
+  useEffect(() => {
+    if (uploadedFiles.length === 0) {
+      setSelectedFile(null);
+    } else if (selectedFile && !uploadedFiles.find(file => file.name === selectedFile)) {
+      setSelectedFile(null);
+    }
+  }, [uploadedFiles, selectedFile]);
   
 
   const toggleMenu = () => {
@@ -222,22 +247,51 @@ const renderUploadedFiles = () => {
           accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png, .zip"
           disabled={isFileProcessing}
         />
+           
         <div className="file-list">
-          {uploadedFiles.map((file, index) => (
-            <div key={index} className="file-list-item">
-              <label className="file-label">
-                <input type="checkbox" className="file-checkbox" />
-                <span className="file-name">{file.name}</span>
-              </label>
-              <button className="remove-file" onClick={() => onRemoveFile(file.name)} disabled={isFileProcessing}>
-                <X size={16} />
-              </button>
-            </div>
-          ))}
+          {uploadedFiles.length > 0 ? (
+            uploadedFiles.map((file) => (
+              <div 
+                key={file.name} 
+                className={`file-list-item ${selectedFile === file.name ? 'selected' : ''}`}
+              >
+                <div className="file-info">
+                  <input
+                    type="checkbox"
+                    className="file-checkbox"
+                    checked={checkedFiles[file.name] || false}
+                    onChange={(e) => handleCheckboxChange(file.name, e)}
+                  />
+                  <span 
+                    className="file-name" 
+                    onClick={(e) => handleFileClick(file.name, e)}
+                  >
+                    {file.name}
+                  </span>
+                </div>
+                <button 
+                  className="remove-file" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveFile(file.name);
+                  }} 
+                  disabled={isFileProcessing}
+                >
+                  Remove
+                </button>
+              </div>
+            ))
+          ) : (
+            <div className="no-files-message">No files uploaded</div>
+          )}
         </div>
       </div>
-      {renderUploadedFiles()}
-      {isFileProcessing && <p className="processing-message">Processing files...</p>}
+      
+      {selectedFile && uploadedFiles.find(file => file.name === selectedFile) && (
+        <div className="file-preview-container">
+          {renderFilePreview(uploadedFiles.find(file => file.name === selectedFile), extractedTexts[selectedFile])}
+        </div>
+      )}
     </div>
   );
 };
