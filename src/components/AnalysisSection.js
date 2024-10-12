@@ -3,8 +3,7 @@ import { Loader, ChevronDown, ChevronUp } from 'lucide-react';
 import AnalysisResult from './AnalysisResult';
 import '../styles/AnalysisSection.css';
 
-const AnalysisSection = ({ 
-  uploadedFiles, 
+const AnalysisSection = ({
   analysisResults, 
   onAnalysis, 
   isLoading, 

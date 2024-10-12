@@ -14,6 +14,7 @@ const LegalAnalyzer = () => {
   const [apiResponse, setApiResponse] = useState(null);
   const [fileBase64, setFileBase64] = useState({});
   const [checkedFiles, setCheckedFiles] = useState({});
+  // eslint-disable-next-line no-unused-vars
   const [isAnalysisInProgress, setIsAnalysisInProgress] = useState(false);
   const [analysisResults, setAnalysisResults] = useState({
     summary: {},
