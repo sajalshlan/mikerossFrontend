@@ -46,9 +46,9 @@ export const uploadFile = async (file) => {
       body: formData,
     });
     const rawResponse = await response.text();
-    console.log('Raw API response:', rawResponse);
+    // console.log('Raw API response:', rawResponse);
     const result = JSON.parse(rawResponse);
-    console.log('Parsed API response:', result);
+    // console.log('Parsed API response:', result);
     if (result.success) {
       return result;
     } else {

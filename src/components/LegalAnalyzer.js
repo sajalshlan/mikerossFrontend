@@ -13,6 +13,8 @@ const LegalAnalyzer = () => {
   const [fileContents, setFileContents] = useState({});
   const [apiResponse, setApiResponse] = useState(null);
   const [fileBase64, setFileBase64] = useState({});
+  const [checkedFiles, setCheckedFiles] = useState({});
+  const [isAnalysisInProgress, setIsAnalysisInProgress] = useState(false);
   const [analysisResults, setAnalysisResults] = useState({
     summary: {},
     risky: {},
@@ -53,7 +55,30 @@ const LegalAnalyzer = () => {
     document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
 
+  console.log("LegalAnalyzer - Initial State:", {
+    uploadedFiles,
+    fileProgress,
+    extractedTexts,
+    fileContents,
+    apiResponse,
+    fileBase64,
+    checkedFiles,
+    isAnalysisInProgress,
+    analysisResults,
+    isFileProcessing,
+    isLoading,
+    isAnalysisPerformed,
+    isResultVisible,
+    processedFiles
+  });
+
+  const handleCheckedFilesChange = (newCheckedFiles) => {
+    console.log("LegalAnalyzer - handleCheckedFilesChange", { newCheckedFiles });
+    setCheckedFiles(newCheckedFiles);
+  };
+
   const handleFileUpload = async (files) => {
+    console.log("LegalAnalyzer - handleFileUpload - Start", { files });
     setIsFileProcessing(true);
     
     const newExtractedTexts = { ...extractedTexts };
@@ -102,6 +127,13 @@ const LegalAnalyzer = () => {
         newFileProgress[file.name] = { progress: 100, status: 'error' };
       }
     }
+    console.log("LegalAnalyzer - handleFileUpload - End", {
+      newExtractedTexts,
+      newFileProgress,
+      newFileContents,
+      newUploadedFiles,
+      newFileBase64
+    });
     setExtractedTexts(newExtractedTexts);
     setFileContents(newFileContents);
     setUploadedFiles(newUploadedFiles);
@@ -127,7 +159,7 @@ const LegalAnalyzer = () => {
         const textsToAnalyze = texts || extractedTexts;
         results = {};
         const filesToProcess = Object.keys(textsToAnalyze).filter(fileName => !processedFiles[type].includes(fileName));
-
+  
         for (const fileName of filesToProcess) {
           const text = textsToAnalyze[fileName];
           if (text) {
@@ -141,17 +173,17 @@ const LegalAnalyzer = () => {
       }
       
       console.log(`Analysis results for ${type}:`, results);
-
+  
       setAnalysisResults(prev => ({
         ...prev,
-        [type]: results
+        [type]: { ...prev[type], ...results }
       }));
       
       setProcessedFiles(prev => ({
         ...prev,
-        [type]: [...prev[type], ...Object.keys(results)]
+        [type]: [...new Set([...prev[type], ...Object.keys(results)])]
       }));
-
+  
       setIsAnalysisPerformed(prev => ({ ...prev, [type]: true }));
       setIsResultVisible(prev => ({ ...prev, [type]: true }));
     } catch (error) {
@@ -209,14 +241,50 @@ const LegalAnalyzer = () => {
         delete newFiles[fileName];
         return { ...prev, files: newFiles };
       });
+
+    setIsAnalysisPerformed(prev => ({
+      summary: false,
+      risky: false,
+      conflict: Object.keys(extractedTexts).length > 1
+    }));
+    
+    setIsResultVisible(prev => ({
+      summary: false,
+      risky: false,
+      conflict: false
+    }));
+
+    setCheckedFiles(prev => {
+      const newCheckedFiles = { ...prev };
+      delete newCheckedFiles[fileName];
+      return newCheckedFiles;
+    });
     }
 
-    const remainingFiles = apiResponse && apiResponse.files 
-      ? Object.keys(apiResponse.files) 
-      : Object.keys(extractedTexts);
-    
-    if (remainingFiles.length <= 2) {
-      setAnalysisResults(prev => ({ ...prev, conflict: '' }));
+    const remainingFiles = Object.keys(extractedTexts).length - 1; // Subtract 1 because we're removing a file
+
+    if (remainingFiles === 0) {
+      setIsAnalysisPerformed({
+        summary: false,
+        risky: false,
+        conflict: false
+      });
+      setIsResultVisible({
+        summary: false,
+        risky: false,
+        conflict: false
+      });
+      setAnalysisResults({
+        summary: {},
+        risky: {},
+        conflict: ''
+      });
+      setProcessedFiles({
+        summary: [],
+        risky: [],
+        conflict: []
+      });
+      setCheckedFiles({});
     }
   };
 
@@ -237,6 +305,8 @@ const LegalAnalyzer = () => {
         onRemoveFile={removeFile}
         apiResponse={apiResponse}
         fileBase64={fileBase64}
+        onCheckedFilesChange={handleCheckedFilesChange}
+        isAnalysisInProgress={isAnalysisInProgress}
       />
       <AnalysisSection
         uploadedFiles={uploadedFiles}
@@ -248,6 +318,8 @@ const LegalAnalyzer = () => {
         onToggleVisibility={toggleAnalysisVisibility}
         extractedTexts={extractedTexts}
         isFileProcessing={isFileProcessing}
+        checkedFiles={checkedFiles}
+        processedFiles={processedFiles}
       />
       <ChatWidget extractedTexts={extractedTexts} />
     </div>

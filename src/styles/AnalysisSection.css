@@ -39,6 +39,7 @@
     margin: 5px;
     font-size: 14px;
     transition: all 0.3s ease;
+    opacity: 0.7;
   }
   
   .analysis-button:hover {
@@ -48,6 +49,7 @@
   .analysis-button:disabled {
     background-color: #95a5a6;
     cursor: not-allowed;
+    opacity: 1;
   }
   
   .analysis-button.loading {
@@ -86,4 +88,8 @@
   
   .results-content {
     margin-top: 20px;
+  }
+
+  .analysis-options {
+    margin-bottom: 0;
   }
