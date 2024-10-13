@@ -6,22 +6,11 @@ import '../styles/HamburgerMenu.css';
 
 
 const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcessing, extractedTexts, onRemoveFile, apiResponse, fileBase64, onCheckedFilesChange, isAnalysisInProgress }) => {
-  console.log("FileUploader - Props:", { uploadedFiles, fileProgress, isFileProcessing, extractedTexts, apiResponse, fileBase64, isAnalysisInProgress });
-  
   const fileInputRef = useRef(null);
   const [docxPreviews, setDocxPreviews] = useState({});
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [checkedFiles, setCheckedFiles] = useState({});
-
-  // useEffect(() => {
-  //   // Initialize checkedFiles based on uploadedFiles
-  //   const initialCheckedFiles = uploadedFiles.reduce((acc, file) => {
-  //     acc[file.name] = false;
-  //     return acc;
-  //   }, {});
-  //   setCheckedFiles(initialCheckedFiles);
-  // }, [uploadedFiles]);
 
   useEffect(() => {
     setCheckedFiles(prev => {
@@ -31,7 +20,6 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
           updatedCheckedFiles[file.name] = false;
         }
       });
-      // Remove any checked files that are no longer in uploadedFiles
       Object.keys(updatedCheckedFiles).forEach(fileName => {
         if (!uploadedFiles.some(file => file.name === fileName)) {
           delete updatedCheckedFiles[fileName];
@@ -41,35 +29,27 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
     });
   }, [uploadedFiles]);
 
-  console.log("FileUploader - Checked Files:", checkedFiles);
-
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
-    console.log("FileUploader - handleFileChange - Selected files:", files);
     
     if (files.length > 0) {
-      console.log("FileUploader - handleFileChange - Calling onFileUpload");
       onFileUpload(files);
     } else {
-      console.log("FileUploader - handleFileChange - No files selected");
       alert("No files selected. Please select valid file types.");
     }
   };
 
   const handleFileClick = (fileName, event) => {
-    // Prevent the click from propagating to parent elements
     event.stopPropagation();
     setSelectedFile(fileName === selectedFile ? null : fileName);
   };
 
   const handleCheckboxChange = (fileName, event) => {
     event.stopPropagation();
-    console.log("FileUploader - handleCheckboxChange - Before update:", { fileName, currentState: checkedFiles[fileName] });
     const newCheckedFiles = {
       ...checkedFiles,
       [fileName]: !checkedFiles[fileName]
     };
-    console.log("FileUploader - handleCheckboxChange - After update:", newCheckedFiles);
     setCheckedFiles(newCheckedFiles);
     onCheckedFilesChange(newCheckedFiles);
   };
@@ -87,13 +67,6 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // const toggleFileExpansion = (filename) => {
-  //   setExpandedFiles(prev => ({
-  //     ...prev,
-  //     [filename]: !prev[filename]
-  //   }));
-  // };
-
   const getFileTypeFromName = (fileName) => {
     const extension = fileName.split('.').pop().toLowerCase();
     const extensionMap = {
@@ -101,30 +74,19 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
       pdf: 'pdf',
       doc: 'document', docx: 'document',
       txt: 'text',
-      // Add more mappings as needed
     };
     return extensionMap[extension] || 'unknown';
   };
 
   const renderFilePreview = (file, content) => {
-    console.log("Rendering preview for:", file.name);
-    // console.log("File:", file);
-  
     const fileType = getFileTypeFromName(file.name);
-    // console.log("File Type:", fileType);
-    // console.log("MIME type:", getMimeType(fileType));
     let fileUrl;
-  
-    // console.log("File Base64 available:", !!fileBase64[file.name]);
   
     if (file instanceof Blob) {
       fileUrl = URL.createObjectURL(file);
-      console.log("Created Blob URL:", fileUrl);
     } else if (fileBase64[file.name]) {
       fileUrl = `data:${getMimeType(fileType)};base64,${fileBase64[file.name]}`;
-      console.log("Created Base64 URL:", fileUrl.substring(0, 100) + "...");
     } else {
-      console.error('Unsupported file type or missing base64 data');
       return <p>Unable to preview file</p>;
     }
   
@@ -154,11 +116,10 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
     }
   };
   
-  // Helper function to get the correct MIME type
   const getMimeType = (fileType) => {
     switch (fileType) {
       case 'image':
-        return 'image/png'; // Adjust based on actual image type if needed
+        return 'image/png';
       case 'pdf':
         return 'application/pdf';
       case 'document':
@@ -168,7 +129,6 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
     }
   };
   
-  // Update renderDocxPreview to handle both Blob and base64
   const renderDocxPreview = (file, fileUrl) => {
     if (docxPreviews[file.name]) {
       return <div className="docx-preview" dangerouslySetInnerHTML={{ __html: docxPreviews[file.name] }} />;
@@ -204,43 +164,6 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
   
     return <p>Loading docx preview...</p>;
   };
-
-// const renderUploadedFiles = () => {
-//   if (uploadedFiles.length > 0) {
-//     return (
-//       <div className="file-preview-container">
-//         {uploadedFiles.map((file, index) => (
-//           <div key={index} className="file-item">
-//             <div className="file-header">
-//               <span className="file-name">{file.name}</span>
-//               <button className="remove-file" onClick={() => onRemoveFile(file.name)} disabled={isFileProcessing}>
-//                 Remove
-//               </button>
-//             </div>
-//             <div className="file-progress">
-//               <div 
-//                 className="progress-bar" 
-//                 style={{width: `${fileProgress[file.name]?.progress || 0}%`}}
-//               ></div>
-//             </div>
-//             {fileProgress[file.name]?.status === 'complete' && <span className="file-status complete">✓</span>}
-//             {fileProgress[file.name]?.status === 'error' && <span className="file-status error">✗</span>}
-//             <div className="file-preview">
-//               {/* {console.log('-----------------------------------')}
-//               {console.log("File Name:", file.name)}
-//               {console.log("File:", file)}
-//               {console.log("Extracted Texts:", extractedTexts)} */}
-//               {renderFilePreview(file, extractedTexts[file.name])}
-//               {/* {console.log('-----------------------------------')} */}
-
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-//     );
-//   }
-//   return null;
-// };
 
 const renderPlaceholder = () => (
   <div className="file-preview-placeholder">

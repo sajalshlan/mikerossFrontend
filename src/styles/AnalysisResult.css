@@ -77,3 +77,37 @@
 .result-item strong {
   color: #3498db;
 }
+
+.result-content h1,
+.result-content h2,
+.result-content h3,
+.result-content h4,
+.result-content h5,
+.result-content h6 {
+  color: #3498db;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.result-content ol {
+  list-style-type: decimal;
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.result-content li {
+  margin-bottom: 5px;
+}
+
+.result-content pre {
+  background-color: #34495e;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+}
+
+.result-content code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  color: #e74c3c;
+}

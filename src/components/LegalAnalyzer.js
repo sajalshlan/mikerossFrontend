@@ -56,30 +56,11 @@ const LegalAnalyzer = () => {
     document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
 
-  console.log("LegalAnalyzer - Initial State:", {
-    uploadedFiles,
-    fileProgress,
-    extractedTexts,
-    fileContents,
-    apiResponse,
-    fileBase64,
-    checkedFiles,
-    isAnalysisInProgress,
-    analysisResults,
-    isFileProcessing,
-    isLoading,
-    isAnalysisPerformed,
-    isResultVisible,
-    processedFiles
-  });
-
   const handleCheckedFilesChange = (newCheckedFiles) => {
-    console.log("LegalAnalyzer - handleCheckedFilesChange", { newCheckedFiles });
     setCheckedFiles(newCheckedFiles);
   };
 
   const handleFileUpload = async (files) => {
-    console.log("LegalAnalyzer - handleFileUpload - Start", { files });
     setIsFileProcessing(true);
     
     const newExtractedTexts = { ...extractedTexts };
@@ -120,21 +101,12 @@ const LegalAnalyzer = () => {
             }
           }
         } else {
-          console.error(`Error extracting text from ${file.name}: ${result.error}`);
           newFileProgress[file.name] = { progress: 100, status: 'error' };
         }
       } catch (error) {
-        console.error(`Error uploading ${file.name}:`, error);
         newFileProgress[file.name] = { progress: 100, status: 'error' };
       }
     }
-    console.log("LegalAnalyzer - handleFileUpload - End", {
-      newExtractedTexts,
-      newFileProgress,
-      newFileContents,
-      newUploadedFiles,
-      newFileBase64
-    });
     setExtractedTexts(newExtractedTexts);
     setFileContents(newFileContents);
     setUploadedFiles(newUploadedFiles);
@@ -145,7 +117,6 @@ const LegalAnalyzer = () => {
 
   const handleAnalysis = async (type, texts = null) => {
     if (analysisInProgress.current[type]) {
-      console.log(`${type} analysis is already in progress, returning`);
       return;
     }
     
@@ -164,7 +135,6 @@ const LegalAnalyzer = () => {
         for (const fileName of filesToProcess) {
           const text = textsToAnalyze[fileName];
           if (text) {
-            console.log(`Performing ${type} analysis for ${fileName}...`);
             const result = await performAnalysis(type, text);
             if (result) {
               results[fileName] = result;
@@ -172,13 +142,12 @@ const LegalAnalyzer = () => {
           }
         }
       }
-      
-      console.log(`Analysis results for ${type}:`, results);
   
       setAnalysisResults(prev => ({
         ...prev,
-        [type]: { ...prev[type], ...results }
+        [type]: type === 'conflict' ? results : { ...prev[type], ...results }
       }));
+  
       
       setProcessedFiles(prev => ({
         ...prev,
@@ -188,7 +157,7 @@ const LegalAnalyzer = () => {
       setIsAnalysisPerformed(prev => ({ ...prev, [type]: true }));
       setIsResultVisible(prev => ({ ...prev, [type]: true }));
     } catch (error) {
-      console.error(`Error performing ${type} analysis:`, error);
+      // Handle error
     } finally {
       setIsLoading(prev => ({ ...prev, [type]: false }));
       analysisInProgress.current[type] = false;

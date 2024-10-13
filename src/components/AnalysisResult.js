@@ -2,26 +2,16 @@ import React from 'react';
 import '../styles/AnalysisResult.css'
 
 const AnalysisResult = ({ type, data, fileCount }) => {
+  console.log('AnalysisResult props:', { type, data, fileCount });
+  
 
   const renderContent = (content) => {
+    // console.log('renderContent called with:', content);
+    
     if (typeof content === 'string') {
       return (
         <div className="result-content">
-          {content.split('\n').map((line, index) => {
-            if (line.trim().startsWith('•')) {
-              return <li key={index}>{line.substring(1).trim()}</li>;
-            } else if (line.includes('**')) {
-              return (
-                <p key={index}>
-                  {line.split('**').map((part, i) => 
-                    i % 2 === 0 ? part : <strong key={i}>{part}</strong>
-                  )}
-                </p>
-              );
-            } else {
-              return <p key={index}>{line}</p>;
-            }
-          })}
+          {content.split('\n').map((line, index) => renderLine(line, index))}
         </div>
       );
     } else if (Array.isArray(content)) {
@@ -46,17 +36,32 @@ const AnalysisResult = ({ type, data, fileCount }) => {
     return content;
   };
 
-  const getTitle = () => {
-    switch (type) {
-      case 'summary':
-        return 'Document Summary';
-      case 'risky':
-        return 'Risk Analysis';
-      case 'conflict':
-        return 'Conflict Check Results';
-      default:
-        return 'Analysis Results';
+  const renderLine = (line, index) => {
+    // console.log('renderLine called with:', { line, index });
+    
+    if (line.trim().startsWith('•')) {
+      return <li key={index}>{line.substring(1).trim()}</li>;
+    } else if (line.includes('**')) {
+      return (
+        <p key={index}>
+          {line.split('**').map((part, i) => 
+            i % 2 === 0 ? part : <strong key={i}>{part}</strong>
+          )}
+        </p>
+      );
+    } else {
+      return <p key={index}>{line}</p>;
     }
+  };
+
+  const titleMap = {
+    summary: 'Document Summary',
+    risky: 'Risk Analysis',
+    conflict: 'Conflict Check Results',
+  };
+
+  const getTitle = () => {
+    return titleMap[type] || 'Analysis Results';
   };
 
   // Only render the component if it's not a conflict check or if there are multiple files
@@ -64,6 +69,8 @@ const AnalysisResult = ({ type, data, fileCount }) => {
     return null;
   }
 
+  console.log('AnalysisResult about to render');
+  
   return (
     <div className="analysis-result">
       <div className="result-header">

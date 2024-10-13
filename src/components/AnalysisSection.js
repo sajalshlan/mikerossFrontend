@@ -15,7 +15,7 @@ const AnalysisSection = ({
   checkedFiles,
   processedFiles
 }) => {
-
+  console.log('AnalysisSection analysisResults:', analysisResults);
   const analysisTypes = ['summary', 'risky', 'conflict'];
   const hasFiles = Object.keys(extractedTexts).length > 0;
   const hasMultipleFiles = Object.keys(extractedTexts).length > 1;
@@ -35,9 +35,9 @@ const AnalysisSection = ({
 
     const unprocessedFiles = selectedFiles.filter(fileName => !processedFiles[type].includes(fileName));
 
-    console.log('Selected files:', selectedFiles);
-    console.log('Unprocessed files:', unprocessedFiles);
-    console.log('Is toggling visibility:', unprocessedFiles.length === 0);
+    // console.log('Selected files:', selectedFiles);
+    // console.log('Unprocessed files:', unprocessedFiles);
+    // console.log('Is toggling visibility:', unprocessedFiles.length === 0);
 
     if (unprocessedFiles.length === 0) {
       // All selected files have been processed, just toggle visibility
