@@ -5,35 +5,17 @@ import '../styles/FileUploader.css';
 import '../styles/HamburgerMenu.css';
 
 
-const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcessing, extractedTexts, onRemoveFile, apiResponse, fileBase64, onCheckedFilesChange, isAnalysisInProgress }) => {
+const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress }) => {
   const fileInputRef = useRef(null);
   const [docxPreviews, setDocxPreviews] = useState({});
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [checkedFiles, setCheckedFiles] = useState({});
-
-  useEffect(() => {
-    setCheckedFiles(prev => {
-      const updatedCheckedFiles = { ...prev };
-      uploadedFiles.forEach(file => {
-        if (!(file.name in updatedCheckedFiles)) {
-          updatedCheckedFiles[file.name] = false;
-        }
-      });
-      Object.keys(updatedCheckedFiles).forEach(fileName => {
-        if (!uploadedFiles.some(file => file.name === fileName)) {
-          delete updatedCheckedFiles[fileName];
-        }
-      });
-      return updatedCheckedFiles;
-    });
-  }, [uploadedFiles]);
 
   const handleFileChange = (event) => {
-    const files = Array.from(event.target.files);
+    const newFiles = Array.from(event.target.files);
     
-    if (files.length > 0) {
-      onFileUpload(files);
+    if (newFiles.length > 0) {
+      onFileUpload(newFiles);
     } else {
       alert("No files selected. Please select valid file types.");
     }
@@ -46,28 +28,26 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
 
   const handleCheckboxChange = (fileName, event) => {
     event.stopPropagation();
-    const newCheckedFiles = {
-      ...checkedFiles,
-      [fileName]: !checkedFiles[fileName]
-    };
-    setCheckedFiles(newCheckedFiles);
-    onCheckedFilesChange(newCheckedFiles);
+    onCheckedFilesChange({
+      ...Object.fromEntries(Object.entries(files).map(([name, file]) => [name, file.isChecked])),
+      [fileName]: !files[fileName].isChecked
+    });
   };
 
   useEffect(() => {
-    if (uploadedFiles.length === 0) {
+    if (Object.keys(files).length === 0) {
       setSelectedFile(null);
-    } else if (selectedFile && !uploadedFiles.find(file => file.name === selectedFile)) {
+    } else if (selectedFile && !files[selectedFile]) {
       setSelectedFile(null);
     }
-  }, [uploadedFiles, selectedFile]);
-  
+  }, [files, selectedFile]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const getFileTypeFromName = (fileName) => {
+    if (!fileName) return 'unknown';
     const extension = fileName.split('.').pop().toLowerCase();
     const extensionMap = {
       jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', bmp: 'image',
@@ -78,24 +58,25 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
     return extensionMap[extension] || 'unknown';
   };
 
-  const renderFilePreview = (file, content) => {
+  const renderFilePreview = (fileObj) => {
+    const file = fileObj.file; // Access the actual File object
     const fileType = getFileTypeFromName(file.name);
     let fileUrl;
-  
+
     if (file instanceof Blob) {
       fileUrl = URL.createObjectURL(file);
-    } else if (fileBase64[file.name]) {
-      fileUrl = `data:${getMimeType(fileType)};base64,${fileBase64[file.name]}`;
+    } else if (fileObj.base64) {
+      fileUrl = `data:${getMimeType(fileType)};base64,${fileObj.base64}`;
     } else {
       return <p>Unable to preview file</p>;
     }
-  
+
     const cleanup = () => {
       if (file instanceof Blob) {
         URL.revokeObjectURL(fileUrl);
       }
     };
-  
+
     switch (fileType) {
       case 'image':
         return <img src={fileUrl} alt={file.name} className="file-preview-image" onLoad={cleanup} />;
@@ -110,7 +91,7 @@ const FileUploader = ({ onFileUpload, uploadedFiles, fileProgress, isFileProcess
             <File size={48} />
             <p>Preview not available. Showing file name:</p>
             <pre className="file-name">{file.name || 'Unnamed file'}</pre>
-            {content && <pre className="extracted-text">{content}</pre>}
+            {fileObj.extractedText && <pre className="extracted-text">{fileObj.extractedText}</pre>}
           </div>
         );
     }
@@ -210,33 +191,32 @@ return (
         />
            
         <div className="file-list">
-          {uploadedFiles.length > 0 ? (
-            uploadedFiles.map((file) => (
-
+          {Object.keys(files).length > 0 ? (
+            Object.entries(files).map(([fileName, file]) => (
               <div 
-                key={file.name} 
-                className={`file-list-item ${selectedFile === file.name ? 'selected' : ''}`}
+                key={fileName} 
+                className={`file-list-item ${selectedFile === fileName ? 'selected' : ''}`}
               >
                 <div className="file-info">
                   <input
                     type="checkbox"
                     className="file-checkbox"
-                    checked={checkedFiles[file.name] || false}
-                    onChange={(e) => handleCheckboxChange(file.name, e)}
+                    checked={file.isChecked}
+                    onChange={(e) => handleCheckboxChange(fileName, e)}
                     disabled={isAnalysisInProgress}
                   />
                   <span 
                     className="file-name" 
-                    onClick={(e) => handleFileClick(file.name, e)}
+                    onClick={(e) => handleFileClick(fileName, e)}
                   >
-                    {file.name}
+                    {fileName}
                   </span>
                 </div>
                 <button 
                   className="remove-file" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRemoveFile(file.name);
+                    onRemoveFile(fileName);
                   }} 
                   disabled={isFileProcessing}
                 >
@@ -250,9 +230,9 @@ return (
         </div>
       </div>
       
-      {selectedFile && uploadedFiles.find(file => file.name === selectedFile) ? (
+      {selectedFile && files[selectedFile] ? (
         <div className="file-preview-container">
-          {renderFilePreview(uploadedFiles.find(file => file.name === selectedFile), extractedTexts[selectedFile])}
+          {renderFilePreview(files[selectedFile])}
         </div>
       ) : (
         renderPlaceholder()

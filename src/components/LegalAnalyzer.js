@@ -7,41 +7,13 @@ import { performAnalysis, uploadFile, performConflictCheck } from '../api';
 import '../styles/App.css';
 
 const LegalAnalyzer = () => {
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [fileProgress, setFileProgress] = useState({});
-  const [extractedTexts, setExtractedTexts] = useState({});
-  const [fileContents, setFileContents] = useState({});
-  const [apiResponse, setApiResponse] = useState(null);
-  const [fileBase64, setFileBase64] = useState({});
-  const [checkedFiles, setCheckedFiles] = useState({});
-  // eslint-disable-next-line no-unused-vars
-  const [isAnalysisInProgress, setIsAnalysisInProgress] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState({
-    summary: {},
-    risky: {},
-    conflict: ''
+  const [files, setFiles] = useState({});
+  const [analysisState, setAnalysisState] = useState({
+    summary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
+    risky: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
+    conflict: { isLoading: false, isPerformed: false, isVisible: false, result: '' }
   });
   const [isFileProcessing, setIsFileProcessing] = useState(false);
-  const [isLoading, setIsLoading] = useState({
-    summary: false,
-    risky: false,
-    conflict: false
-  });
-  const [isAnalysisPerformed, setIsAnalysisPerformed] = useState({
-    summary: false,
-    risky: false,
-    conflict: false
-  });
-  const [isResultVisible, setIsResultVisible] = useState({
-    summary: false,
-    risky: false,
-    conflict: false
-  });
-  const [processedFiles, setProcessedFiles] = useState({
-    summary: [],
-    risky: [],
-    conflict: []
-  });
   const analysisInProgress = useRef({
     summary: false,
     risky: false,
@@ -57,61 +29,66 @@ const LegalAnalyzer = () => {
   }, []);
 
   const handleCheckedFilesChange = (newCheckedFiles) => {
-    setCheckedFiles(newCheckedFiles);
+    setFiles(prev => {
+      const updatedFiles = { ...prev };
+      Object.keys(newCheckedFiles).forEach(fileName => {
+        if (updatedFiles[fileName]) {
+          updatedFiles[fileName].isChecked = newCheckedFiles[fileName];
+        }
+      });
+      return updatedFiles;
+    });
   };
 
-  const handleFileUpload = async (files) => {
+  const handleFileUpload = async (newFiles) => {
     setIsFileProcessing(true);
     
-    const newExtractedTexts = { ...extractedTexts };
-    const newFileProgress = { ...fileProgress };
-    const newFileContents = { ...fileContents };
-    const newUploadedFiles = [...uploadedFiles];
-    const newFileBase64 = { ...fileBase64 };
-  
-    for (const file of files) {
-      newFileProgress[file.name] = { progress: 0, status: 'uploading' };
+    const updatedFiles = { ...files };
+    
+    for (const file of newFiles) {
+      updatedFiles[file.name] = { 
+        file, 
+        progress: { progress: 0, status: 'uploading' }, 
+        isChecked: false 
+      };
     }
-    setFileProgress(newFileProgress);
-  
-    for (const file of files) {
+    
+    setFiles(updatedFiles);
+
+    for (const file of newFiles) {
       try {
         const result = await uploadFile(file);
         if (result.success) {
-          setApiResponse(result);
           if (result.files) {
             // Handle ZIP file or multiple files
             Object.entries(result.files).forEach(([filename, fileData]) => {
-              newExtractedTexts[filename] = fileData.content;
-              newFileContents[filename] = fileData.content;
-              newUploadedFiles.push({ name: filename });
-              newFileProgress[filename] = { progress: 100, status: 'complete' };
-              if (fileData.base64) {
-                newFileBase64[filename] = fileData.base64;
-              }
+              updatedFiles[filename] = {
+                ...updatedFiles[filename],
+                extractedText: fileData.content,
+                progress: { progress: 100, status: 'complete' },
+                base64: fileData.base64
+              };
             });
           } else {
             // Handle single file
-            newExtractedTexts[file.name] = result.text;
-            newFileContents[file.name] = result.text;
-            newUploadedFiles.push(file);
-            newFileProgress[file.name] = { progress: 100, status: 'complete' };
-            if (result.base64) {
-              newFileBase64[file.name] = result.base64;
+            if (file && result && result.text) {
+              updatedFiles[file.name] = {
+                ...updatedFiles[file.name],
+                extractedText: result.text,
+                progress: { progress: 100, status: 'complete' },
+                base64: result.base64
+              };
             }
           }
         } else {
-          newFileProgress[file.name] = { progress: 100, status: 'error' };
+          updatedFiles[file.name].progress = { progress: 100, status: 'error' };
         }
       } catch (error) {
-        newFileProgress[file.name] = { progress: 100, status: 'error' };
+        updatedFiles[file.name].progress = { progress: 100, status: 'error' };
       }
     }
-    setExtractedTexts(newExtractedTexts);
-    setFileContents(newFileContents);
-    setUploadedFiles(newUploadedFiles);
-    setFileProgress(newFileProgress);
-    setFileBase64(newFileBase64);
+    
+    setFiles(updatedFiles);
     setIsFileProcessing(false);
   };
 
@@ -121,140 +98,100 @@ const LegalAnalyzer = () => {
     }
     
     analysisInProgress.current[type] = true;
-    setIsLoading(prev => ({ ...prev, [type]: true }));
+    setAnalysisState(prev => ({
+      ...prev,
+      [type]: { ...prev[type], isLoading: true }
+    }));
     
     try {
       let results;
       if (type === 'conflict') {
         results = await performConflictCheck(texts);
+        console.log("##########", results);
       } else {
-        const textsToAnalyze = texts || extractedTexts;
+        const textsToAnalyze = texts || Object.fromEntries(
+          Object.entries(files)
+            .filter(([_, file]) => file.isChecked)
+            .map(([fileName, file]) => [fileName, file.extractedText])
+        );
         results = {};
-        const filesToProcess = Object.keys(textsToAnalyze).filter(fileName => !processedFiles[type].includes(fileName));
+
+        const filesToProcess = Object.keys(textsToAnalyze).filter(
+          fileName => !analysisState[type].result[fileName]
+        );
+
+        console.log("filesToProcess", filesToProcess);
   
         for (const fileName of filesToProcess) {
           const text = textsToAnalyze[fileName];
           if (text) {
             const result = await performAnalysis(type, text);
+            console.log("performing analysis", fileName);
             if (result) {
               results[fileName] = result;
+              console.log('##########################');
+              console.log(fileName, result);
             }
           }
         }
       }
-  
-      setAnalysisResults(prev => ({
+      setAnalysisState(prev => ({
         ...prev,
-        [type]: type === 'conflict' ? results : { ...prev[type], ...results }
+        [type]: {
+          ...prev[type],
+          isLoading: false,
+          isPerformed: true,
+          isVisible: true,
+          result: type === 'conflict' ? results : { ...prev[type].result, ...results }
+        }
       }));
-  
-      
-      setProcessedFiles(prev => ({
-        ...prev,
-        [type]: [...new Set([...prev[type], ...Object.keys(results)])]
-      }));
-  
-      setIsAnalysisPerformed(prev => ({ ...prev, [type]: true }));
-      setIsResultVisible(prev => ({ ...prev, [type]: true }));
     } catch (error) {
       // Handle error
+      setAnalysisState(prev => ({
+        ...prev,
+        [type]: { ...prev[type], isLoading: false }
+      }));
     } finally {
-      setIsLoading(prev => ({ ...prev, [type]: false }));
       analysisInProgress.current[type] = false;
     }
   };
 
   const toggleAnalysisVisibility = (type) => {
-    setIsResultVisible(prev => ({ ...prev, [type]: !prev[type] }));
+    setAnalysisState(prev => ({
+      ...prev,
+      [type]: { ...prev[type], isVisible: !prev[type].isVisible }
+    }));
   };
 
   const removeFile = (fileName) => {
-    setUploadedFiles(prevFiles => prevFiles.filter(file => file.name !== fileName));
-    setFileProgress(prev => {
-      const newProgress = { ...prev };
-      delete newProgress[fileName];
-      return newProgress;
-    });
-    setExtractedTexts(prev => {
-      const newTexts = { ...prev };
-      delete newTexts[fileName];
-      return newTexts;
-    });
-    
-    setProcessedFiles(prev => {
-      const newProcessedFiles = { ...prev };
-      Object.keys(newProcessedFiles).forEach(type => {
-        newProcessedFiles[type] = newProcessedFiles[type].filter(file => file !== fileName);
-      });
-      return newProcessedFiles;
+    setFiles(prev => {
+      const updatedFiles = { ...prev };
+      delete updatedFiles[fileName];
+      return updatedFiles;
     });
 
-    setFileBase64(prev => {
-      const newFileBase64 = { ...prev };
-      delete newFileBase64[fileName];
-      return newFileBase64;
-    });
-
-    setAnalysisResults(prev => {
-      const newResults = { ...prev };
-      Object.keys(newResults).forEach(type => {
+    setAnalysisState(prev => {
+      const updatedState = { ...prev };
+      Object.keys(updatedState).forEach(type => {
         if (type !== 'conflict') {
-          delete newResults[type][fileName];
+          const { [fileName]: _, ...rest } = updatedState[type].result;
+          updatedState[type] = {
+            ...updatedState[type],
+            result: rest,
+            isPerformed: Object.keys(rest).length > 0,
+            isVisible: Object.keys(rest).length > 0
+          };
         }
       });
-      return newResults;
+      return updatedState;
     });
 
-    if (apiResponse && apiResponse.files) {
-      setApiResponse(prev => {
-        const newFiles = { ...prev.files };
-        delete newFiles[fileName];
-        return { ...prev, files: newFiles };
+    if (Object.keys(files).length === 1) {
+      setAnalysisState({
+        summary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
+        risky: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
+        conflict: { isLoading: false, isPerformed: false, isVisible: false, result: '' }
       });
-
-    setIsAnalysisPerformed(prev => ({
-      summary: false,
-      risky: false,
-      conflict: Object.keys(extractedTexts).length > 1
-    }));
-    
-    setIsResultVisible(prev => ({
-      summary: false,
-      risky: false,
-      conflict: false
-    }));
-
-    setCheckedFiles(prev => {
-      const newCheckedFiles = { ...prev };
-      delete newCheckedFiles[fileName];
-      return newCheckedFiles;
-    });
-    }
-
-    const remainingFiles = Object.keys(extractedTexts).length - 1; // Subtract 1 because we're removing a file
-
-    if (remainingFiles === 0) {
-      setIsAnalysisPerformed({
-        summary: false,
-        risky: false,
-        conflict: false
-      });
-      setIsResultVisible({
-        summary: false,
-        risky: false,
-        conflict: false
-      });
-      setAnalysisResults({
-        summary: {},
-        risky: {},
-        conflict: ''
-      });
-      setProcessedFiles({
-        summary: [],
-        risky: [],
-        conflict: []
-      });
-      setCheckedFiles({});
     }
   };
 
@@ -268,30 +205,22 @@ const LegalAnalyzer = () => {
       </Helmet>
       <FileUploader
         onFileUpload={handleFileUpload}
-        uploadedFiles={uploadedFiles}
-        fileProgress={fileProgress}
+        files={files}
         isFileProcessing={isFileProcessing}
-        extractedTexts={extractedTexts}
         onRemoveFile={removeFile}
-        apiResponse={apiResponse}
-        fileBase64={fileBase64}
         onCheckedFilesChange={handleCheckedFilesChange}
-        isAnalysisInProgress={isAnalysisInProgress}
+        isAnalysisInProgress={Object.values(analysisState).some(state => state.isLoading)}
       />
       <AnalysisSection
-        uploadedFiles={uploadedFiles}
-        analysisResults={analysisResults}
+        files={files}
+        analysisState={analysisState}
         onAnalysis={handleAnalysis}
-        isLoading={isLoading}
-        isAnalysisPerformed={isAnalysisPerformed}
-        isResultVisible={isResultVisible}
         onToggleVisibility={toggleAnalysisVisibility}
-        extractedTexts={extractedTexts}
         isFileProcessing={isFileProcessing}
-        checkedFiles={checkedFiles}
-        processedFiles={processedFiles}
       />
-      <ChatWidget extractedTexts={extractedTexts} />
+      <ChatWidget extractedTexts={Object.fromEntries(
+        Object.entries(files).map(([fileName, file]) => [fileName, file.extractedText])
+      )} />
     </div>
   );
 };

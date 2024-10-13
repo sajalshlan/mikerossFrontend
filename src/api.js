@@ -1,7 +1,7 @@
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export const performAnalysis = async (type, text) => {
-  console.log(`Performing ${type} analysis...`);
+  console.log(`[API] Performing ${type} analysis...`);
   try {
     const response = await fetch(`${API_BASE_URL}/perform_analysis/`, {
       method: 'POST',
@@ -11,16 +11,16 @@ export const performAnalysis = async (type, text) => {
       body: JSON.stringify({ analysis_type: type, text }),
     });
     const result = await response.json();
-    console.log(`${type} analysis result:`, result);
+    console.log(`[API] ${type} analysis result:`, result);
     return result.success ? result.result : null;
   } catch (error) {
-    console.error(`Error performing ${type} analysis:`, error);
+    console.error(`[API] Error performing ${type} analysis:`, error);
     return null;
   }
 };
 
 export const performConflictCheck = async (texts) => {
-  console.log('Performing conflict check...');
+  console.log('[API] Performing conflict check...');
   try {
     const response = await fetch(`${API_BASE_URL}/perform_conflict_check/`, {
       method: 'POST',
@@ -30,10 +30,10 @@ export const performConflictCheck = async (texts) => {
       body: JSON.stringify({ texts }),
     });
     const result = await response.json();
-    console.log('Conflict check result:', result);
+    console.log('[API] Conflict check result:', result);
     return result.success ? result.result : null;
   } catch (error) {
-    console.error('Error performing conflict check:', error);
+    console.error('[API] Error performing conflict check:', error);
     return null;
   }
 };
@@ -46,16 +46,16 @@ export const uploadFile = async (file) => {
       body: formData,
     });
     const rawResponse = await response.text();
-    // console.log('Raw API response:', rawResponse);
+    // console.log('[API] Raw API response:', rawResponse);
     const result = JSON.parse(rawResponse);
-    // console.log('Parsed API response:', result);
+    // console.log('[API] Parsed API response:', result);
     if (result.success) {
       return result;
     } else {
       throw new Error(result.error || 'Unknown error occurred during file upload');
     }
   } catch (error) {
-    console.error(`Error uploading ${file.name}:`, error);
+    console.error(`[API] Error uploading ${file.name}:`, error);
     return {
       success: false,
       error: error.message

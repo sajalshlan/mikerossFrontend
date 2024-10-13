@@ -2,7 +2,7 @@ import React from 'react';
 import '../styles/AnalysisResult.css'
 
 const AnalysisResult = ({ type, data, fileCount }) => {
-  console.log('AnalysisResult props:', { type, data, fileCount });
+  // console.log('AnalysisResult props:', { type, data, fileCount });
   
 
   const renderContent = (content) => {
@@ -69,7 +69,7 @@ const AnalysisResult = ({ type, data, fileCount }) => {
     return null;
   }
 
-  console.log('AnalysisResult about to render');
+  // console.log('AnalysisResult about to render');
   
   return (
     <div className="analysis-result">
