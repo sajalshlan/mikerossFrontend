@@ -15,13 +15,13 @@ const AnalysisSection = ({
   const hasMultipleFiles = Object.keys(files).length > 1;
 
   const handleAnalysisClick = (type) => {
-    console.log("-----------------------------------");
-    console.log("files", files);  
-    console.log("analysisState", analysisState);
-    console.log("isFileProcessing", isFileProcessing);
-    console.log("hasFiles", hasFiles);
-    console.log("hasMultipleFiles", hasMultipleFiles);
-    console.log("-----------------------------------");
+    // console.log("-----------------------------------");
+    // console.log("files", files);  
+    // console.log("analysisState", analysisState);
+    // console.log("isFileProcessing", isFileProcessing);
+    // console.log("hasFiles", hasFiles);
+    // console.log("hasMultipleFiles", hasMultipleFiles);
+    // console.log("-----------------------------------");
     const selectedFiles = Object.entries(files)
       .filter(([_, file]) => file.isChecked)
       .map(([fileName, _]) => fileName);
@@ -39,16 +39,15 @@ const AnalysisSection = ({
       return;
     }
 
-    const unprocessedFiles = type === 'conflict'
-      ? (analysisState[type].result ? [] : selectedFiles)
-      : selectedFiles.filter(fileName => !analysisState[type].result[fileName]);
+    const unprocessedFiles = selectedFiles.filter(fileName => !analysisState[type].result[fileName]);
     console.log("unprocessedFiles", unprocessedFiles);
 
     if (unprocessedFiles.length === 0) {
       // All selected files have been processed, just toggle visibility
       onToggleVisibility(type);
-      console.log("toggle button clicked");
-      console.log("all files processed");
+      // console.log("toggle button clicked");
+      // console.log("all files processed");
+
 
     } else {
       // There are unprocessed files, perform analysis on them

@@ -96,6 +96,8 @@ const LegalAnalyzer = () => {
     if (analysisInProgress.current[type]) {
       return;
     }
+
+    console.log("handleAnalysis", type, texts);
     
     analysisInProgress.current[type] = true;
     setAnalysisState(prev => ({
@@ -105,23 +107,34 @@ const LegalAnalyzer = () => {
     
     try {
       let results;
+
       if (type === 'conflict') {
-        results = await performConflictCheck(texts);
-        console.log("##########", results);
+        const textsToAnalyze = Object.fromEntries(
+          Object.entries(files)
+            .filter(([_, file]) => file.isChecked)
+            .map(([fileName, file]) => [fileName, file.extractedText])
+        );
+        console.log("textsToAnalyze", textsToAnalyze);
+        const conflictResults = await performConflictCheck(textsToAnalyze);
+
+        // Assign the conflict check results to each file
+        results = Object.fromEntries(
+          Object.keys(textsToAnalyze).map(fileName => [fileName, conflictResults])
+        );
+
       } else {
+        results = {};
         const textsToAnalyze = texts || Object.fromEntries(
           Object.entries(files)
             .filter(([_, file]) => file.isChecked)
             .map(([fileName, file]) => [fileName, file.extractedText])
         );
-        results = {};
-
         const filesToProcess = Object.keys(textsToAnalyze).filter(
           fileName => !analysisState[type].result[fileName]
         );
 
         console.log("filesToProcess", filesToProcess);
-  
+
         for (const fileName of filesToProcess) {
           const text = textsToAnalyze[fileName];
           if (text) {
@@ -135,6 +148,7 @@ const LegalAnalyzer = () => {
           }
         }
       }
+
       setAnalysisState(prev => ({
         ...prev,
         [type]: {
@@ -142,7 +156,7 @@ const LegalAnalyzer = () => {
           isLoading: false,
           isPerformed: true,
           isVisible: true,
-          result: type === 'conflict' ? results : { ...prev[type].result, ...results }
+          result: { ...prev[type].result, ...results }
         }
       }));
     } catch (error) {
