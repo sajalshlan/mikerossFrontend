@@ -2,13 +2,21 @@ import React from 'react';
 import '../styles/AnalysisResult.css'
 
 const AnalysisResult = ({ type, data, fileCount }) => {
-  // console.log('AnalysisResult props:', { type, data, fileCount });
+  console.log('AnalysisResult props:', { type, data, fileCount });
   
 
   const renderContent = (content) => {
-    // console.log('renderContent called with:', content);
+    console.log("type", typeof content)
     
-    if (typeof content === 'string') {
+    if (type === 'conflict') {
+      // For conflict check, display only one result
+      const conflictResult = Object.values(content)[0];
+      return (
+        <div className="result-content">
+          {conflictResult.split('\n').map((line, index) => renderLine(line, index))}
+        </div>
+      );
+    } else if (typeof content === 'string') {
       return (
         <div className="result-content">
           {content.split('\n').map((line, index) => renderLine(line, index))}
@@ -78,7 +86,9 @@ const AnalysisResult = ({ type, data, fileCount }) => {
       </div>
       <div className="result-body">
         {type === 'conflict' ? (
-          renderContent(data)
+          <div className="file-result">
+            {renderContent(data)}
+          </div>
         ) : (
           Object.entries(data).map(([filename, content]) => (
             <div key={filename} className="file-result">
