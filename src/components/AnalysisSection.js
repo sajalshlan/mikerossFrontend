@@ -5,6 +5,7 @@ import '../styles/AnalysisSection.css';
 
 const AnalysisSection = ({
   files,
+  selectedFiles,
   analysisState,
   onAnalysis,
   onToggleVisibility,
@@ -15,18 +16,10 @@ const AnalysisSection = ({
   const hasMultipleFiles = Object.keys(files).length > 1;
 
   const handleAnalysisClick = (type) => {
-    // console.log("-----------------------------------");
-    // console.log("files", files);  
-    // console.log("analysisState", analysisState);
-    // console.log("isFileProcessing", isFileProcessing);
-    // console.log("hasFiles", hasFiles);
-    // console.log("hasMultipleFiles", hasMultipleFiles);
-    // console.log("-----------------------------------");
     const selectedFiles = Object.entries(files)
       .filter(([_, file]) => file.isChecked)
       .map(([fileName, _]) => fileName);
 
-    // console.log("A", analysisState[type]);
     console.log("selectedFiles", selectedFiles);
 
     if (selectedFiles.length === 0) {
@@ -39,26 +32,33 @@ const AnalysisSection = ({
       return;
     }
 
-    const unprocessedFiles = selectedFiles.filter(fileName => !analysisState[type].result[fileName]);
-    console.log("unprocessedFiles", unprocessedFiles);
+    const previousSelectedFiles = analysisState[type].selectedFiles || [];
+    const selectedFilesChanged = JSON.stringify(selectedFiles.sort()) !== JSON.stringify(previousSelectedFiles.sort());
 
-    if (unprocessedFiles.length === 0) {
-      // All selected files have been processed, just toggle visibility
-      onToggleVisibility(type);
-      // console.log("toggle button clicked");
-      // console.log("all files processed");
-
-
+    if (type === 'conflict') {
+      if (selectedFilesChanged) {
+        // Perform conflict analysis on all selected files
+        const selectedTexts = selectedFiles.reduce((acc, fileName) => {
+          acc[fileName] = files[fileName].extractedText;
+          return acc;
+        }, {});
+        onAnalysis(type, selectedTexts);
+      } else {
+        // Just toggle visibility if selected files haven't changed
+        onToggleVisibility(type);
+      }
     } else {
-      // There are unprocessed files, perform analysis on them
-      const selectedTexts = unprocessedFiles.reduce((acc, fileName) => {
-        acc[fileName] = files[fileName].extractedText;
-        return acc;
-      }, {});
-
-      console.log("selectedTexts", selectedTexts);
-
-      onAnalysis(type, selectedTexts);
+      // For non-conflict types, keep the existing logic
+      const unprocessedFiles = selectedFiles.filter(fileName => !analysisState[type].result[fileName]);
+      if (unprocessedFiles.length === 0) {
+        onToggleVisibility(type);
+      } else {
+        const selectedTexts = unprocessedFiles.reduce((acc, fileName) => {
+          acc[fileName] = files[fileName].extractedText;
+          return acc;
+        }, {});
+        onAnalysis(type, selectedTexts);
+      }
     }
   };
 

@@ -156,7 +156,8 @@ const LegalAnalyzer = () => {
           isLoading: false,
           isPerformed: true,
           isVisible: true,
-          result: { ...prev[type].result, ...results }
+          result: type === 'conflict' ? results : { ...prev[type].result, ...results },
+          selectedFiles: Object.keys(texts) // Store the selected files
         }
       }));
     } catch (error) {
