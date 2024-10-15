@@ -1,0 +1,250 @@
+/* Hamburger menu styles */
+.menu-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1002;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.menu-toggle:hover {
+  transform: scale(1.1);
+}
+
+.menu-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.menu-backdrop.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hamburger-menu {
+  position: fixed;
+  top: 0;
+  left: -350px;
+  width: 330px;
+  height: 100%;
+  background-color: #2a2a2a;
+  padding: 20px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  z-index: 1001;
+  transition: left 0.3s ease-in-out;
+}
+
+.hamburger-menu.open {
+  left: 0;
+}
+
+.menu-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #444;
+}
+
+.menu-header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 24px;
+  margin-top: 30px;
+}
+
+/* File upload area within hamburger menu */
+.hamburger-menu .file-upload-area {
+  margin-bottom: 30px;
+  border: 2px dashed #4a4a4a;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.hamburger-menu .file-upload-area:hover {
+  background-color: #3a3a3a;
+}
+
+.hamburger-menu .file-upload-area p {
+  margin: 10px 0;
+}
+
+.hamburger-menu .file-limit {
+  font-size: 12px;
+  color: #888888;
+}
+
+.hamburger-menu .browse-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.hamburger-menu .browse-button:hover {
+  background-color: #2980b9;
+}
+
+/* File list within hamburger menu */
+.hamburger-menu .file-list {
+  margin-top: 30px;
+}
+
+.hamburger-menu .file-list-item {
+  background-color: #3a3a3a;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hamburger-menu .file-list-item:hover {
+  background-color: #444;
+}
+
+.hamburger-menu .file-list-item .file-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.hamburger-menu .file-list-item .file-checkbox {
+  margin-right: 15px;
+}
+
+.hamburger-menu .file-list-item .file-name {
+  color: #fff;
+  word-break: break-word;
+  font-size: 14px;
+}
+
+.file-list-item.selected {
+  background-color: #4a4a4a;
+}
+
+.file-list-item.selected .file-name {
+  color: #3498db;
+  font-weight: bold;
+}
+
+.hamburger-menu .remove-file {
+  background: none;
+  border: none;
+  padding: 5px;
+  color: #ff6b6b;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.hamburger-menu .remove-file:hover {
+  color: #ff4757;
+}
+
+/* Scrollbar styles for the menu */
+.hamburger-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hamburger-menu::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.hamburger-menu::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.hamburger-menu::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+.file-preview-container {
+  margin-top: 20px;
+  background-color: #2c3e50;
+  border-radius: 5px;
+  padding: 15px;
+}
+
+.file-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.file-list-item:last-child {
+  border-bottom: none;
+}
+
+.file-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.file-checkbox {
+  margin-right: 10px;
+}
+
+.file-name {
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.file-name:hover {
+  text-decoration: underline;
+}
+
+.hamburger-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 300px;
+  background-color: #2a2a2a;
+  z-index: 1001;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.hamburger-menu.open {
+  transform: translateX(0);
+}
+
+.menu-toggle {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1002;
+}
