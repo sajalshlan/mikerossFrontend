@@ -27,9 +27,14 @@ const AnalysisSection = ({
       return;
     }
     
-    if (type === 'conflict' && selectedFiles.length < 2) {
-      alert("Please select at least two files for conflict analysis.");
-      return;
+    if (type === 'conflict') {
+      if (selectedFiles.length < 2) {
+        if (analysisState[type].isVisible) {
+          onToggleVisibility(type);  // Toggle off the conflict result
+        }
+        alert("Please select at least two files for conflict analysis.");
+        return;
+      }
     }
 
     const previousSelectedFiles = analysisState[type].selectedFiles || [];
