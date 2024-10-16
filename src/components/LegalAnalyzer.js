@@ -156,7 +156,8 @@ const LegalAnalyzer = () => {
           isLoading: false,
           isPerformed: true,
           isVisible: true,
-          result: { ...prev[type].result, ...results }
+          result: type === 'conflict' ? results : { ...prev[type].result, ...results },
+          selectedFiles: Object.keys(texts) // Store the selected files
         }
       }));
     } catch (error) {
@@ -187,7 +188,17 @@ const LegalAnalyzer = () => {
     setAnalysisState(prev => {
       const updatedState = { ...prev };
       Object.keys(updatedState).forEach(type => {
-        if (type !== 'conflict') {
+        if (type === 'conflict') {
+          const remainingCheckedFiles = Object.values(files).filter(file => file.isChecked && file.file.name !== fileName).length;
+          if (remainingCheckedFiles < 2) {
+            updatedState[type] = {
+              ...updatedState[type],
+              result: '',
+              isPerformed: false,
+              isVisible: false
+            };
+          }
+        } else {
           const { [fileName]: _, ...rest } = updatedState[type].result;
           updatedState[type] = {
             ...updatedState[type],
