@@ -164,81 +164,89 @@ return (
       <div className="menu-header">
         <h2>Mike Ross</h2>
       </div>
-        <p>Upload Contract</p>
-        <div 
-          className={`file-upload-area ${isFileProcessing ? 'disabled' : ''}`} 
-          onClick={() => !isFileProcessing && fileInputRef.current.click()}
-        >
-          {isFileProcessing ? (
-            <Loader size={24} className="spinner" />
-          ) : (
-            <Upload size={24} />
-          )}
-          <p>{isFileProcessing ? 'Processing file...' : 'Drag and drop file here'}</p>
-          <p className="file-limit">Limit 200MB per file • DOCX, PDF, JPG, PNG</p>
-          <button className="browse-button" disabled={isFileProcessing}>
-            {isFileProcessing ? 'Processing...' : 'Browse files'}
-          </button>
-        </div>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          style={{ display: 'none' }}
-          multiple
-          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-          disabled={isFileProcessing}
-        />
-           
-        <div className="file-list">
-          {Object.keys(files).length > 0 ? (
-            Object.entries(files).map(([fileName, file]) => (
-              <div 
-                key={fileName} 
-                className={`file-list-item ${selectedFile === fileName ? 'selected' : ''}`}
-              >
-                <div className="file-info">
-                  <input
-                    type="checkbox"
-                    className="file-checkbox"
-                    checked={file.isChecked}
-                    onChange={(e) => handleCheckboxChange(fileName, e)}
-                    disabled={isAnalysisInProgress}
-                  />
-                  <span 
-                    className="file-name" 
-                    onClick={(e) => handleFileClick(fileName, e)}
-                  >
-                    {fileName}
-                  </span>
-                </div>
-                <button 
-                  className="remove-file" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemoveFile(fileName);
-                  }} 
-                  disabled={isFileProcessing}
-                >
-                  Remove
-                </button>
-              </div>
-            ))
-          ) : (
-            <div className="no-files-message">No files uploaded</div>
-          )}
-        </div>
+      <p>Upload Contract</p>
+      <div 
+        className={`file-upload-area ${isFileProcessing ? 'disabled' : ''}`} 
+        onClick={() => !isFileProcessing && fileInputRef.current.click()}
+      >
+        {isFileProcessing ? (
+          <Loader size={24} className="spinner" />
+        ) : (
+          <Upload size={24} />
+        )}
+        <p>{isFileProcessing ? 'Processing file...' : 'Drag and drop file here'}</p>
+        <p className="file-limit">Limit 200MB per file • DOCX, PDF, JPG, PNG</p>
+        <button className="browse-button" disabled={isFileProcessing}>
+          {isFileProcessing ? 'Processing...' : 'Browse files'}
+        </button>
       </div>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+        multiple
+        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+        disabled={isFileProcessing}
+      />
       
-      {selectedFile && files[selectedFile] ? (
-        <div className="file-preview-container">
-          {renderFilePreview(files[selectedFile])}
-        </div>
-      ) : (
-        renderPlaceholder()
+      {Object.keys(files).length > 0 && (
+        <p className="file-instruction">
+          <strong>Your uploaded files:</strong><br />
+          ✓ Check boxes to select files for analysis<br />
+          👁️ Click on the file to preview its contents
+        </p>
       )}
+      
+      <div className="file-list">
+        {Object.keys(files).length > 0 ? (
+          Object.entries(files).map(([fileName, file]) => (
+            <div 
+              key={fileName} 
+              className={`file-list-item ${selectedFile === fileName ? 'selected' : ''}`}
+            >
+              <div className="file-info">
+                <input
+                  type="checkbox"
+                  className="file-checkbox"
+                  checked={file.isChecked}
+                  onChange={(e) => handleCheckboxChange(fileName, e)}
+                  disabled={isAnalysisInProgress}
+                />
+                <span 
+                  className="file-name" 
+                  onClick={(e) => handleFileClick(fileName, e)}
+                >
+                  {fileName}
+                </span>
+              </div>
+              <button 
+                className="remove-file" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveFile(fileName);
+                }} 
+                disabled={isFileProcessing}
+              >
+                Remove
+              </button>
+            </div>
+          ))
+        ) : (
+          <div className="no-files-message">No files uploaded</div>
+        )}
+      </div>
     </div>
-  );
+    
+    {selectedFile && files[selectedFile] ? (
+      <div className="file-preview-container">
+        {renderFilePreview(files[selectedFile])}
+      </div>
+    ) : (
+      renderPlaceholder()
+    )}
+  </div>
+);
 };
 
 export default FileUploader;
