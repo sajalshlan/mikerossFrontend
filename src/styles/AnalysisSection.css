@@ -111,3 +111,51 @@
   .analysis-button.disabled:hover {
     background-color: #95a5a6;
   }
+
+  .analysis-section {
+    background-color: #1f1f1f;
+    color: #ffffff;
+  }
+  
+  .analysis-card {
+    background-color: #2a2a2a;
+    border: none;
+    height: 100%;
+  }
+  
+  .analysis-card .ant-card-body {
+    padding: 16px;
+  }
+  
+  .analysis-buttons {
+    margin-bottom: 16px;
+  }
+  
+  .analysis-button {
+    background-color: #3a3a3a;
+    border-color: #4a4a4a;
+    color: #ffffff;
+  }
+  
+  .analysis-button:hover {
+    background-color: #4a4a4a;
+    border-color: #5a5a5a;
+  }
+  
+  .analysis-button.performed {
+    background-color: #1890ff;
+    border-color: #1890ff;
+  }
+  
+  .analysis-button.performed:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+  
+  .ant-typography {
+    color: #ffffff;
+  }
+  
+  .ant-divider {
+    border-top: 1px solid #444444;
+  }

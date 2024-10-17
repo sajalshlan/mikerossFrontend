@@ -8,20 +8,13 @@
 .chat-toggle {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
 .chat-toggle:hover {
-  background-color: #2980b9;
+  transform: scale(1.1);
 }
 
 .chat-window {
@@ -30,136 +23,115 @@
   right: 20px;
   width: 350px;
   height: 500px;
-  background-color: #2a2a2a;
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 
+              0 9px 28px 0 rgba(0, 0, 0, 0.05), 
+              0 12px 48px 16px rgba(0, 0, 0, 0.03);
 }
 
 .chat-header {
-  padding: 15px;
-  background-color: #3a3a3a;
-  color: white;
-  font-weight: bold;
+  padding: 16px;
+  background-color: #1890ff;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.chat-header h4.ant-typography {
+  color: #ffffff;
+  margin: 0;
 }
 
 .chat-messages {
-  flex-grow: 1;
+  padding: 16px;
   overflow-y: auto;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
 }
 
 .chat-message {
   max-width: 80%;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .chat-message.user {
   align-self: flex-end;
-  background-color: #3498db;
-  color: white;
+  background-color: #1890ff;
+  color: #ffffff;
+  margin-left: auto;
 }
 
 .chat-message.assistant {
   align-self: flex-start;
-  background-color: #2c3e50;
-  color: white;
+  background-color: #f0f0f0;
+  color: rgba(0, 0, 0, 0.85);
 }
 
 .message-content {
   word-wrap: break-word;
 }
 
-.message-content p {
-  margin: 0 0 10px 0;
-}
-
-.message-content p:last-child {
-  margin-bottom: 0;
-}
-
-.message-content strong {
-  font-weight: bold;
-  color: #f39c12;
-}
-
 .message-timestamp {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 5px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-top: 4px;
   text-align: right;
 }
 
 .chat-input {
   display: flex;
-  padding: 15px;
-  background-color: #3a3a3a;
+  padding: 16px;
+  background-color: #ffffff;
+  border-top: 1px solid #f0f0f0;
 }
 
-.chat-input input {
+.chat-input .ant-input {
   flex-grow: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 5px 0 0 5px;
-  background-color: #4a4a4a;
-  color: #ffffff;
+  margin-right: 8px;
 }
 
-.chat-input button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 0 5px 5px 0;
-  background-color: #3498db;
-  color: white;
-  cursor: pointer;
-}
-
-.chat-input button:hover {
-  background-color: #2980b9;
-}
-
-.chat-input button:disabled {
-  background-color: #95a5a6;
-  cursor: not-allowed;
+.chat-input .ant-btn {
+  flex-shrink: 0;
 }
 
 .thinking-animation {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 10px;
+  padding: 16px;
 }
 
-.thinking-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #3498db;
-  border-radius: 50%;
-  margin: 0 4px;
-  animation: thinking 1.4s infinite;
+/* Scrollbar Styles */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
 }
 
-.thinking-dot:nth-child(2) {
-  animation-delay: 0.2s;
+.chat-messages::-webkit-scrollbar-track {
+  background: #f0f0f0;
 }
 
-.thinking-dot:nth-child(3) {
-  animation-delay: 0.4s;
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: #bfbfbf;
+  border-radius: 3px;
 }
 
-@keyframes thinking {
-  0%, 60%, 100% {
-    transform: translateY(0);
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background-color: #a6a6a6;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .chat-window {
+    width: 100%;
+    height: calc(100% - 90px);
+    right: 0;
+    bottom: 0;
+    border-radius: 0;
   }
-  30% {
-    transform: translateY(-10px);
+
+  .chat-toggle {
+    right: 10px;
+    bottom: 10px;
   }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { Button, Input, Spin, FloatButton } from 'antd';
+import { MessageOutlined, CloseOutlined, SendOutlined, CustomerServiceOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
-import '../styles/ChatWidget.css';
 
 const ChatWidget = ({ extractedTexts }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -68,57 +68,81 @@ const ChatWidget = ({ extractedTexts }) => {
     const parts = content.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index}>{part.slice(2, -2)}</strong>;
+        return <strong key={index} className="text-blue-300">{part.slice(2, -2)}</strong>;
       }
       return part;
     });
   };
 
   return (
-    <div className={`chat-widget ${isChatOpen ? 'open' : ''}`}>
-      <button className="chat-toggle" onClick={toggleChat}>
-        {isChatOpen ? <X size={24} /> : <MessageCircle size={24} />}
-      </button>
+    <>
+      <FloatButton.Group
+        trigger="click"
+        type="primary"
+        style={{ right: 24, bottom: 24 }}
+        icon={<CustomerServiceOutlined />}
+      >
+        <FloatButton icon={<MessageOutlined />} onClick={toggleChat} />
+      </FloatButton.Group>
+      
       {isChatOpen && (
-        <div className="chat-window">
-          <div className="chat-header">
-            <h3>Chat with AI</h3>
-          </div>
-          <div className="chat-messages" ref={chatMessagesRef}>
+        <div className="fixed bottom-24 right-24 w-96 h-[500px] bg-gray-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-700">
+          <header className="bg-gray-900 p-4 text-white flex justify-between items-center rounded-t-2xl">
+            <h4 className="text-lg font-bold m-0">Chat with AI</h4>
+            <Button
+              type="text"
+              icon={<CloseOutlined />}
+              onClick={toggleChat}
+              className="text-white hover:text-gray-300"
+            />
+          </header>
+          <div className="flex-grow overflow-y-auto p-4 bg-gray-800" ref={chatMessagesRef}>
             {chatMessages.map((message, index) => (
               <div 
                 key={index} 
-                className={`chat-message ${message.role}`}
+                className={`max-w-[80%] mb-4 ${
+                  message.role === 'user' ? 'ml-auto' : 'mr-auto'
+                }`}
                 ref={index === chatMessages.length - 1 ? latestMessageRef : null}
               >
-                <div className="message-content">
-                  {renderMessageContent(message.content)}
+                <div className={`p-3 rounded-2xl ${
+                  message.role === 'user' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-700 text-gray-100'
+                }`}>
+                  <div className="break-words text-sm">
+                    {renderMessageContent(message.content)}
+                  </div>
                 </div>
-                <div className="message-timestamp">{message.timestamp}</div>
+                <div className="text-xs text-gray-400 mt-1 text-right">{message.timestamp}</div>
               </div>
             ))}
             {isWaitingForResponse && (
-              <div className="thinking-animation">
-                <div className="thinking-dot"></div>
-                <div className="thinking-dot"></div>
-                <div className="thinking-dot"></div>
+              <div className="flex justify-center items-center p-4">
+                <Spin size="small" />
               </div>
             )}
           </div>
-          <form onSubmit={handleChatSubmit} className="chat-input">
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Type your question here..."
-            />
-            <button type="submit" disabled={isWaitingForResponse}>
-              <Send size={18} />
-            </button>
-          </form>
+          <footer className="bg-gray-900 p-4 rounded-b-2xl">
+            <form onSubmit={handleChatSubmit} className="flex">
+              <Input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Type your question here..."
+                className="flex-grow mr-2 bg-gray-700 border-gray-600 text-black placeholder-gray-400 rounded-xl"
+              />
+              <Button
+                type="primary"
+                htmlType="submit"
+                icon={<SendOutlined />}
+                disabled={isWaitingForResponse || !chatInput.trim()}
+                className="bg-blue-600 border-blue-600 hover:bg-blue-700 rounded-xl"
+              />
+            </form>
+          </footer>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
