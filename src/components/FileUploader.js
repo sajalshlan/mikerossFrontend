@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
-import { Upload, Button, List, Checkbox } from 'antd';
-import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
-
-const { Dragger } = Upload;
+import { Upload, Button, List, Checkbox, Progress, message } from 'antd';
+import { UploadOutlined, FolderOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection }) => {
   const [selectedFiles, setSelectedFiles] = useState({});
 
   const handleFileChange = (info) => {
-    const { file, fileList } = info;
-    if (file.status !== 'uploading') {
-      onFileUpload(fileList.map(f => f.originFileObj));
-    }
+    const { fileList } = info;
+    const newFiles = fileList.map(file => file.originFileObj);
+    onFileUpload(newFiles);
+  };
+
+  const handleDirectoryUpload = (info) => {
+    const { fileList } = info;
+    const newFiles = fileList.map(file => file.originFileObj);
+    onFileUpload(newFiles);
   };
 
   const handleCheckboxChange = (fileName) => {
     const newSelectedFiles = { ...selectedFiles, [fileName]: !selectedFiles[fileName] };
     setSelectedFiles(newSelectedFiles);
     onCheckedFilesChange(newSelectedFiles);
+  };
+
+  const handleRemoveFile = (fileName) => {
+    onRemoveFile(fileName);
+    message.success(`${fileName} removed successfully`);
   };
 
   const uploadProps = {
@@ -29,47 +37,68 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     beforeUpload: () => false,
   };
 
-  return (
-    <div className="bg-gray-700 p-6 rounded-lg shadow-lg">
-      <Dragger {...uploadProps} className="mb-6 bg-gray-800 border-2 border-dashed border-blue-500 hover:border-blue-600">
-        <p className="ant-upload-drag-icon text-blue-500">
-          <UploadOutlined style={{ fontSize: '48px' }} />
-        </p>
-        <p className="ant-upload-text text-white text-lg">Click or drag file to this area to upload</p>
-      </Dragger>
+  const directoryProps = {
+    ...uploadProps,
+    directory: true,
+    onChange: handleDirectoryUpload,
+  };
 
-      <List
-        dataSource={Object.entries(files)}
-        renderItem={([fileName, file]) => (
-          <List.Item
-            key={fileName}
-            className="bg-gray-800 mb-2 rounded"
-            actions={[
-              <Button
-                onClick={() => onRemoveFile(fileName)}
-                disabled={isAnalysisInProgress}
-                danger
-                icon={<DeleteOutlined />}
-              >
-                Delete
-              </Button>
-            ]}
-          >
-            <List.Item.Meta
-              avatar={
+  return (
+    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+      <div className="flex space-x-4 mb-6">
+        <Upload {...uploadProps}>
+          <Button icon={<UploadOutlined />} disabled={isFileProcessing} className="bg-blue-500 hover:bg-blue-600 text-white border-none">
+            Upload Files
+          </Button>
+        </Upload>
+        <Upload {...directoryProps}>
+          <Button icon={<FolderOutlined />} disabled={isFileProcessing} className="bg-green-500 hover:bg-green-600 text-white border-none">
+            Upload Directory
+          </Button>
+        </Upload>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-white text-xl mb-4">Uploaded Files</h2>
+        <List
+          dataSource={Object.entries(files)}
+          renderItem={([fileName, file]) => (
+            <List.Item
+              key={fileName}
+              className="bg-gray-700 mb-3 rounded-lg p-3 flex items-center justify-between"
+            >
+              <div className="flex items-center space-x-4 flex-grow">
                 <Checkbox
                   checked={selectedFiles[fileName] || false}
                   onChange={() => handleCheckboxChange(fileName)}
                   disabled={isAnalysisInProgress}
-                  className="mr-4"
+                  className="text-blue-500"
                 />
-              }
-              title={<a onClick={() => onFileSelection(fileName)} className="text-white hover:text-blue-400">{fileName}</a>}
-              description={<span className="text-gray-400">{file.progress?.status || 'Uploaded'}</span>}
-            />
-          </List.Item>
-        )}
-      />
+                <span 
+                  onClick={() => onFileSelection(fileName)}
+                  className="cursor-pointer text-white hover:text-blue-400 transition-colors duration-200 flex-grow"
+                >
+                  {fileName}
+                </span>
+                {file.progress && file.progress.percent < 100 && (
+                  <Progress percent={file.progress.percent} size="small" className="w-24" />
+                )}
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-400">{file.progress?.status || 'Uploaded'}</span>
+                <Button
+                  onClick={() => handleRemoveFile(fileName)}
+                  disabled={isAnalysisInProgress}
+                  danger
+                  icon={<DeleteOutlined />}
+                  size="small"
+                  className="flex items-center justify-center bg-red-500 hover:bg-red-600 border-none"
+                />
+              </div>
+            </List.Item>
+          )}
+        />
+      </div>
     </div>
   );
 };

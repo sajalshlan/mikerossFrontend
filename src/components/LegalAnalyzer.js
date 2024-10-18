@@ -55,7 +55,7 @@ const LegalAnalyzer = () => {
     for (const file of newFiles) {
       updatedFiles[file.name] = { 
         file, 
-        progress: { progress: 0, status: 'uploading' }, 
+        progress: { percent: 0, status: 'uploading' }, 
         isChecked: false 
       };
     }
@@ -64,7 +64,25 @@ const LegalAnalyzer = () => {
 
     for (const file of newFiles) {
       try {
+        // Simulate file upload progress
+        let percent = 0;
+        const interval = setInterval(() => {
+          percent += 10;
+          setFiles(prevFiles => ({
+            ...prevFiles,
+            [file.name]: {
+              ...prevFiles[file.name],
+              progress: { percent, status: percent < 100 ? 'uploading' : 'done' }
+            }
+          }));
+          if (percent >= 100) {
+            clearInterval(interval);
+          }
+        }, 200);
+
         const result = await uploadFile(file);
+        clearInterval(interval); // Clear interval when upload is complete
+
         if (result.success) {
           if (result.files) {
             // Handle ZIP file or multiple files
@@ -72,7 +90,7 @@ const LegalAnalyzer = () => {
               updatedFiles[filename] = {
                 ...updatedFiles[filename],
                 extractedText: fileData.content,
-                progress: { progress: 100, status: 'complete' },
+                progress: { percent: 100, status: 'complete' },
                 base64: fileData.base64
               };
             });
@@ -82,16 +100,16 @@ const LegalAnalyzer = () => {
               updatedFiles[file.name] = {
                 ...updatedFiles[file.name],
                 extractedText: result.text,
-                progress: { progress: 100, status: 'complete' },
+                progress: { percent: 100, status: 'complete' },
                 base64: result.base64
               };
             }
           }
         } else {
-          updatedFiles[file.name].progress = { progress: 100, status: 'error' };
+          updatedFiles[file.name].progress = { percent: 100, status: 'error' };
         }
       } catch (error) {
-        updatedFiles[file.name].progress = { progress: 100, status: 'error' };
+        updatedFiles[file.name].progress = { percent: 100, status: 'error' };
       }
     }
     
@@ -249,7 +267,7 @@ const LegalAnalyzer = () => {
         placement="left"
         onClose={() => setDrawerVisible(false)}
         visible={drawerVisible}
-        width={300}
+        width={500}
       >
         <FileUploader
           onFileUpload={handleFileUpload}
