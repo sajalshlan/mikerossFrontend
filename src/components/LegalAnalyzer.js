@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Layout, Button, Drawer } from 'antd';
+import { Layout } from 'antd';
 import { Helmet } from 'react-helmet';
-import { MenuOutlined } from '@ant-design/icons';
 import FileUploader from './FileUploader';
 import AnalysisSection from './AnalysisSection';
+import FilePreview from './FilePreview';
 import ChatWidget from './ChatWidget';
 import { performAnalysis, uploadFile, performConflictCheck } from '../api';
 import '../styles/App.css';
-import FilePreview from './FilePreview';
 
 const { Sider, Content } = Layout;
 
@@ -25,7 +24,7 @@ const LegalAnalyzer = () => {
     conflict: false
   });
   const [selectedFile, setSelectedFile] = useState(null);
-  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
@@ -257,28 +256,6 @@ const LegalAnalyzer = () => {
         <meta property="og:description" content="AI-powered legal document analysis tool" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Helmet>
-      <Button
-        icon={<MenuOutlined />}
-        onClick={() => setDrawerVisible(true)}
-        className="fixed top-4 left-4 z-50"
-      />
-      <Drawer
-        title="File Uploader"
-        placement="left"
-        onClose={() => setDrawerVisible(false)}
-        visible={drawerVisible}
-        width={500}
-      >
-        <FileUploader
-          onFileUpload={handleFileUpload}
-          files={files}
-          isFileProcessing={isFileProcessing}
-          onRemoveFile={removeFile}
-          onCheckedFilesChange={handleCheckedFilesChange}
-          isAnalysisInProgress={Object.values(analysisState).some(state => state.isLoading)}
-          onFileSelection={handleFileSelection}
-        />
-      </Drawer>
       <Layout className="flex-1">
         <Content className="bg-gray-100 p-4 flex">
           <div className="w-1/2 pr-2 overflow-auto">
@@ -294,6 +271,29 @@ const LegalAnalyzer = () => {
             />
           </div>
         </Content>
+        <Sider
+          width={300}
+          theme="light"
+          collapsible
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          reverseArrow={true}
+          trigger={null}
+          collapsedWidth={50}
+          style={{ position: 'fixed', right: 0, top: 0, bottom: 0, zIndex: 1000 }}
+        >
+          <FileUploader
+            onFileUpload={handleFileUpload}
+            files={files}
+            isFileProcessing={isFileProcessing}
+            onRemoveFile={removeFile}
+            onCheckedFilesChange={handleCheckedFilesChange}
+            isAnalysisInProgress={Object.values(analysisState).some(state => state.isLoading)}
+            onFileSelection={handleFileSelection}
+            collapsed={collapsed}
+            setCollapsed={setCollapsed}
+          />
+        </Sider>
       </Layout>
       <ChatWidget extractedTexts={Object.fromEntries(
         Object.entries(files).map(([fileName, file]) => [fileName, file.extractedText])

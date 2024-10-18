@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Upload, Button, List, Checkbox, Progress, message } from 'antd';
-import { UploadOutlined, FolderOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Menu, Upload, Button, Checkbox, Progress, message } from 'antd';
+import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 
-const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection }) => {
-  const [selectedFiles, setSelectedFiles] = useState({});
+const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection, collapsed, setCollapsed }) => {
+  const [selectedFiles, setSelectedFiles] = useState({})
 
   const handleFileChange = (info) => {
     const { fileList } = info;
@@ -43,62 +43,90 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     onChange: handleDirectoryUpload,
   };
 
-  return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-      <div className="flex space-x-4 mb-6">
-        <Upload {...uploadProps}>
-          <Button icon={<UploadOutlined />} disabled={isFileProcessing} className="bg-blue-500 hover:bg-blue-600 text-white border-none">
-            Upload Files
-          </Button>
-        </Upload>
-        <Upload {...directoryProps}>
-          <Button icon={<FolderOutlined />} disabled={isFileProcessing} className="bg-green-500 hover:bg-green-600 text-white border-none">
-            Upload Directory
-          </Button>
-        </Upload>
-      </div>
+  const menuItems = [
+    {
+      key: 'upload',
+      icon: <UploadOutlined />,
+      label: 'Upload Files',
+      children: [
+        {
+          key: 'uploadFiles',
+          label: (
+            <Upload {...uploadProps}>
+              <Button icon={<UploadOutlined />} disabled={isFileProcessing}>
+                Upload Files
+              </Button>
+            </Upload>
+          ),
+        },
+        {
+          key: 'uploadDirectory',
+          label: (
+            <Upload {...directoryProps}>
+              <Button icon={<FolderOutlined />} disabled={isFileProcessing}>
+                Upload Directory
+              </Button>
+            </Upload>
+          ),
+        },
+      ],
+    },
+    {
+      key: 'files',
+      icon: <FileOutlined />,
+      label: 'Uploaded Files',
+      children: Object.entries(files).map(([fileName, file]) => ({
+        key: fileName,
+        label: (
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={selectedFiles[fileName] || false}
+                onChange={() => handleCheckboxChange(fileName)}
+                disabled={isAnalysisInProgress}
+              />
+              <span 
+                onClick={() => onFileSelection(fileName)}
+                className="cursor-pointer hover:text-blue-400 transition-colors duration-200"
+              >
+                {fileName}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              {file.progress && file.progress.percent < 100 && (
+                <Progress percent={file.progress.percent} size="small" className="w-16" />
+              )}
+              <Button
+                onClick={() => handleRemoveFile(fileName)}
+                disabled={isAnalysisInProgress}
+                danger
+                icon={<DeleteOutlined />}
+                size="small"
+              />
+            </div>
+          </div>
+        ),
+      })),
+    },
+  ];
 
-      <div className="mt-6">
-        <h2 className="text-white text-xl mb-4">Uploaded Files</h2>
-        <List
-          dataSource={Object.entries(files)}
-          renderItem={([fileName, file]) => (
-            <List.Item
-              key={fileName}
-              className="bg-gray-700 mb-3 rounded-lg p-3 flex items-center justify-between"
-            >
-              <div className="flex items-center space-x-4 flex-grow">
-                <Checkbox
-                  checked={selectedFiles[fileName] || false}
-                  onChange={() => handleCheckboxChange(fileName)}
-                  disabled={isAnalysisInProgress}
-                  className="text-blue-500"
-                />
-                <span 
-                  onClick={() => onFileSelection(fileName)}
-                  className="cursor-pointer text-white hover:text-blue-400 transition-colors duration-200 flex-grow"
-                >
-                  {fileName}
-                </span>
-                {file.progress && file.progress.percent < 100 && (
-                  <Progress percent={file.progress.percent} size="small" className="w-24" />
-                )}
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-400">{file.progress?.status || 'Uploaded'}</span>
-                <Button
-                  onClick={() => handleRemoveFile(fileName)}
-                  disabled={isAnalysisInProgress}
-                  danger
-                  icon={<DeleteOutlined />}
-                  size="small"
-                  className="flex items-center justify-center bg-red-500 hover:bg-red-600 border-none"
-                />
-              </div>
-            </List.Item>
-          )}
-        />
-      </div>
+  return (
+    <div className="file-uploader h-full flex flex-col">
+      <Button
+        type="primary"
+        onClick={() => setCollapsed(!collapsed)}
+        style={{ alignSelf: 'flex-start', margin: '16px 0 16px 16px' }}
+        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+      />
+      <Menu
+        defaultSelectedKeys={['upload']}
+        defaultOpenKeys={['upload', 'files']}
+        mode="inline"
+        theme="light"
+        inlineCollapsed={collapsed}
+        items={menuItems}
+        className="flex-grow"
+      />
     </div>
   );
 };
