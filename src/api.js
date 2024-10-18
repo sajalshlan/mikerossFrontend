@@ -37,6 +37,7 @@ export const performConflictCheck = async (texts) => {
     return null;
   }
 };
+
 export const uploadFile = async (file) => {
   try {
     const formData = new FormData();
@@ -45,10 +46,10 @@ export const uploadFile = async (file) => {
       method: 'POST',
       body: formData,
     });
-    const rawResponse = await response.text();
-    // console.log('[API] Raw API response:', rawResponse);
-    const result = JSON.parse(rawResponse);
-    // console.log('[API] Parsed API response:', result);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result = await response.json();
     if (result.success) {
       return result;
     } else {

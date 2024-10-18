@@ -25,6 +25,7 @@ const LegalAnalyzer = () => {
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
+  const siderRef = useRef(null);
 
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
@@ -34,54 +35,47 @@ const LegalAnalyzer = () => {
     document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (siderRef.current && !siderRef.current.contains(event.target) && !collapsed) {
+        setCollapsed(true);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [collapsed]);
+
   const handleCheckedFilesChange = (newCheckedFiles) => {
     setFiles(prev => {
       const updatedFiles = { ...prev };
-      Object.keys(newCheckedFiles).forEach(fileName => {
-        if (updatedFiles[fileName]) {
-          updatedFiles[fileName].isChecked = newCheckedFiles[fileName];
-        }
+      Object.keys(updatedFiles).forEach(fileName => {
+        updatedFiles[fileName] = {
+          ...updatedFiles[fileName],
+          isChecked: newCheckedFiles[fileName] || false
+        };
       });
       return updatedFiles;
     });
   };
 
   const handleFileUpload = async (newFiles) => {
+    console.log('LegalAnalyzer: handleFileUpload started', newFiles);
     setIsFileProcessing(true);
+    // Initialize updatedFiles with only the new files
+    const updatedFiles = Object.fromEntries(
+      newFiles.map(file => [file.name, { file, isChecked: false }])
+    );
     
-    const updatedFiles = { ...files };
-    
-    for (const file of newFiles) {
-      updatedFiles[file.name] = { 
-        file, 
-        progress: { percent: 0, status: 'uploading' }, 
-        isChecked: false 
-      };
-    }
-    
-    setFiles(updatedFiles);
+    console.log('LegalAnalyzer: updatedFiles', updatedFiles);
 
     for (const file of newFiles) {
       try {
-        // Simulate file upload progress
-        let percent = 0;
-        const interval = setInterval(() => {
-          percent += 10;
-          setFiles(prevFiles => ({
-            ...prevFiles,
-            [file.name]: {
-              ...prevFiles[file.name],
-              progress: { percent, status: percent < 100 ? 'uploading' : 'done' }
-            }
-          }));
-          if (percent >= 100) {
-            clearInterval(interval);
-          }
-        }, 200);
-
+        console.log('----------------------------------', file);
         const result = await uploadFile(file);
-        clearInterval(interval); // Clear interval when upload is complete
-
+        console.log('----------------------------------', result);
         if (result.success) {
           if (result.files) {
             // Handle ZIP file or multiple files
@@ -89,7 +83,6 @@ const LegalAnalyzer = () => {
               updatedFiles[filename] = {
                 ...updatedFiles[filename],
                 extractedText: fileData.content,
-                progress: { percent: 100, status: 'complete' },
                 base64: fileData.base64
               };
             });
@@ -99,20 +92,20 @@ const LegalAnalyzer = () => {
               updatedFiles[file.name] = {
                 ...updatedFiles[file.name],
                 extractedText: result.text,
-                progress: { percent: 100, status: 'complete' },
                 base64: result.base64
               };
             }
           }
-        } else {
-          updatedFiles[file.name].progress = { percent: 100, status: 'error' };
         }
       } catch (error) {
-        updatedFiles[file.name].progress = { percent: 100, status: 'error' };
+        console.error(`Error uploading file ${file.name}:`, error);
       }
     }
     
-    setFiles(updatedFiles);
+    // Merge the new files with existing files
+    setFiles(prevFiles => ({...prevFiles, ...updatedFiles}));
+    
+    console.log('LegalAnalyzer: final files', updatedFiles);
     setIsFileProcessing(false);
   };
 
@@ -272,15 +265,16 @@ const LegalAnalyzer = () => {
           </div>
         </Content>
         <Sider
-          width={300}
+          ref={siderRef}
+          width={400}
           theme="light"
           collapsible
           collapsed={collapsed}
           onCollapse={setCollapsed}
           reverseArrow={true}
           trigger={null}
-          collapsedWidth={50}
-          style={{ position: 'fixed', right: 0, top: 0, bottom: 0, zIndex: 1000 }}
+          collapsedWidth={55}
+          style={{ position: 'fixed', right: 0, top: 0, bottom: 0, zIndex: 999 }}
         >
           <FileUploader
             onFileUpload={handleFileUpload}

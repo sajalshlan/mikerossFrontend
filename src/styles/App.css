@@ -702,3 +702,16 @@ h2 {
     transform: translateY(-10px);
   }
 }
+
+.ant-layout-content {
+  margin-right: 50px; /* This accounts for the collapsed Sider */
+  transition: margin-right 0.2s;
+}
+
+.ant-layout-sider-collapsed + .ant-layout-content {
+  margin-right: 50px;
+}
+
+.ant-layout-sider:not(.ant-layout-sider-collapsed) + .ant-layout-content {
+  margin-right: 400px; /* This accounts for the expanded Sider */
+}

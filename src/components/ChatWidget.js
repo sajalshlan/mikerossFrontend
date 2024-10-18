@@ -79,7 +79,7 @@ const ChatWidget = ({ extractedTexts }) => {
       <FloatButton.Group
         trigger="click"
         type="primary"
-        style={{ right: 24, bottom: 24 }}
+        style={{ right: 6, bottom: 20 }}
         icon={<BulbOutlined />}
       >
         <Tooltip title="Chat with AI" placement="left">

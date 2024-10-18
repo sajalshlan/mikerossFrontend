@@ -1,23 +1,28 @@
-import React, { useState } from 'react';
-import { Menu, Upload, Button, Checkbox, Progress, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Menu, Upload, Button, Progress, message, Tooltip } from 'antd';
 import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 
 const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection, collapsed, setCollapsed }) => {
-  const [selectedFiles, setSelectedFiles] = useState({})
+  const [selectedFiles, setSelectedFiles] = useState({});
+
+  useEffect(() => {
+    // Initialize selectedFiles based on the isChecked property of each file
+    const initialSelectedFiles = Object.entries(files).reduce((acc, [fileName, file]) => {
+      acc[fileName] = file.isChecked || false;
+      return acc;
+    }, {});
+    setSelectedFiles(initialSelectedFiles);
+  }, [files]);
 
   const handleFileChange = (info) => {
+    console.log('FileUploader: handleFileChange called', info);
     const { fileList } = info;
     const newFiles = fileList.map(file => file.originFileObj);
+    console.log('FileUploader: newFiles', newFiles);
     onFileUpload(newFiles);
   };
 
-  const handleDirectoryUpload = (info) => {
-    const { fileList } = info;
-    const newFiles = fileList.map(file => file.originFileObj);
-    onFileUpload(newFiles);
-  };
-
-  const handleCheckboxChange = (fileName) => {
+  const handleFileSelection = (fileName) => {
     const newSelectedFiles = { ...selectedFiles, [fileName]: !selectedFiles[fileName] };
     setSelectedFiles(newSelectedFiles);
     onCheckedFilesChange(newSelectedFiles);
@@ -37,76 +42,53 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     beforeUpload: () => false,
   };
 
-  const directoryProps = {
-    ...uploadProps,
-    directory: true,
-    onChange: handleDirectoryUpload,
-  };
-
   const menuItems = [
     {
       key: 'upload',
       icon: <UploadOutlined />,
-      label: 'Upload Files',
-      children: [
-        {
-          key: 'uploadFiles',
-          label: (
-            <Upload {...uploadProps}>
-              <Button icon={<UploadOutlined />} disabled={isFileProcessing}>
-                Upload Files
-              </Button>
-            </Upload>
-          ),
-        },
-        {
-          key: 'uploadDirectory',
-          label: (
-            <Upload {...directoryProps}>
-              <Button icon={<FolderOutlined />} disabled={isFileProcessing}>
-                Upload Directory
-              </Button>
-            </Upload>
-          ),
-        },
-      ],
+      label: (
+        <Upload {...uploadProps}>
+          <Button icon={<UploadOutlined />} disabled={isFileProcessing}>
+            Upload Files
+          </Button>
+        </Upload>
+      ),
     },
     {
       key: 'files',
       icon: <FileOutlined />,
       label: 'Uploaded Files',
-      children: Object.entries(files).map(([fileName, file]) => ({
-        key: fileName,
-        label: (
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={selectedFiles[fileName] || false}
-                onChange={() => handleCheckboxChange(fileName)}
-                disabled={isAnalysisInProgress}
-              />
-              <span 
-                onClick={() => onFileSelection(fileName)}
-                className="cursor-pointer hover:text-blue-400 transition-colors duration-200"
-              >
-                {fileName}
-              </span>
+      children: Object.entries(files).map(([fileName, file]) => {
+        return {
+          key: fileName,
+          label: (
+            <div className="flex flex-col w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center space-x-2 flex-grow min-w-0">
+                  <Tooltip title="Preview file">
+                    <FileOutlined 
+                      onClick={() => onFileSelection(fileName)}
+                      className="cursor-pointer text-blue-400 hover:text-blue-600 transition-colors duration-200 flex-shrink-0"
+                    />
+                  </Tooltip>
+                  <span 
+                    onClick={() => handleFileSelection(fileName)}
+                    className={`cursor-pointer hover:text-blue-400 transition-colors duration-200 truncate ${selectedFiles[fileName] ? 'font-bold text-blue-500' : ''}`}
+                  >
+                    {fileName}
+                  </span>
+                </div>
+                <Tooltip title="Delete file">
+                  <DeleteOutlined
+                    onClick={() => handleRemoveFile(fileName)}
+                    className="cursor-pointer text-red-400 hover:text-red-600 transition-colors duration-200 flex-shrink-0 ml-2"
+                  />
+                </Tooltip>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              {file.progress && file.progress.percent < 100 && (
-                <Progress percent={file.progress.percent} size="small" className="w-16" />
-              )}
-              <Button
-                onClick={() => handleRemoveFile(fileName)}
-                disabled={isAnalysisInProgress}
-                danger
-                icon={<DeleteOutlined />}
-                size="small"
-              />
-            </div>
-          </div>
-        ),
-      })),
+          ),
+        };
+      }),
     },
   ];
 
@@ -123,7 +105,6 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
         defaultOpenKeys={['upload', 'files']}
         mode="inline"
         theme="light"
-        inlineCollapsed={collapsed}
         items={menuItems}
         className="flex-grow"
       />
