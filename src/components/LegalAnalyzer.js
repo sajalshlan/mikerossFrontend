@@ -1,10 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Layout, Button, Drawer } from 'antd';
 import { Helmet } from 'react-helmet';
+import { MenuOutlined } from '@ant-design/icons';
 import FileUploader from './FileUploader';
 import AnalysisSection from './AnalysisSection';
 import ChatWidget from './ChatWidget';
 import { performAnalysis, uploadFile, performConflictCheck } from '../api';
 import '../styles/App.css';
+import FilePreview from './FilePreview';
+
+const { Sider, Content } = Layout;
 
 const LegalAnalyzer = () => {
   const [files, setFiles] = useState({});
@@ -19,6 +24,8 @@ const LegalAnalyzer = () => {
     risky: false,
     conflict: false
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
@@ -220,33 +227,60 @@ const LegalAnalyzer = () => {
     }
   };
 
+  const handleFileSelection = (fileName) => {
+    setSelectedFile(fileName);
+  };
+
   return (
-    <div className="legal-document-analyzer">
+    <Layout className="min-h-screen">
       <Helmet>
         <title>Mike Ross</title>
         <meta property="og:title" content="Your super intelligent legal assistant" />
         <meta property="og:description" content="AI-powered legal document analysis tool" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Helmet>
-      <FileUploader
-        onFileUpload={handleFileUpload}
-        files={files}
-        isFileProcessing={isFileProcessing}
-        onRemoveFile={removeFile}
-        onCheckedFilesChange={handleCheckedFilesChange}
-        isAnalysisInProgress={Object.values(analysisState).some(state => state.isLoading)}
+      <Button
+        icon={<MenuOutlined />}
+        onClick={() => setDrawerVisible(true)}
+        className="fixed top-4 left-4 z-50"
       />
-      <AnalysisSection
-        files={files}
-        analysisState={analysisState}
-        onAnalysis={handleAnalysis}
-        onToggleVisibility={toggleAnalysisVisibility}
-        isFileProcessing={isFileProcessing}
-      />
+      <Drawer
+        title="File Uploader"
+        placement="left"
+        onClose={() => setDrawerVisible(false)}
+        visible={drawerVisible}
+        width={300}
+      >
+        <FileUploader
+          onFileUpload={handleFileUpload}
+          files={files}
+          isFileProcessing={isFileProcessing}
+          onRemoveFile={removeFile}
+          onCheckedFilesChange={handleCheckedFilesChange}
+          isAnalysisInProgress={Object.values(analysisState).some(state => state.isLoading)}
+          onFileSelection={handleFileSelection}
+        />
+      </Drawer>
+      <Layout className="flex-1">
+        <Content className="bg-gray-100 p-4 flex">
+          <div className="w-1/2 pr-2 overflow-auto">
+            <FilePreview files={files} selectedFile={selectedFile} onFileSelect={setSelectedFile} />
+          </div>
+          <div className="w-1/2 pl-2 overflow-auto">
+            <AnalysisSection
+              files={files}
+              analysisState={analysisState}
+              onAnalysis={handleAnalysis}
+              onToggleVisibility={toggleAnalysisVisibility}
+              isFileProcessing={isFileProcessing}
+            />
+          </div>
+        </Content>
+      </Layout>
       <ChatWidget extractedTexts={Object.fromEntries(
         Object.entries(files).map(([fileName, file]) => [fileName, file.extractedText])
       )} />
-    </div>
+    </Layout>
   );
 };
 

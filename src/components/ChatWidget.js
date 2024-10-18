@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, Spin, FloatButton } from 'antd';
-import { MessageOutlined, CloseOutlined, SendOutlined, CustomerServiceOutlined } from '@ant-design/icons';
+import { Button, Input, Spin, FloatButton, Tooltip } from 'antd';
+import { MessageOutlined, CloseOutlined, SendOutlined, BulbOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 
 const ChatWidget = ({ extractedTexts }) => {
@@ -80,13 +80,15 @@ const ChatWidget = ({ extractedTexts }) => {
         trigger="click"
         type="primary"
         style={{ right: 24, bottom: 24 }}
-        icon={<CustomerServiceOutlined />}
+        icon={<BulbOutlined />}
       >
-        <FloatButton icon={<MessageOutlined />} onClick={toggleChat} />
+        <Tooltip title="Chat with AI" placement="left">
+          <FloatButton icon={<MessageOutlined />} onClick={toggleChat} />
+        </Tooltip>
       </FloatButton.Group>
       
       {isChatOpen && (
-        <div className="fixed bottom-24 right-24 w-96 h-[500px] bg-gray-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-700">
+        <div className="fixed bottom-20 right-20 w-96 h-[500px] bg-gray-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-700">
           <header className="bg-gray-900 p-4 text-white flex justify-between items-center rounded-t-2xl">
             <h4 className="text-lg font-bold m-0">Chat with AI</h4>
             <Button
