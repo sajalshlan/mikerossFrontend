@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Typography, List, Tooltip } from 'antd';
+import { Card, Typography, List, Tooltip, Divider } from 'antd';
 import '../styles/AnalysisResult.css'
 
 const { Title, Text, Paragraph } = Typography;
@@ -74,8 +74,8 @@ const AnalysisResult = ({ type, data, files, fileCount }) => {
   };
 
   const titleMap = {
-    summary: 'Document Summary',
-    risky: 'Risk Analysis',
+    summary: 'Summary Results',
+    risky: 'Risk Analysis Results',
     conflict: 'Conflict Check Results',
   };
 
@@ -93,24 +93,27 @@ const AnalysisResult = ({ type, data, files, fileCount }) => {
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
       <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-        <Typography.Title level={4} className="text-gray-800">{getTitle()}</Typography.Title>
+        <Typography.Title level={4} className="text-gray-800 text-center">{getTitle()}</Typography.Title>
       </div>
       <div className="flex-grow overflow-auto p-4">
         {type === 'conflict' ? (
-          <div className="space-y-2">
+          <div className="bg-gray-100 p-4 rounded-md shadow-sm">
             {renderContent(data)}
           </div>
         ) : (
-          selectedFiles.map(fileName => (
+          selectedFiles.map((fileName, index) => (
             data[fileName] && (
-              <div key={fileName} className="mb-6 last:mb-0">
-                <Tooltip title={fileName}>
-                  <Typography.Text strong className="text-gray-800 block mb-2">{fileName}</Typography.Text>
-                </Tooltip>
-                <div className="bg-gray-50 p-4 rounded-md shadow-sm">
-                  {renderContent(data[fileName])}
+              <React.Fragment key={fileName}>
+                {index > 0 && <Divider className="my-6" />}
+                <div className="mb-2 last:mb-0">
+                  <Tooltip title={fileName}>
+                    <Typography.Title level={4} strong className="text-gray-800 block mb-2 text-center mx-auto max-w-md font-bold">{fileName}</Typography.Title>
+                  </Tooltip>
+                  <div className="bg-gray-100 p-4 rounded-md shadow-sm">
+                    {renderContent(data[fileName])}
+                  </div>
                 </div>
-              </div>
+              </React.Fragment>
             )
           ))
         )}

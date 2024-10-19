@@ -4,7 +4,6 @@ import { Helmet } from 'react-helmet';
 import FileUploader from './FileUploader';
 import AnalysisSection from './AnalysisSection';
 import FilePreview from './FilePreview';
-import ChatWidget from './ChatWidget';
 import { performAnalysis, uploadFile, performConflictCheck } from '../api';
 import '../styles/App.css';
 import MagicEffect from './MagicEffect';
@@ -289,10 +288,10 @@ const LegalAnalyzer = () => {
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Helmet>
       <Layout className="flex-1">
-        <Content className="bg-gray-100 p-1">
+        <Content className="bg-gray-200">
           <Splitter
             style={{
-              height: 'calc(100vh - 20px)', // Adjust this value if needed
+              height: '100%', // Adjust this value if needed
               border: '0.5px solid #f0f0f0', // Add a border to make the Splitter visible
             }}
           >
@@ -302,7 +301,7 @@ const LegalAnalyzer = () => {
               max="70%"
               style={{ height: '100%', overflow: 'hidden' }}
             >
-              <div className="h-full overflow-auto p-4">
+              <div className="h-full overflow-auto p-2">
                 <FilePreview
                   files={files}
                   selectedFile={selectedFile}
@@ -311,7 +310,7 @@ const LegalAnalyzer = () => {
               </div>
             </Splitter.Panel>
             <Splitter.Panel style={{ height: '100%', overflow: 'hidden' }}>
-              <div className="h-full overflow-auto p-4">
+              <div className="h-full overflow-auto p-2">
                 <AnalysisSection
                   files={files}
                   analysisState={analysisState}
@@ -332,7 +331,7 @@ const LegalAnalyzer = () => {
           onCollapse={setCollapsed}
           reverseArrow={true}
           trigger={null}
-          collapsedWidth={50}
+          collapsedWidth={55}
           style={{ position: 'fixed', right: 0, top: 0, bottom: 0, zIndex: 999 }}
         >
           <FileUploader

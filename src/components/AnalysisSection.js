@@ -22,10 +22,10 @@ const AnalysisSection = ({
     const allProcessed = selectedFileNames.every(fileName => analysisState[type].result[fileName]);
     const someProcessed = selectedFileNames.some(fileName => analysisState[type].result[fileName]);
 
-    if (analysisState[type].isLoading) return 'bg-blue-500 hover:bg-blue-600 text-white';
-    if (allProcessed && selectedFileNames.length > 0) return 'bg-green-500 hover:bg-green-600 text-white';
-    if (someProcessed) return 'bg-yellow-500 hover:bg-yellow-600 text-white';
-    return 'bg-gray-200 hover:bg-gray-300 text-gray-700';
+    if (analysisState[type].isLoading) return 'bg-blue-600 hover:bg-blue-700 text-white';
+    if (allProcessed && selectedFileNames.length > 0) return 'bg-green-600 hover:bg-green-700 text-white';
+    if (someProcessed) return 'bg-yellow-600 hover:bg-yellow-700 text-white';
+    return 'bg-gray-300 hover:bg-gray-400 text-gray-800';
   };
 
   const getButtonTooltip = (type) => {
@@ -68,10 +68,10 @@ const AnalysisSection = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
       <div className="flex-shrink-0">
-        <Title level={3} className="text-gray-800 mb-4">Analysis</Title>
-        <Space wrap className="mb-4">
+        <Title level={3} className="text-gray-800 mb-2 font-semibold text-center">Mike Ross</Title>
+        <div className="grid grid-cols-3 gap-4 mb-2">
           {analysisTypes.map((type) => (
             <Tooltip key={type} title={getButtonTooltip(type)}>
               <button
@@ -83,13 +83,13 @@ const AnalysisSection = ({
                   checkedFilesCount === 0 ||
                   (type === 'conflict' && checkedFilesCount < 2)
                 }
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200
+                className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
                   ${getButtonColor(type)}
                   ${(!hasFiles || isFileProcessing || checkedFilesCount === 0 || 
-                    (type === 'conflict' && checkedFilesCount < 2)) ? 'opacity-50 cursor-not-allowed' : ''}
+                    (type === 'conflict' && checkedFilesCount < 2)) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
                 `}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-center space-x-2">
                   {analysisState[type].isLoading && <LoadingOutlined className="animate-spin" />}
                   <span>
                     {type === 'summary' ? 'Summary' : 
@@ -97,16 +97,16 @@ const AnalysisSection = ({
                      'Conflict Check'}
                   </span>
                   {analysisState[type].isPerformed && (
-                    analysisState[type].isVisible ? <UpOutlined /> : <DownOutlined />
+                    analysisState[type].isVisible ? <UpOutlined className="ml-1" /> : <DownOutlined className="ml-1" />
                   )}
                 </div>
               </button>
             </Tooltip>
           ))}
-        </Space>
+        </div>
       </div>
       {hasFiles && checkedFilesCount > 0 && (
-        <div className="flex-grow overflow-hidden">
+        <div className="flex-grow overflow-hidden bg-gray-50 rounded-lg">
           {analysisTypes.map((type) => (
             analysisState[type].isPerformed && analysisState[type].isVisible && (
               <AnalysisResult 

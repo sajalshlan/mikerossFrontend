@@ -123,7 +123,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
 
   const renderPlaceholder = () => (
     <div className="flex flex-col items-center justify-center h-full">
-      <img src="/law1.jpg" alt="Placeholder" className="max-w-full h-auto mb-4" />
+      <img src="/law4.png" alt="Placeholder" className="max-w-full h-auto mb-4" />
     </div>
   );
 

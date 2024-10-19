@@ -103,7 +103,7 @@ const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult
             </div>
           </Tooltip>
           <div className="ml-3 text-gray-700 font-medium">
-           Work only with the files you've selected from the sidebar
+           Work only with the files you've selected in the sidebar
           </div>
         </label>
       </div>

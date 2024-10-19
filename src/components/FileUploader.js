@@ -178,7 +178,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
       <Button
         type="primary"
         onClick={() => setCollapsed(!collapsed)}
-        style={{ alignSelf: 'flex-start', margin: '16px 0 16px 16px' }}
+        style={{ alignSelf: 'flex-start', margin: '16px 0 16px 12px' }}
         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
       />
       <Menu

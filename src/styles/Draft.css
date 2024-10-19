@@ -1,0 +1,23 @@
+.dark .draft-assistant {
+  background-color: #1f2937;
+  color: #e5e7eb;
+}
+
+.dark .draft-header {
+  background-color: #4b5563;
+}
+
+.dark .draft-content {
+  background-color: #374151;
+}
+
+.dark .draft-input {
+  background-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.dark .draft-button {
+  background-color: #3b82f6;
+  color: #e5e7eb;
+}
+
