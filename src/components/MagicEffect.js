@@ -85,21 +85,23 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
   return (
     <>
       <div ref={floatButtonRef}>
-        <FloatButton.Group
-          trigger="click"
-          type="primary"
-          style={{ right: 5, bottom: 24 }}
-          icon={<BulbOutlined />}
-          open={isFloatGroupOpen}
-          onOpenChange={handleMainButtonClick}
-        >
-          <Tooltip title="Draft Assistant" placement="left">
-            <FloatButton icon={<FileTextOutlined />} onClick={toggleDraft} />
-          </Tooltip>
-          <Tooltip title="Chat with AI" placement="left">
-            <FloatButton icon={<MessageOutlined />} onClick={toggleChat} />
-          </Tooltip>
-        </FloatButton.Group>
+        <Tooltip title="Magic Helpers" placement="left">
+          <FloatButton.Group
+            trigger="click"
+            type="primary"
+            style={{ right: 5, bottom: 24 }}
+            icon={<img src="/magic-wand.svg" alt="Magic Wand" style={{ width: '34px', height: '24px' }} />}
+            open={isFloatGroupOpen}
+            onOpenChange={handleMainButtonClick}
+          >
+            <Tooltip title="Draft Assistant" placement="left">
+              <FloatButton icon={<FileTextOutlined />} onClick={toggleDraft} />
+            </Tooltip>
+            <Tooltip title="AI Assistant" placement="left">
+              <FloatButton icon={<MessageOutlined />} onClick={toggleChat} />
+            </Tooltip>
+          </FloatButton.Group>
+        </Tooltip>
       </div>
       
       {isChatVisible && (

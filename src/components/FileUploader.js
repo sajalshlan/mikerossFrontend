@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Upload, Button, Progress, message, Tooltip } from 'antd';
+import { Menu, Upload, Button, Progress, message, Tooltip, Typography } from 'antd';
 import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+
+const { Text } = Typography;
 
 const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection, collapsed, setCollapsed }) => {
   const [selectedFiles, setSelectedFiles] = useState({});
@@ -16,15 +18,19 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
 
   const handleFileChange = (info) => {
     const { fileList } = info;
-    setPendingFiles(fileList.map(file => file.originFileObj));
+      setPendingFiles(fileList.map(file => file.originFileObj));
   };
 
   const handleUploadClick = () => {
+    console.log('handleUploadClick clicked');
     if (pendingFiles.length > 0) {
-      onFileUpload(pendingFiles);
+      // Remove any duplicate files before uploading
+      const uniqueFiles = Array.from(new Set(pendingFiles.map(file => file.name)))
+        .map(name => pendingFiles.find(file => file.name === name));
+      onFileUpload(uniqueFiles);
       setPendingFiles([]);
     } else {
-      message.warning('Please select files to upload');
+      message.warning('Please select files or a directory to upload');
     }
   };
 
@@ -52,14 +58,40 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     fileList: pendingFiles,
   };
 
+  const handleDirectoryUpload = (info) => {
+    const { fileList } = info;
+    const directoryFiles = fileList.map(file => file.originFileObj);
+    // Use a Set to remove duplicates based on file names
+    const uniqueFiles = Array.from(new Set(directoryFiles.map(file => file.name)))
+      .map(name => directoryFiles.find(file => file.name === name));
+    setPendingFiles(prevFiles => [...prevFiles, ...uniqueFiles]);
+  };
+
+  const directoryProps = {
+    name: 'directory',
+    directory: true,
+    multiple: true,
+    onChange: handleDirectoryUpload,
+    showUploadList: false,
+    beforeUpload: () => false,
+  };
+
   const menuItems = [
     {
       key: 'upload',
       icon: <UploadOutlined />,
-      label: 'Upload Files',
+      label: 'Upload',
       children: [
         {
-          key: 'uploadButton',
+          key: 'uploadInstructions',
+          label: (
+            <Text type="secondary" className="text-xs">
+              Supported formats: PDF, JPEG, PNG, DOC, DOCX
+            </Text>
+          ),
+        },
+        {
+          key: 'uploadFiles',
           label: (
             <div>
               <Upload {...uploadProps}>
@@ -67,14 +99,31 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
                   Select Files
                 </Button>
               </Upload>
-              <Button 
-                onClick={handleUploadClick} 
-                disabled={isFileProcessing || pendingFiles.length === 0}
-                style={{ marginLeft: '10px' }}
-              >
-                Upload
-              </Button>
             </div>
+          ),
+        },
+        {
+          key: 'uploadDirectory',
+          label: (
+            <div>
+              <Upload {...directoryProps}>
+                <Button icon={<FolderOutlined />} disabled={isFileProcessing}>
+                  Select Directory
+                </Button>
+              </Upload>
+            </div>
+          ),
+        },
+        {
+          key: 'uploadButton',
+          label: (
+            <Button 
+              onClick={handleUploadClick} 
+              disabled={isFileProcessing || pendingFiles.length === 0}
+              style={{ marginTop: '8px', width: '100%', marginBottom: '8px' }}
+            >
+              Upload
+            </Button>
           ),
         },
       ],

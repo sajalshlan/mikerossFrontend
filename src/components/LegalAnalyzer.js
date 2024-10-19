@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Layout } from 'antd';
+import { Layout, Splitter } from 'antd';
 import { Helmet } from 'react-helmet';
 import FileUploader from './FileUploader';
 import AnalysisSection from './AnalysisSection';
@@ -64,18 +64,22 @@ const LegalAnalyzer = () => {
     });
   };
 
-  const  
-  handleFileUpload = async (newFiles) => {
+  const handleFileUpload = async (newFiles) => {
     console.log('LegalAnalyzer: handleFileUpload started', newFiles);
     setIsFileProcessing(true);
 
     const updatedFiles = { ...files };
+    const uniqueNewFiles = [];
+
     for (const file of newFiles) {
-      updatedFiles[file.name] = { 
-        file, 
-        progress: { progress: 0, status: 'uploading' }, 
-        isChecked: false 
-      };
+      if (!updatedFiles[file.name]) {
+        updatedFiles[file.name] = { 
+          file, 
+          progress: { progress: 0, status: 'uploading' }, 
+          isChecked: false 
+        };
+        uniqueNewFiles.push(file);
+      }
     }
     
     setFiles(updatedFiles);
@@ -83,7 +87,7 @@ const LegalAnalyzer = () => {
     console.log('LegalAnalyzer: updatedFiles', updatedFiles);
 
     try {
-      const uploadPromises = newFiles.map(file => 
+      const uploadPromises = uniqueNewFiles.map(file => 
         uploadFile(file, (progress) => {
           setFiles(prev => ({
             ...prev,
@@ -285,19 +289,39 @@ const LegalAnalyzer = () => {
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Helmet>
       <Layout className="flex-1">
-        <Content className="bg-gray-100 p-4 flex h-full">
-          <div className="w-1/2 pr-2 overflow-auto">
-            <FilePreview files={files} selectedFile={selectedFile} onFileSelect={setSelectedFile} />
-          </div>
-          <div className="w-1/2 pl-2 overflow-auto">
-            <AnalysisSection
-              files={files}
-              analysisState={analysisState}
-              onAnalysis={handleAnalysis}
-              onToggleVisibility={toggleAnalysisVisibility}
-              isFileProcessing={isFileProcessing}
-            />
-          </div>
+        <Content className="bg-gray-100 p-1">
+          <Splitter
+            style={{
+              height: 'calc(100vh - 20px)', // Adjust this value if needed
+              border: '0.5px solid #f0f0f0', // Add a border to make the Splitter visible
+            }}
+          >
+            <Splitter.Panel
+              defaultSize="50%"
+              min="30%"
+              max="70%"
+              style={{ height: '100%', overflow: 'hidden' }}
+            >
+              <div className="h-full overflow-auto p-4">
+                <FilePreview
+                  files={files}
+                  selectedFile={selectedFile}
+                  onFileSelect={setSelectedFile}
+                />
+              </div>
+            </Splitter.Panel>
+            <Splitter.Panel style={{ height: '100%', overflow: 'hidden' }}>
+              <div className="h-full overflow-auto p-4">
+                <AnalysisSection
+                  files={files}
+                  analysisState={analysisState}
+                  onAnalysis={handleAnalysis}
+                  onToggleVisibility={toggleAnalysisVisibility}
+                  isFileProcessing={isFileProcessing}
+                />
+              </div>
+            </Splitter.Panel>
+          </Splitter>
         </Content>
         <Sider
           ref={siderRef}

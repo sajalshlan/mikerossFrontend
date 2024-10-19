@@ -121,14 +121,18 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     return <p className="text-blue-500">Loading docx preview...</p>;
   };
 
+  const renderPlaceholder = () => (
+    <div className="flex flex-col items-center justify-center h-full">
+      <img src="/law1.jpg" alt="Placeholder" className="max-w-full h-auto mb-4" />
+    </div>
+  );
+
   return (
     <div className="bg-gray-900 rounded-lg shadow-lg p-6 h-full overflow-auto">
       {selectedFile && files[selectedFile] ? (
         renderFilePreview(files[selectedFile])
       ) : (
-        <div className="flex items-center justify-center h-full">
-          <p className="text-gray-400 text-xl">No file selected for preview</p>
-        </div>
+        renderPlaceholder()
       )}
     </div>
   );
