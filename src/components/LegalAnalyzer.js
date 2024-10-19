@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Layout, Splitter } from 'antd';
+import { Layout, Splitter, Button } from 'antd';
 import { Helmet } from 'react-helmet';
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import FileUploader from './FileUploader';
 import AnalysisSection from './AnalysisSection';
 import FilePreview from './FilePreview';
@@ -28,6 +29,7 @@ const LegalAnalyzer = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
   const siderRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
@@ -49,6 +51,15 @@ const LegalAnalyzer = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [collapsed]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleCheckedFilesChange = (newCheckedFiles) => {
     setFiles(prev => {
@@ -289,27 +300,16 @@ const LegalAnalyzer = () => {
       </Helmet>
       <Layout className="flex-1">
         <Content className="bg-gray-200">
-          <Splitter
-            style={{
-              height: '100%', // Adjust this value if needed
-            }}
-          >
-            <Splitter.Panel
-              defaultSize="50%"
-              min="30%"
-              max="70%"
-              style={{ height: '100%', overflow: 'hidden' }}
-            >
-              <div className="h-full overflow-auto p-2">
+          {isMobile ? (
+            <div className="h-full flex flex-col">
+              <div className="h-1/2 overflow-auto p-2">
                 <FilePreview
                   files={files}
                   selectedFile={selectedFile}
                   onFileSelect={setSelectedFile}
                 />
               </div>
-            </Splitter.Panel>
-            <Splitter.Panel style={{ height: '100%', overflow: 'hidden' }}>
-              <div className="h-full overflow-auto p-2">
+              <div className="h-1/2 overflow-auto p-2">
                 <AnalysisSection
                   files={files}
                   analysisState={analysisState}
@@ -318,20 +318,65 @@ const LegalAnalyzer = () => {
                   isFileProcessing={isFileProcessing}
                 />
               </div>
-            </Splitter.Panel>
-          </Splitter>
+            </div>
+          ) : (
+            <Splitter
+              style={{
+                height: '100%',
+              }}
+            >
+              <Splitter.Panel
+                defaultSize="50%"
+                min="30%"
+                max="70%"
+                style={{ height: '100%', overflow: 'hidden' }}
+              >
+                <div className="h-full overflow-auto p-2">
+                  <FilePreview
+                    files={files}
+                    selectedFile={selectedFile}
+                    onFileSelect={setSelectedFile}
+                  />
+                </div>
+              </Splitter.Panel>
+              <Splitter.Panel style={{ height: '100%', overflow: 'hidden' }}>
+                <div className="h-full overflow-auto p-2">
+                  <AnalysisSection
+                    files={files}
+                    analysisState={analysisState}
+                    onAnalysis={handleAnalysis}
+                    onToggleVisibility={toggleAnalysisVisibility}
+                    isFileProcessing={isFileProcessing}
+                  />
+                </div>
+              </Splitter.Panel>
+            </Splitter>
+          )}
         </Content>
         <Sider
           ref={siderRef}
-          width={400}
+          width={isMobile ? '100%' : 350}
           theme="light"
           collapsible
           collapsed={collapsed}
           onCollapse={setCollapsed}
           reverseArrow={true}
           trigger={null}
-          collapsedWidth={55}
-          style={{ position: 'fixed', right: 0, top: 0, bottom: 0, zIndex: 999, backgroundColor: '#F5F5F5' }}
+          collapsedWidth={isMobile ? 0 : 55}
+          style={{
+            position: 'fixed',
+            right: 0,
+            top: 0,
+            bottom: 0,
+            zIndex: 999,
+            backgroundColor: '#F5F5F5',
+            ...(isMobile && {
+              position: 'fixed',
+              height: '100%',
+              right: collapsed ? '-100%' : 0,
+              transition: 'right 0.3s',
+            }),
+          }}
         >
           <FileUploader
             onFileUpload={handleFileUpload}
@@ -346,6 +391,19 @@ const LegalAnalyzer = () => {
           />
         </Sider>
       </Layout>
+      {isMobile && (
+        <Button
+          type="primary"
+          onClick={() => setCollapsed(!collapsed)}
+          style={{
+            position: 'fixed',
+            top: 16,
+            right: 16,
+            zIndex: 1000,
+          }}
+          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+        />
+      )}
       <MagicEffect 
         extractedTexts={getSelectedFilesExtractedTexts()}
         allExtractedTexts={Object.fromEntries(

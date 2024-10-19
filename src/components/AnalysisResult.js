@@ -92,24 +92,24 @@ const AnalysisResult = ({ type, data, files, fileCount }) => {
   
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
-      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-        <Typography.Title level={4} className="text-gray-800 text-center">{getTitle()}</Typography.Title>
+      <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+        <Typography.Title level={4} className="text-gray-800 text-center m-0">{getTitle()}</Typography.Title>
       </div>
-      <div className="flex-grow overflow-auto p-4">
+      <div className="flex-grow overflow-auto p-2">
         {type === 'conflict' ? (
-          <div className="bg-gray-100 p-4 rounded-md shadow-sm">
+          <div className="bg-gray-100 p-3 rounded-md">
             {renderContent(data)}
           </div>
         ) : (
           selectedFiles.map((fileName, index) => (
             data[fileName] && (
               <React.Fragment key={fileName}>
-                {index > 0 && <Divider className="my-6" />}
+                {index > 0 && <Divider className="my-3" />}
                 <div className="mb-2 last:mb-0">
                   <Tooltip title={fileName}>
-                    <Typography.Title level={4} strong className="text-gray-800 block mb-2 text-center mx-auto max-w-md font-bold">{fileName}</Typography.Title>
+                    <Typography.Title level={4} className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2">{fileName}</Typography.Title>
                   </Tooltip>
-                  <div className="bg-gray-100 p-4 rounded-md shadow-sm">
+                  <div className="bg-gray-100 p-3 rounded-md">
                     {renderContent(data[fileName])}
                   </div>
                 </div>

@@ -217,6 +217,25 @@ h2 {
   }
 }
 
+@media (max-width: 768px) {
+  .ant-float-btn-group {
+    right: 16px !important;
+    bottom: 16px !important;
+  }
+
+  .chat-input, .draft-input {
+    padding: 8px;
+  }
+
+  .chat-input .ant-input, .draft-input .ant-input {
+    font-size: 14px;
+  }
+
+  .chat-message, .draft-content {
+    font-size: 14px;
+  }
+}
+
 .ant-layout-content {
   margin-right: 50px;
   transition: margin-right 0.2s;

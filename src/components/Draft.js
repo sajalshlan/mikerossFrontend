@@ -78,7 +78,7 @@ const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult
   };
 
   return (
-    <div className={`fixed bottom-12 right-16 w-[600px] h-[600px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-200 transition-transform duration-300 ease-in-out ${isClosing ? 'translate-y-full' : 'translate-y-0'} animate-slide-up`}>
+    <div className={`fixed inset-0 md:inset-auto md:bottom-12 md:right-16 md:w-[600px] md:h-[600px] bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 transition-opacity duration-300 ease-in-out ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
       <header className="bg-gray-100 p-4 text-gray-800 flex justify-between items-center rounded-t-2xl">
         <h4 className="text-lg font-bold m-0">Draft Assistant</h4>
         <Button

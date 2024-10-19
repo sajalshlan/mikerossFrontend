@@ -71,7 +71,7 @@ const AnalysisSection = ({
     <div className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
       <div className="flex-shrink-0">
         <Title level={3} className="text-gray-800 mb-2 font-semibold text-center">Mike Ross</Title>
-        <div className="grid grid-cols-3 gap-4 mb-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
           {analysisTypes.map((type) => (
             <Tooltip key={type} title={getButtonTooltip(type)}>
               <button
