@@ -29,6 +29,10 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   };
 
   const handleFileSelection = (fileName) => {
+    if (files[fileName].progress && files[fileName].progress.status !== 'success') {
+      message.warning('Please wait for the file to finish uploading before selecting it.');
+      return;
+    }
     const newSelectedFiles = { ...selectedFiles, [fileName]: !selectedFiles[fileName] };
     setSelectedFiles(newSelectedFiles);
     onCheckedFilesChange(newSelectedFiles);
@@ -93,7 +97,9 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
                 </Tooltip>
                 <span 
                   onClick={() => handleFileSelection(fileName)}
-                  className={`cursor-pointer hover:text-blue-400 transition-colors duration-200 truncate ${selectedFiles[fileName] ? 'font-bold text-blue-500' : ''}`}
+                  className={`cursor-pointer hover:text-blue-400 transition-colors duration-200 truncate 
+                    ${selectedFiles[fileName] ? 'font-bold text-blue-500' : ''}
+                    ${file.progress && file.progress.status !== 'success' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {fileName}
                 </span>

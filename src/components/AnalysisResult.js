@@ -1,8 +1,8 @@
 import React from 'react';
 import '../styles/AnalysisResult.css'
 
-const AnalysisResult = ({ type, data, fileCount }) => {
-  console.log('AnalysisResult props:', { type, data, fileCount });
+const AnalysisResult = ({ type, data, files, fileCount }) => {
+  console.log('AnalysisResult props:', { type, data, files, fileCount });
   
   const renderContent = (content) => {
     try {
@@ -81,7 +81,7 @@ const AnalysisResult = ({ type, data, fileCount }) => {
     return null;
   }
 
-  // console.log('AnalysisResult about to render');
+  const selectedFiles = Object.keys(files).filter(fileName => files[fileName].isChecked);
   
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden h-full flex flex-col">
@@ -94,13 +94,15 @@ const AnalysisResult = ({ type, data, fileCount }) => {
             {renderContent(data)}
           </div>
         ) : (
-          Object.entries(data).map(([filename, content]) => (
-            <div key={filename} className="mb-6 last:mb-0">
-              <h4 className="text-md font-semibold text-gray-800 mb-2">{filename}</h4>
-              <div className="bg-gray-50 p-4 rounded-md shadow-sm">
-                {renderContent(content)}
+          selectedFiles.map(fileName => (
+            data[fileName] && (
+              <div key={fileName} className="mb-6 last:mb-0">
+                <h4 className="text-md font-semibold text-gray-800 mb-2">{fileName}</h4>
+                <div className="bg-gray-50 p-4 rounded-md shadow-sm">
+                  {renderContent(data[fileName])}
+                </div>
               </div>
-            </div>
+            )
           ))
         )}
       </div>
