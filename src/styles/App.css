@@ -266,3 +266,20 @@ h2 {
   padding-top: 8px;
   padding-bottom: 8px;
 }
+
+@media (max-width: 768px) {
+  .ant-layout-sider {
+    position: fixed !important;
+    height: 100% !important;
+    right: 0 !important;
+    transition: right 0.3s !important;
+  }
+
+  .ant-layout-sider-collapsed {
+    right: -100% !important;
+  }
+
+  .ant-layout-content {
+    margin-right: 0 !important;
+  }
+}
