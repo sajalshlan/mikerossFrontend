@@ -68,9 +68,9 @@ const AnalysisSection = ({
   };
 
   return (
-    <div className="column analysis-results">
-      <h2>Analysis</h2>
-      <div className="analysis-options">
+    <div className="flex flex-col space-y-4">
+      <h2 className="text-2xl font-semibold text-gray-800">Analysis</h2>
+      <div className="flex flex-wrap gap-2">
         {analysisTypes.map((type) => (
           <button 
             key={type}
@@ -82,22 +82,30 @@ const AnalysisSection = ({
               Object.values(files).filter(file => file.isChecked).length === 0 ||
               (type === 'conflict' && !hasMultipleFiles)
             }
-            className={`analysis-button ${analysisState[type].isLoading ? 'loading' : ''} ${analysisState[type].isPerformed ? 'performed' : ''}`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200
+              ${analysisState[type].isLoading ? 'bg-blue-100 text-blue-800' : 
+                analysisState[type].isPerformed ? 'bg-green-100 text-green-800' : 
+                'bg-gray-100 text-gray-800 hover:bg-gray-200'}
+              ${!hasFiles || isFileProcessing || Object.values(files).filter(file => file.isChecked).length === 0 || 
+                (type === 'conflict' && !hasMultipleFiles) ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
           >
-            {analysisState[type].isLoading ? <Loader className="spinner" /> : null}
-            <span>
-              {type === 'summary' ? 'Summary' : 
-               type === 'risky' ? 'Risk Analysis' : 
-               'Conflict Check'}
-            </span>
-            {analysisState[type].isPerformed && (
-              analysisState[type].isVisible ? <ChevronUp size={16} /> : <ChevronDown size={16} />
-            )}
+            <div className="flex items-center space-x-2">
+              {analysisState[type].isLoading && <Loader className="animate-spin w-4 h-4" />}
+              <span>
+                {type === 'summary' ? 'Summary' : 
+                 type === 'risky' ? 'Risk Analysis' : 
+                 'Conflict Check'}
+              </span>
+              {analysisState[type].isPerformed && (
+                analysisState[type].isVisible ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+              )}
+            </div>
           </button>
         ))}
       </div>
       {hasFiles && (
-        <div className="results-content">
+        <div className="space-y-4">
           {analysisTypes.map((type) => (
             analysisState[type].isPerformed && analysisState[type].isVisible && (
               <AnalysisResult 

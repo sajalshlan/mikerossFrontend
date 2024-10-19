@@ -5,8 +5,6 @@ const AnalysisResult = ({ type, data, fileCount }) => {
   console.log('AnalysisResult props:', { type, data, fileCount });
   
   const renderContent = (content) => {
-    console.log("type", typeof content)
-    
     try {
       if (type === 'conflict') {
         const conflictResult = Object.values(content)[0];
@@ -17,54 +15,54 @@ const AnalysisResult = ({ type, data, fileCount }) => {
         );
       } else if (typeof content === 'string') {
         return (
-          <div className="result-content">
+          <div className="space-y-2">
             {content.split('\n').map((line, index) => renderLine(line, index))}
           </div>
         );
       } else if (Array.isArray(content)) {
         return (
-          <ul className="result-list">
+          <ul className="list-disc list-inside space-y-1">
             {content.map((item, index) => (
-              <li key={index}>{renderContent(item)}</li>
+              <li key={index} className="text-gray-700">{renderContent(item)}</li>
             ))}
           </ul>
         );
       } else if (typeof content === 'object' && content !== null) {
         return (
-          <div className="result-object">
+          <div className="space-y-2">
             {Object.entries(content).map(([key, value]) => (
-              <div key={key} className="result-item">
-                <strong>{key}:</strong> {renderContent(value)}
+              <div key={key} className="flex">
+                <strong className="mr-2 text-gray-800">{key}:</strong> {renderContent(value)}
               </div>
             ))}
           </div>
         );
       }
-      return content;
+      return <span className="text-gray-700">{content}</span>;
     } catch (error) {
       console.error('Error in renderContent:', error);
-      return <div className="error-message">Error rendering content. Please try again.</div>;
+      return <div className="text-red-500">Error rendering content. Please try again.</div>;
     }
   };
 
   const renderLine = (line, index) => {
     try {
       if (line.trim().startsWith('•')) {
-        return <li key={index}>{line.substring(1).trim()}</li>;
+        return <li key={index} className="ml-4 text-gray-700">{line.substring(1).trim()}</li>;
       } else if (line.includes('**')) {
         return (
-          <p key={index}>
+          <p key={index} className="text-gray-700">
             {line.split('**').map((part, i) => 
-              i % 2 === 0 ? part : <strong key={i}>{part}</strong>
+              i % 2 === 0 ? part : <strong key={i} className="font-semibold text-gray-900">{part}</strong>
             )}
           </p>
         );
       } else {
-        return <p key={index}>{line}</p>;
+        return <p key={index} className="text-gray-700">{line}</p>;
       }
     } catch (error) {
       console.error('Error in renderLine:', error);
-      return <p key={index} className="error-message">Error rendering line. Please try again.</p>;
+      return <p key={index} className="text-red-500">Error rendering line. Please try again.</p>;
     }
   };
 
@@ -86,20 +84,22 @@ const AnalysisResult = ({ type, data, fileCount }) => {
   // console.log('AnalysisResult about to render');
   
   return (
-    <div className="analysis-result">
-      <div className="result-header">
-        <h3>{getTitle()}</h3>
+    <div className="bg-white shadow-md rounded-lg overflow-hidden h-full flex flex-col">
+      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800">{getTitle()}</h3>
       </div>
-      <div className="result-body">
+      <div className="p-4 overflow-auto flex-grow">
         {type === 'conflict' ? (
-          <div className="file-result">
+          <div className="space-y-2">
             {renderContent(data)}
           </div>
         ) : (
           Object.entries(data).map(([filename, content]) => (
-            <div key={filename} className="file-result">
-              <h4>{filename}</h4>
-              {renderContent(content)}
+            <div key={filename} className="mb-6 last:mb-0">
+              <h4 className="text-md font-semibold text-gray-800 mb-2">{filename}</h4>
+              <div className="bg-gray-50 p-4 rounded-md shadow-sm">
+                {renderContent(content)}
+              </div>
             </div>
           ))
         )}

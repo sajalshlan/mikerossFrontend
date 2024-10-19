@@ -268,7 +268,7 @@ const LegalAnalyzer = () => {
   };
 
   return (
-    <Layout className="min-h-screen">
+    <Layout className="h-screen overflow-hidden">
       <Helmet>
         <title>Mike Ross</title>
         <meta property="og:title" content="Your super intelligent legal assistant" />
@@ -276,7 +276,7 @@ const LegalAnalyzer = () => {
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Helmet>
       <Layout className="flex-1">
-        <Content className="bg-gray-100 p-4 flex">
+        <Content className="bg-gray-100 p-4 flex h-full">
           <div className="w-1/2 pr-2 overflow-auto">
             <FilePreview files={files} selectedFile={selectedFile} onFileSelect={setSelectedFile} />
           </div>
