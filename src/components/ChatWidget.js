@@ -3,9 +3,7 @@ import { Button, Input, Spin } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 
-const ChatWidget = ({ extractedTexts, onClose }) => {
-  const [chatMessages, setChatMessages] = useState([]);
-  const [chatInput, setChatInput] = useState('');
+const ChatWidget = ({ extractedTexts, onClose, chatMessages, setChatMessages, chatInput, setChatInput }) => {
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const chatMessagesRef = useRef(null);
   const latestMessageRef = useRef(null);

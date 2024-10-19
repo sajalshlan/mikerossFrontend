@@ -7,6 +7,10 @@ import Draft from './Draft';
 const MagicEffect = ({ extractedTexts }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isDraftOpen, setIsDraftOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [draftQuery, setDraftQuery] = useState('');
+  const [draftResult, setDraftResult] = useState('');
 
   const toggleChat = () => {
     setIsChatOpen(prev => !prev);
@@ -34,8 +38,26 @@ const MagicEffect = ({ extractedTexts }) => {
         </Tooltip>
       </FloatButton.Group>
       
-      {isChatOpen && <ChatWidget extractedTexts={extractedTexts} onClose={() => setIsChatOpen(false)} />}
-      {isDraftOpen && <Draft extractedTexts={extractedTexts} onClose={() => setIsDraftOpen(false)} />}
+      {isChatOpen && (
+        <ChatWidget
+          extractedTexts={extractedTexts}
+          onClose={() => setIsChatOpen(false)}
+          chatMessages={chatMessages}
+          setChatMessages={setChatMessages}
+          chatInput={chatInput}
+          setChatInput={setChatInput}
+        />
+      )}
+      {isDraftOpen && (
+        <Draft
+          extractedTexts={extractedTexts}
+          onClose={() => setIsDraftOpen(false)}
+          draftQuery={draftQuery}
+          setDraftQuery={setDraftQuery}
+          draftResult={draftResult}
+          setDraftResult={setDraftResult}
+        />
+      )}
     </>
   );
 };

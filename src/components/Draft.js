@@ -1,13 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, Spin, Typography } from 'antd';
-import { CloseOutlined, SendOutlined } from '@ant-design/icons';
+import { Button, Input, Spin, Typography, message } from 'antd';
+import { CloseOutlined, SendOutlined, CopyOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 
 const { Title, Paragraph } = Typography;
 
-const Draft = ({ extractedTexts, onClose }) => {
-  const [draftQuery, setDraftQuery] = useState('');
-  const [draftResult, setDraftResult] = useState('');
+const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult, setDraftResult }) => {
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const draftResultRef = useRef(null);
   const textAreaRef = useRef(null);
@@ -29,6 +27,7 @@ const Draft = ({ extractedTexts, onClose }) => {
         
         if (result) {
           setDraftResult(result);
+          setDraftQuery(''); // Clear the input after sending
         } else {
           throw new Error('No response from the server');
         }
@@ -50,10 +49,29 @@ const Draft = ({ extractedTexts, onClose }) => {
 
   const renderDraftContent = (content) => {
     return content.split('\n').map((line, index) => (
-      <Paragraph key={index} className="mb-2">
-        {line}
+      <Paragraph 
+        key={index} 
+        className={`mb-2 ${line.trim() === '' ? 'h-1' : ''}`}
+      >
+        {line.startsWith('**') && line.endsWith('**') ? (
+          <strong className="text-md font-semibold text-gray-800">{line.slice(2, -2)}</strong>
+        ) : line.startsWith('Re:') ? (
+          <span className="text-base font-medium text-gray-700">{line}</span>
+        ) : (
+          <span className="text-sm text-gray-600">{line}</span>
+        )}
       </Paragraph>
     ));
+  };
+
+  // Add this function after the renderDraftContent function
+  const handleCopyToClipboard = () => {
+    navigator.clipboard.writeText(draftResult).then(() => {
+      message.success('Draft copied to clipboard');
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+      message.error('Failed to copy draft');
+    });
   };
 
   return (
@@ -70,8 +88,19 @@ const Draft = ({ extractedTexts, onClose }) => {
       <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={draftResultRef}>
         {draftResult ? (
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <Title level={4} className="mb-4">Generated Draft</Title>
-            {renderDraftContent(draftResult)}
+            <div className="flex justify-between items-center mb-4">
+              <Title level={4} className="m-0 text-xl font-bold text-gray-900">Generated Draft</Title>
+              <Button
+                icon={<CopyOutlined />}
+                onClick={handleCopyToClipboard}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                Copy
+              </Button>
+            </div>
+            <div className="space-y-2 font-serif">
+              {renderDraftContent(draftResult)}
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-500">
@@ -98,6 +127,7 @@ const Draft = ({ extractedTexts, onClose }) => {
               placeholder="Describe the draft you want to create..."
               className="flex-grow mr-2 bg-white border-gray-300 text-gray-800 placeholder-gray-400 rounded-xl"
               autoSize={{ minRows: 2, maxRows: 4 }}
+              disabled={isWaitingForResponse}
             />
             <Button
               type="primary"
