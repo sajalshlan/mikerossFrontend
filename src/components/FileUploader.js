@@ -86,7 +86,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
       children: Object.entries(files).map(([fileName, file]) => ({
         key: fileName,
         label: (
-          <div className="flex flex-col w-full ">
+          <div className={`flex flex-col w-full ${selectedFiles[fileName] ? 'bg-blue-100 rounded-md p-2' : ''}`}>
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center space-x-2 flex-grow min-w-0">
                 <Tooltip title="Preview file">
@@ -97,8 +97,8 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
                 </Tooltip>
                 <span 
                   onClick={() => handleFileSelection(fileName)}
-                  className={`cursor-pointer hover:text-blue-400 transition-colors duration-200 truncate 
-                    ${selectedFiles[fileName] ? 'font-bold text-blue-500' : ''}
+                  className={`cursor-pointer transition-colors duration-200 truncate 
+                    ${selectedFiles[fileName] ? 'font-bold text-blue-700' : 'hover:text-blue-400'}
                     ${file.progress && file.progress.status !== 'success' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {fileName}
