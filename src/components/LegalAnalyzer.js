@@ -292,7 +292,6 @@ const LegalAnalyzer = () => {
           <Splitter
             style={{
               height: '100%', // Adjust this value if needed
-              border: '0.5px solid #f0f0f0', // Add a border to make the Splitter visible
             }}
           >
             <Splitter.Panel

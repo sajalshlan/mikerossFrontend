@@ -89,7 +89,7 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
           <FloatButton.Group
             trigger="click"
             type="primary"
-            style={{ right: 6, bottom: 24 }}
+            style={{ right: 10, bottom: 24 }}
             icon={<img src="/magic-wand2.svg" alt="Magic Wand" style={{ width: '34px', height: '24px' }} />}
             open={isFloatGroupOpen}
             onOpenChange={handleMainButtonClick}
