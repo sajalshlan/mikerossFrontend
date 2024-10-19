@@ -21,8 +21,14 @@ const ChatWidget = ({ extractedTexts }) => {
     }
   };
 
+  const handleFloatButtonClick = () => {
+    if (isChatOpen) {
+      setIsChatOpen(false);
+    }
+  };
+
   const toggleChat = () => {
-    setIsChatOpen(!isChatOpen);
+    setIsChatOpen(prev => !prev);
   };
 
   const handleChatSubmit = async (e) => {
@@ -68,7 +74,7 @@ const ChatWidget = ({ extractedTexts }) => {
     const parts = content.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="text-blue-300">{part.slice(2, -2)}</strong>;
+        return <strong key={index} className="text-blue-600">{part.slice(2, -2)}</strong>;
       }
       return part;
     });
@@ -79,8 +85,9 @@ const ChatWidget = ({ extractedTexts }) => {
       <FloatButton.Group
         trigger="click"
         type="primary"
-        style={{ right: 6, bottom: 20 }}
+        style={{ right: 10, bottom: 24 }}
         icon={<BulbOutlined />}
+        onClick={handleFloatButtonClick}
       >
         <Tooltip title="Chat with AI" placement="left">
           <FloatButton icon={<MessageOutlined />} onClick={toggleChat} />
@@ -88,17 +95,17 @@ const ChatWidget = ({ extractedTexts }) => {
       </FloatButton.Group>
       
       {isChatOpen && (
-        <div className="fixed bottom-20 right-20 w-96 h-[500px] bg-gray-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-700">
-          <header className="bg-gray-900 p-4 text-white flex justify-between items-center rounded-t-2xl">
+        <div className="fixed bottom-24 right-24 w-96 h-[500px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-200 animate-slide-up">
+          <header className="bg-gray-100 p-4 text-gray-800 flex justify-between items-center rounded-t-2xl">
             <h4 className="text-lg font-bold m-0">Chat with AI</h4>
             <Button
               type="text"
               icon={<CloseOutlined />}
-              onClick={toggleChat}
-              className="text-white hover:text-gray-300"
+              onClick={() => setIsChatOpen(false)}
+              className="text-gray-600 hover:text-gray-800"
             />
           </header>
-          <div className="flex-grow overflow-y-auto p-4 bg-gray-800" ref={chatMessagesRef}>
+          <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={chatMessagesRef}>
             {chatMessages.map((message, index) => (
               <div 
                 key={index} 
@@ -109,14 +116,14 @@ const ChatWidget = ({ extractedTexts }) => {
               >
                 <div className={`p-3 rounded-2xl ${
                   message.role === 'user' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-700 text-gray-100'
+                    ? 'bg-blue-100 text-gray-800' 
+                    : 'bg-gray-200 text-gray-800'
                 }`}>
                   <div className="break-words text-sm">
                     {renderMessageContent(message.content)}
                   </div>
                 </div>
-                <div className="text-xs text-gray-400 mt-1 text-right">{message.timestamp}</div>
+                <div className="text-xs text-gray-500 mt-1 text-right">{message.timestamp}</div>
               </div>
             ))}
             {isWaitingForResponse && (
@@ -125,20 +132,20 @@ const ChatWidget = ({ extractedTexts }) => {
               </div>
             )}
           </div>
-          <footer className="bg-gray-900 p-4 rounded-b-2xl">
+          <footer className="bg-gray-100 p-4 rounded-b-2xl">
             <form onSubmit={handleChatSubmit} className="flex">
               <Input
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder="Type your question here..."
-                className="flex-grow mr-2 bg-gray-700 border-gray-600 text-black placeholder-gray-400 rounded-xl"
+                className="flex-grow mr-2 bg-white border-gray-300 text-gray-800 placeholder-gray-400 rounded-xl"
               />
               <Button
                 type="primary"
                 htmlType="submit"
                 icon={<SendOutlined />}
                 disabled={isWaitingForResponse || !chatInput.trim()}
-                className="bg-blue-600 border-blue-600 hover:bg-blue-700 rounded-xl"
+                className="bg-blue-500 border-blue-500 hover:bg-blue-600 rounded-xl"
               />
             </form>
           </footer>
