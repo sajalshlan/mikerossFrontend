@@ -1,76 +1,63 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, Spin } from 'antd';
+import { Button, Input, Spin, Typography } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 
+const { Title, Paragraph } = Typography;
+
 const Draft = ({ extractedTexts, onClose }) => {
-  const [draftMessages, setDraftMessages] = useState([]);
-  const [draftInput, setDraftInput] = useState('');
+  const [draftQuery, setDraftQuery] = useState('');
+  const [draftResult, setDraftResult] = useState('');
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
-  const draftMessagesRef = useRef(null);
-  const latestMessageRef = useRef(null);
+  const draftResultRef = useRef(null);
+  const textAreaRef = useRef(null);
 
   useEffect(() => {
-    scrollToLatestMessage();
-  }, [draftMessages]);
-
-  const scrollToLatestMessage = () => {
-    if (latestMessageRef.current) {
-      latestMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (draftResultRef.current) {
+      draftResultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  };
+  }, [draftResult]);
 
   const handleDraftSubmit = async (e) => {
     e.preventDefault();
-    if (draftInput.trim() && !isWaitingForResponse) {
-      const newUserMessage = { 
-        role: 'user', 
-        content: draftInput,
-        timestamp: new Date().toLocaleTimeString()
-      };
-      setDraftMessages(prev => [...prev, newUserMessage]);
-      setDraftInput('');
+    if (draftQuery.trim() && !isWaitingForResponse) {
       setIsWaitingForResponse(true);
 
       try {
         const fullText = Object.values(extractedTexts).join('\n\n');
-        const result = await performAnalysis('draft', `${fullText}\n\nUser Query: ${newUserMessage.content}`);
+        const result = await performAnalysis('draft', `${fullText}\n\nUser Query: ${draftQuery}`);
         
         if (result) {
-          const newAssistantMessage = { 
-            role: 'assistant', 
-            content: result,
-            timestamp: new Date().toLocaleTimeString()
-          };
-          setDraftMessages(prev => [...prev, newAssistantMessage]);
+          setDraftResult(result);
         } else {
           throw new Error('No response from the server');
         }
       } catch (error) {
         console.error('Error in draft submission:', error);
-        setDraftMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: `An error occurred: ${error.message}. Please try again.`, 
-          timestamp: new Date().toLocaleTimeString() 
-        }]);
+        setDraftResult(`An error occurred: ${error.message}. Please try again.`);
       } finally {
         setIsWaitingForResponse(false);
       }
     }
   };
 
-  const renderMessageContent = (content) => {
-    const parts = content.split(/(\*\*.*?\*\*)/g);
-    return parts.map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="text-blue-600">{part.slice(2, -2)}</strong>;
-      }
-      return part;
-    });
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      handleDraftSubmit(e);
+    }
+  };
+
+  const renderDraftContent = (content) => {
+    return content.split('\n').map((line, index) => (
+      <Paragraph key={index} className="mb-2">
+        {line}
+      </Paragraph>
+    ));
   };
 
   return (
-    <div className="fixed bottom-24 right-24 w-96 h-[500px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-200 animate-slide-up">
+    <div className="fixed bottom-24 right-24 w-[600px] h-[600px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-200 animate-slide-up">
       <header className="bg-gray-100 p-4 text-gray-800 flex justify-between items-center rounded-t-2xl">
         <h4 className="text-lg font-bold m-0">Draft Assistant</h4>
         <Button
@@ -80,48 +67,48 @@ const Draft = ({ extractedTexts, onClose }) => {
           className="text-gray-600 hover:text-gray-800"
         />
       </header>
-      <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={draftMessagesRef}>
-        {draftMessages.map((message, index) => (
-          <div 
-            key={index} 
-            className={`max-w-[80%] mb-4 ${
-              message.role === 'user' ? 'ml-auto' : 'mr-auto'
-            }`}
-            ref={index === draftMessages.length - 1 ? latestMessageRef : null}
-          >
-            <div className={`p-3 rounded-2xl ${
-              message.role === 'user' 
-                ? 'bg-blue-100 text-gray-800' 
-                : 'bg-gray-200 text-gray-800'
-            }`}>
-              <div className="break-words text-sm">
-                {renderMessageContent(message.content)}
-              </div>
-            </div>
-            <div className="text-xs text-gray-500 mt-1 text-right">{message.timestamp}</div>
+      <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={draftResultRef}>
+        {draftResult ? (
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <Title level={4} className="mb-4">Generated Draft</Title>
+            {renderDraftContent(draftResult)}
           </div>
-        ))}
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            Your draft will appear here
+          </div>
+        )}
         {isWaitingForResponse && (
           <div className="flex justify-center items-center p-4">
-            <Spin size="small" />
+            <Spin size="large" />
           </div>
         )}
       </div>
       <footer className="bg-gray-100 p-4 rounded-b-2xl">
-        <form onSubmit={handleDraftSubmit} className="flex">
-          <Input
-            value={draftInput}
-            onChange={(e) => setDraftInput(e.target.value)}
-            placeholder="Type your draft request here..."
-            className="flex-grow mr-2 bg-white border-gray-300 text-gray-800 placeholder-gray-400 rounded-xl"
-          />
-          <Button
-            type="primary"
-            htmlType="submit"
-            icon={<SendOutlined />}
-            disabled={isWaitingForResponse || !draftInput.trim()}
-            className="bg-blue-500 border-blue-500 hover:bg-blue-600 rounded-xl"
-          />
+        <form onSubmit={handleDraftSubmit} className="flex flex-col">
+          <div className="text-xs text-gray-500 mb-2">
+            Press Enter for a new line. Press Shift+Enter to generate the draft.
+          </div>
+          <div className="flex">
+            <Input.TextArea
+              ref={textAreaRef}
+              value={draftQuery}
+              onChange={(e) => setDraftQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Describe the draft you want to create..."
+              className="flex-grow mr-2 bg-white border-gray-300 text-gray-800 placeholder-gray-400 rounded-xl"
+              autoSize={{ minRows: 2, maxRows: 4 }}
+            />
+            <Button
+              type="primary"
+              htmlType="submit"
+              icon={<SendOutlined />}
+              disabled={isWaitingForResponse || !draftQuery.trim()}
+              className="bg-blue-500 border-blue-500 hover:bg-blue-600 rounded-xl"
+            >
+              Generate
+            </Button>
+          </div>
         </form>
       </footer>
     </div>
