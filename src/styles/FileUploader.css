@@ -18,3 +18,22 @@
   display: none;
 }
 
+.custom-menu .ant-menu-item,
+.custom-menu .ant-menu-submenu-title {
+  height: auto !important;
+  line-height: 40px !important;
+  padding-inline: 16px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-inline: 4px !important;
+  margin-block: 4px !important;
+  width: calc(100% - 8px) !important;
+}
+
+.custom-menu .ant-menu-item-icon {
+  line-height: 40px !important;
+}
+
+.custom-menu .ant-menu-title-content {
+  line-height: 40px !important;
+}

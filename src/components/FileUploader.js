@@ -82,7 +82,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
       children: Object.entries(files).map(([fileName, file]) => ({
         key: fileName,
         label: (
-          <div className="flex flex-col w-full">
+          <div className="flex flex-col w-full ">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center space-x-2 flex-grow min-w-0">
                 <Tooltip title="Preview file">
@@ -132,7 +132,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
         mode="inline"
         theme="light"
         items={menuItems}
-        className="flex-grow"
+        className="flex-grow custom-menu"
         style={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'auto' }}
       />
     </div>
