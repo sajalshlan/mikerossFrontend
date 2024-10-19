@@ -38,28 +38,45 @@ export const performConflictCheck = async (texts) => {
   }
 };
 
-export const uploadFile = async (file) => {
+export const uploadFile = async (file, onProgress) => {
   try {
+    console.log(`[API] Uploading file...`);
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch(`${API_BASE_URL}/upload_file/`, {
-      method: 'POST',
-      body: formData,
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${API_BASE_URL}/upload_file/`, true);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = (event.loaded / event.total) * 100;
+        onProgress(Math.min(percentComplete, 90)); // Cap at 90%
+      }
+    };
+
+    const response = await new Promise((resolve, reject) => {
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(JSON.parse(xhr.responseText));
+        } else {
+          reject(new Error(`HTTP error! status: ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.send(formData);
     });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const result = await response.json();
-    if (result.success) {
-      return result;
+
+    if (response.success) {
+      return response;
     } else {
-      throw new Error(result.error || 'Unknown error occurred during file upload');
+      throw new Error(response.error || 'Unknown error occurred during file upload');
     }
   } catch (error) {
     console.error(`[API] Error uploading ${file.name}:`, error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
+      file: file
     };
   }
 };

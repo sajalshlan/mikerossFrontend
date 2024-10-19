@@ -4,9 +4,9 @@ import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldO
 
 const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection, collapsed, setCollapsed }) => {
   const [selectedFiles, setSelectedFiles] = useState({});
+  const [pendingFiles, setPendingFiles] = useState([]);
 
   useEffect(() => {
-    // Initialize selectedFiles based on the isChecked property of each file
     const initialSelectedFiles = Object.entries(files).reduce((acc, [fileName, file]) => {
       acc[fileName] = file.isChecked || false;
       return acc;
@@ -15,11 +15,17 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   }, [files]);
 
   const handleFileChange = (info) => {
-    console.log('FileUploader: handleFileChange called', info);
     const { fileList } = info;
-    const newFiles = fileList.map(file => file.originFileObj);
-    console.log('FileUploader: newFiles', newFiles);
-    onFileUpload(newFiles);
+    setPendingFiles(fileList.map(file => file.originFileObj));
+  };
+
+  const handleUploadClick = () => {
+    if (pendingFiles.length > 0) {
+      onFileUpload(pendingFiles);
+      setPendingFiles([]);
+    } else {
+      message.warning('Please select files to upload');
+    }
   };
 
   const handleFileSelection = (fileName) => {
@@ -38,57 +44,77 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     multiple: true,
     onChange: handleFileChange,
     showUploadList: false,
-    disabled: isFileProcessing,
     beforeUpload: () => false,
+    fileList: pendingFiles,
   };
 
   const menuItems = [
     {
       key: 'upload',
       icon: <UploadOutlined />,
-      label: (
-        <Upload {...uploadProps}>
-          <Button icon={<UploadOutlined />} disabled={isFileProcessing}>
-            Upload Files
-          </Button>
-        </Upload>
-      ),
+      label: 'Upload Files',
+      children: [
+        {
+          key: 'uploadButton',
+          label: (
+            <div>
+              <Upload {...uploadProps}>
+                <Button icon={<UploadOutlined />} disabled={isFileProcessing}>
+                  Select Files
+                </Button>
+              </Upload>
+              <Button 
+                onClick={handleUploadClick} 
+                disabled={isFileProcessing || pendingFiles.length === 0}
+                style={{ marginLeft: '10px' }}
+              >
+                Upload
+              </Button>
+            </div>
+          ),
+        },
+      ],
     },
     {
       key: 'files',
       icon: <FileOutlined />,
       label: 'Uploaded Files',
-      children: Object.entries(files).map(([fileName, file]) => {
-        return {
-          key: fileName,
-          label: (
-            <div className="flex flex-col w-full">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center space-x-2 flex-grow min-w-0">
-                  <Tooltip title="Preview file">
-                    <FileOutlined 
-                      onClick={() => onFileSelection(fileName)}
-                      className="cursor-pointer text-blue-400 hover:text-blue-600 transition-colors duration-200 flex-shrink-0"
-                    />
-                  </Tooltip>
-                  <span 
-                    onClick={() => handleFileSelection(fileName)}
-                    className={`cursor-pointer hover:text-blue-400 transition-colors duration-200 truncate ${selectedFiles[fileName] ? 'font-bold text-blue-500' : ''}`}
-                  >
-                    {fileName}
-                  </span>
-                </div>
-                <Tooltip title="Delete file">
-                  <DeleteOutlined
-                    onClick={() => handleRemoveFile(fileName)}
-                    className="cursor-pointer text-red-400 hover:text-red-600 transition-colors duration-200 flex-shrink-0 ml-2"
+      children: Object.entries(files).map(([fileName, file]) => ({
+        key: fileName,
+        label: (
+          <div className="flex flex-col w-full">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center space-x-2 flex-grow min-w-0">
+                <Tooltip title="Preview file">
+                  <FileOutlined 
+                    onClick={() => onFileSelection(fileName)}
+                    className="cursor-pointer text-blue-400 hover:text-blue-600 transition-colors duration-200 flex-shrink-0"
                   />
                 </Tooltip>
+                <span 
+                  onClick={() => handleFileSelection(fileName)}
+                  className={`cursor-pointer hover:text-blue-400 transition-colors duration-200 truncate ${selectedFiles[fileName] ? 'font-bold text-blue-500' : ''}`}
+                >
+                  {fileName}
+                </span>
               </div>
+              <Tooltip title="Delete file">
+                <DeleteOutlined
+                  onClick={() => handleRemoveFile(fileName)}
+                  className="cursor-pointer text-red-400 hover:text-red-600 transition-colors duration-200 flex-shrink-0 ml-2"
+                />
+              </Tooltip>
             </div>
-          ),
-        };
-      }),
+            {file.progress && (
+              <Progress 
+                percent={Math.round(file.progress.progress)} 
+                status={file.progress.status === 'error' ? 'exception' : file.progress.status === 'success' ? 'success' : 'active'}
+                size="small"
+              />
+            )}
+          </div>
+        ),
+      })),
     },
   ];
 
@@ -107,6 +133,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
         theme="light"
         items={menuItems}
         className="flex-grow"
+        style={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'auto' }}
       />
     </div>
   );

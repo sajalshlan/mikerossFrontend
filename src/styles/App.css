@@ -715,3 +715,10 @@ h2 {
 .ant-layout-sider:not(.ant-layout-sider-collapsed) + .ant-layout-content {
   margin-right: 400px; /* This accounts for the expanded Sider */
 }
+
+.ant-menu-item:hover,
+.ant-menu-item-active,
+.ant-menu-item-selected {
+  background-color: transparent !important; /* Removes background color */
+  color: inherit !important; /* Keeps text color same */
+}

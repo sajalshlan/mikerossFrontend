@@ -11,6 +11,8 @@ import '../styles/App.css';
 const { Sider, Content } = Layout;
 
 const LegalAnalyzer = () => {
+  let count=0
+
   const [files, setFiles] = useState({});
   const [analysisState, setAnalysisState] = useState({
     summary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
@@ -61,21 +63,43 @@ const LegalAnalyzer = () => {
     });
   };
 
-  const handleFileUpload = async (newFiles) => {
+  const  
+  handleFileUpload = async (newFiles) => {
     console.log('LegalAnalyzer: handleFileUpload started', newFiles);
     setIsFileProcessing(true);
-    // Initialize updatedFiles with only the new files
-    const updatedFiles = Object.fromEntries(
-      newFiles.map(file => [file.name, { file, isChecked: false }])
-    );
+
+    const updatedFiles = { ...files };
+    for (const file of newFiles) {
+      updatedFiles[file.name] = { 
+        file, 
+        progress: { progress: 0, status: 'uploading' }, 
+        isChecked: false 
+      };
+    }
+    
+    setFiles(updatedFiles);
     
     console.log('LegalAnalyzer: updatedFiles', updatedFiles);
 
-    for (const file of newFiles) {
-      try {
-        console.log('----------------------------------', file);
-        const result = await uploadFile(file);
-        console.log('----------------------------------', result);
+    try {
+      const uploadPromises = newFiles.map(file => 
+        uploadFile(file, (progress) => {
+          setFiles(prev => ({
+            ...prev,
+            [file.name]: {
+              ...prev[file.name],
+              progress: { 
+                progress: progress < 100 ? progress : Math.floor(Math.random() * (99 - 90 + 1) + 90),
+                status: 'uploading' 
+              }
+            }
+          }));
+        })
+      );
+      const results = await Promise.all(uploadPromises);
+      console.log('results', results);
+      results.forEach((result, index) => {
+        const file = newFiles[index];
         if (result.success) {
           if (result.files) {
             // Handle ZIP file or multiple files
@@ -83,30 +107,32 @@ const LegalAnalyzer = () => {
               updatedFiles[filename] = {
                 ...updatedFiles[filename],
                 extractedText: fileData.content,
+                progress: { progress: 100, status: 'success' },
                 base64: fileData.base64
               };
             });
           } else {
             // Handle single file
-            if (file && result && result.text) {
-              updatedFiles[file.name] = {
-                ...updatedFiles[file.name],
-                extractedText: result.text,
-                base64: result.base64
-              };
-            }
+            updatedFiles[file.name] = {
+              ...updatedFiles[file.name],
+              extractedText: result.text,
+              progress: { progress: 100, status: 'success' },
+              base64: result.base64
+            };
           }
+        } else {
+          updatedFiles[file.name].progress = { progress: 100, status: 'error' };
         }
-      } catch (error) {
-        console.error(`Error uploading file ${file.name}:`, error);
-      }
+      });
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      newFiles.forEach(file => {
+        updatedFiles[file.name].progress = { progress: 100, status: 'error' };
+      });
+    } finally {
+      setFiles(updatedFiles);
+      setIsFileProcessing(false);
     }
-    
-    // Merge the new files with existing files
-    setFiles(prevFiles => ({...prevFiles, ...updatedFiles}));
-    
-    console.log('LegalAnalyzer: final files', updatedFiles);
-    setIsFileProcessing(false);
   };
 
   const handleAnalysis = async (type, texts = null) => {
