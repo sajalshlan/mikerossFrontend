@@ -1,7 +1,9 @@
 import React from 'react';
-import { Loader, ChevronDown, ChevronUp } from 'lucide-react';
+import { Typography, Tooltip, Space } from 'antd';
+import { LoadingOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import AnalysisResult from './AnalysisResult';
-import '../styles/AnalysisSection.css';
+
+const { Title } = Typography;
 
 const AnalysisSection = ({
   files,
@@ -13,18 +15,28 @@ const AnalysisSection = ({
 }) => {
   const analysisTypes = ['summary', 'risky', 'conflict'];
   const hasFiles = Object.keys(files).length > 0;
+  const checkedFilesCount = Object.values(files).filter(file => file.isChecked).length;
 
   const getButtonColor = (type) => {
     const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
     const allProcessed = selectedFileNames.every(fileName => analysisState[type].result[fileName]);
     const someProcessed = selectedFileNames.some(fileName => analysisState[type].result[fileName]);
 
-    if (analysisState[type].isLoading) return 'bg-blue-100 text-blue-800';
-    if (allProcessed && selectedFileNames.length > 0) return 'bg-green-100 text-green-800';
-    if (someProcessed) return 'bg-yellow-100 text-yellow-800';
-    
-    // Default state (including when not enough files are selected for conflict check)
-    return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+    if (analysisState[type].isLoading) return 'bg-blue-500 hover:bg-blue-600 text-white';
+    if (allProcessed && selectedFileNames.length > 0) return 'bg-green-500 hover:bg-green-600 text-white';
+    if (someProcessed) return 'bg-yellow-500 hover:bg-yellow-600 text-white';
+    return 'bg-gray-200 hover:bg-gray-300 text-gray-700';
+  };
+
+  const getButtonTooltip = (type) => {
+    const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
+    const allProcessed = selectedFileNames.every(fileName => analysisState[type].result[fileName]);
+    const someProcessed = selectedFileNames.some(fileName => analysisState[type].result[fileName]);
+
+    if (analysisState[type].isLoading) return "Analysis in progress...";
+    if (allProcessed && selectedFileNames.length > 0) return "All files processed";
+    if (someProcessed) return "Click to process newly selected files.";
+    return "Click or select files to start analysis";
   };
 
   const handleAnalysisClick = (type) => {
@@ -56,42 +68,45 @@ const AnalysisSection = ({
   };
 
   return (
-    <div className="flex flex-col space-y-4">
-      <h2 className="text-2xl font-semibold text-gray-800">Analysis</h2>
-      <div className="flex flex-wrap gap-2">
-        {analysisTypes.map((type) => (
-          <button 
-            key={type}
-            onClick={() => handleAnalysisClick(type)}
-            disabled={
-              !hasFiles ||
-              analysisState[type].isLoading || 
-              isFileProcessing || 
-              Object.values(files).filter(file => file.isChecked).length === 0 ||
-              (type === 'conflict' && Object.values(files).filter(file => file.isChecked).length < 2)
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200
-              ${getButtonColor(type)}
-              ${!hasFiles || isFileProcessing || Object.values(files).filter(file => file.isChecked).length === 0 || 
-                (type === 'conflict' && Object.values(files).filter(file => file.isChecked).length < 2) ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-          >
-            <div className="flex items-center space-x-2">
-              {analysisState[type].isLoading && <Loader className="animate-spin w-4 h-4" />}
-              <span>
-                {type === 'summary' ? 'Summary' : 
-                 type === 'risky' ? 'Risk Analysis' : 
-                 'Conflict Check'}
-              </span>
-              {analysisState[type].isPerformed && (
-                analysisState[type].isVisible ? <ChevronUp size={16} /> : <ChevronDown size={16} />
-              )}
-            </div>
-          </button>
-        ))}
+    <div className="flex flex-col h-full">
+      <div className="flex-shrink-0">
+        <Title level={3} className="text-gray-800 mb-4">Analysis</Title>
+        <Space wrap className="mb-4">
+          {analysisTypes.map((type) => (
+            <Tooltip key={type} title={getButtonTooltip(type)}>
+              <button
+                onClick={() => handleAnalysisClick(type)}
+                disabled={
+                  !hasFiles ||
+                  analysisState[type].isLoading || 
+                  isFileProcessing || 
+                  checkedFilesCount === 0 ||
+                  (type === 'conflict' && checkedFilesCount < 2)
+                }
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200
+                  ${getButtonColor(type)}
+                  ${(!hasFiles || isFileProcessing || checkedFilesCount === 0 || 
+                    (type === 'conflict' && checkedFilesCount < 2)) ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+              >
+                <div className="flex items-center space-x-2">
+                  {analysisState[type].isLoading && <LoadingOutlined className="animate-spin" />}
+                  <span>
+                    {type === 'summary' ? 'Summary' : 
+                     type === 'risky' ? 'Risk Analysis' : 
+                     'Conflict Check'}
+                  </span>
+                  {analysisState[type].isPerformed && (
+                    analysisState[type].isVisible ? <UpOutlined /> : <DownOutlined />
+                  )}
+                </div>
+              </button>
+            </Tooltip>
+          ))}
+        </Space>
       </div>
-      {hasFiles && (
-        <div className="space-y-4">
+      {hasFiles && checkedFilesCount > 0 && (
+        <div className="flex-grow overflow-hidden">
           {analysisTypes.map((type) => (
             analysisState[type].isPerformed && analysisState[type].isVisible && (
               <AnalysisResult 

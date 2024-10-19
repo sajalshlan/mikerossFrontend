@@ -1,5 +1,8 @@
 import React from 'react';
+import { Card, Typography, List, Tooltip } from 'antd';
 import '../styles/AnalysisResult.css'
+
+const { Title, Text, Paragraph } = Typography;
 
 const AnalysisResult = ({ type, data, files, fileCount }) => {
   console.log('AnalysisResult props:', { type, data, files, fileCount });
@@ -9,60 +12,64 @@ const AnalysisResult = ({ type, data, files, fileCount }) => {
       if (type === 'conflict') {
         const conflictResult = Object.values(content)[0];
         return (
-          <div className="result-content">
+          <div className="text-gray-700">
             {conflictResult.split('\n').map((line, index) => renderLine(line, index))}
           </div>
         );
       } else if (typeof content === 'string') {
         return (
-          <div className="space-y-2">
+          <Typography.Paragraph className="text-gray-700">
             {content.split('\n').map((line, index) => renderLine(line, index))}
-          </div>
+          </Typography.Paragraph>
         );
       } else if (Array.isArray(content)) {
         return (
-          <ul className="list-disc list-inside space-y-1">
-            {content.map((item, index) => (
-              <li key={index} className="text-gray-700">{renderContent(item)}</li>
-            ))}
-          </ul>
+          <List
+            dataSource={content}
+            renderItem={(item, index) => (
+              <List.Item key={index} className="text-gray-700">
+                <Typography.Text>{renderContent(item)}</Typography.Text>
+              </List.Item>
+            )}
+          />
         );
       } else if (typeof content === 'object' && content !== null) {
         return (
-          <div className="space-y-2">
-            {Object.entries(content).map(([key, value]) => (
-              <div key={key} className="flex">
-                <strong className="mr-2 text-gray-800">{key}:</strong> {renderContent(value)}
-              </div>
-            ))}
-          </div>
+          <List
+            dataSource={Object.entries(content)}
+            renderItem={([key, value]) => (
+              <List.Item key={key} className="text-gray-700">
+                <Typography.Text strong>{key}:</Typography.Text> {renderContent(value)}
+              </List.Item>
+            )}
+          />
         );
       }
-      return <span className="text-gray-700">{content}</span>;
+      return <Typography.Text className="text-gray-700">{content}</Typography.Text>;
     } catch (error) {
       console.error('Error in renderContent:', error);
-      return <div className="text-red-500">Error rendering content. Please try again.</div>;
+      return <Typography.Text type="danger">Error rendering content. Please try again.</Typography.Text>;
     }
   };
 
   const renderLine = (line, index) => {
     try {
       if (line.trim().startsWith('•')) {
-        return <li key={index} className="ml-4 text-gray-700">{line.substring(1).trim()}</li>;
+        return <Typography.Paragraph key={index} className="text-gray-700 ml-4">{line}</Typography.Paragraph>;
       } else if (line.includes('**')) {
         return (
-          <p key={index} className="text-gray-700">
+          <Typography.Paragraph key={index} className="text-gray-700">
             {line.split('**').map((part, i) => 
-              i % 2 === 0 ? part : <strong key={i} className="font-semibold text-gray-900">{part}</strong>
+              i % 2 === 0 ? part : <Typography.Text strong key={i} className="text-gray-900">{part}</Typography.Text>
             )}
-          </p>
+          </Typography.Paragraph>
         );
       } else {
-        return <p key={index} className="text-gray-700">{line}</p>;
+        return <Typography.Paragraph key={index} className="text-gray-700">{line}</Typography.Paragraph>;
       }
     } catch (error) {
       console.error('Error in renderLine:', error);
-      return <p key={index} className="text-red-500">Error rendering line. Please try again.</p>;
+      return <Typography.Text key={index} type="danger">Error rendering line. Please try again.</Typography.Text>;
     }
   };
 
@@ -84,11 +91,11 @@ const AnalysisResult = ({ type, data, files, fileCount }) => {
   const selectedFiles = Object.keys(files).filter(fileName => files[fileName].isChecked);
   
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden h-full flex flex-col">
+    <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
       <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800">{getTitle()}</h3>
+        <Typography.Title level={4} className="text-gray-800">{getTitle()}</Typography.Title>
       </div>
-      <div className="p-4 overflow-auto flex-grow">
+      <div className="flex-grow overflow-auto p-4">
         {type === 'conflict' ? (
           <div className="space-y-2">
             {renderContent(data)}
@@ -97,7 +104,9 @@ const AnalysisResult = ({ type, data, files, fileCount }) => {
           selectedFiles.map(fileName => (
             data[fileName] && (
               <div key={fileName} className="mb-6 last:mb-0">
-                <h4 className="text-md font-semibold text-gray-800 mb-2">{fileName}</h4>
+                <Tooltip title={fileName}>
+                  <Typography.Text strong className="text-gray-800 block mb-2">{fileName}</Typography.Text>
+                </Tooltip>
                 <div className="bg-gray-50 p-4 rounded-md shadow-sm">
                   {renderContent(data[fileName])}
                 </div>
