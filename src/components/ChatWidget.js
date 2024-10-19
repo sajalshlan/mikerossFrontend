@@ -31,9 +31,11 @@ const ChatWidget = ({ extractedTexts, onClose, chatMessages, setChatMessages, ch
       setIsWaitingForResponse(true);
 
       try {
-        const textsToUse = extractedTexts
-        const fullText = Object.values(textsToUse).join('\n\n');
-        const result = await performAnalysis('ask', `${fullText}\n\nUser Query: ${newUserMessage.content}`);
+        const textsToUse = extractedTexts;
+        const indexedTexts = Object.entries(textsToUse).map(([fileName, content], index) => 
+          `[${index + 1}] ${fileName}:\n${content}`
+        ).join('\n\n\n\n');
+        const result = await performAnalysis('ask', `${indexedTexts}\n\nUser Query: ${newUserMessage.content}`);
         
         if (result) {
           const newAssistantMessage = { 

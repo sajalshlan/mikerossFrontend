@@ -22,9 +22,11 @@ const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult
       setIsWaitingForResponse(true);
 
       try {
-        const textsToUse = extractedTexts
-        const fullText = Object.values(textsToUse).join('\n\n');
-        const result = await performAnalysis('draft', `${fullText}\n\nUser Query: ${draftQuery}`);
+        const textsToUse = extractedTexts;
+        const indexedTexts = Object.entries(textsToUse).map(([fileName, content], index) => 
+          `[${index + 1}] ${fileName}:\n${content}`
+        ).join('\n\n\n\n');
+        const result = await performAnalysis('draft', `${indexedTexts}\n\nUser Query: ${draftQuery}`);
         
         if (result) {
           setDraftResult(result);
