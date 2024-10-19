@@ -1,61 +1,133 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FloatButton, Tooltip } from 'antd';
 import { BulbOutlined, MessageOutlined, FileTextOutlined } from '@ant-design/icons';
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 
-const MagicEffect = ({ extractedTexts }) => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isDraftOpen, setIsDraftOpen] = useState(false);
+const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
+    console.log("extracted texts", extractedTexts);
+    console.log("all extracted texts", allExtractedTexts);
+  const [isChatVisible, setIsChatVisible] = useState(false);
+  const [isDraftVisible, setIsDraftVisible] = useState(false);
+  const [isChatClosing, setIsChatClosing] = useState(false);
+  const [isDraftClosing, setIsDraftClosing] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [draftQuery, setDraftQuery] = useState('');
   const [draftResult, setDraftResult] = useState('');
+  const [useSelectedFiles, setUseSelectedFiles] = useState(false);
+  const [isFloatGroupOpen, setIsFloatGroupOpen] = useState(false);
+
+  const floatButtonRef = useRef(null);
 
   const toggleChat = () => {
-    setIsChatOpen(prev => !prev);
-    setIsDraftOpen(false);
+    if (isChatVisible && !isChatClosing) {
+      setIsChatClosing(true);
+    } else {
+      setIsChatVisible(true);
+      setIsDraftVisible(false);
+      setIsDraftClosing(false);
+    }
+    setIsFloatGroupOpen(false);
   };
 
   const toggleDraft = () => {
-    setIsDraftOpen(prev => !prev);
-    setIsChatOpen(false);
+    if (isDraftVisible && !isDraftClosing) {
+      setIsDraftClosing(true);
+    } else {
+      setIsDraftVisible(true);
+      setIsChatVisible(false);
+      setIsChatClosing(false);
+    }
+    setIsFloatGroupOpen(false);
   };
+
+  const handleMainButtonClick = () => {
+    setIsFloatGroupOpen(!isFloatGroupOpen);
+    if (isChatVisible) {
+      toggleChat();
+    } else if (isDraftVisible) {
+      toggleDraft();
+    }
+  };
+
+  useEffect(() => {
+    if (isChatClosing) {
+      const timer = setTimeout(() => {
+        setIsChatVisible(false);
+        setIsChatClosing(false);
+      }, 300); // Match this with your animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [isChatClosing]);
+
+  useEffect(() => {
+    if (isDraftClosing) {
+      const timer = setTimeout(() => {
+        setIsDraftVisible(false);
+        setIsDraftClosing(false);
+      }, 300); // Match this with your animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [isDraftClosing]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (floatButtonRef.current && !floatButtonRef.current.contains(event.target)) {
+        setIsFloatGroupOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <>
-      <FloatButton.Group
-        trigger="click"
-        type="primary"
-        style={{ right: 24, bottom: 24 }}
-        icon={<BulbOutlined />}
-      >
-        <Tooltip title="Draft Assistant" placement="left">
-          <FloatButton icon={<FileTextOutlined />} onClick={toggleDraft} />
-        </Tooltip>
-        <Tooltip title="Chat with AI" placement="left">
-          <FloatButton icon={<MessageOutlined />} onClick={toggleChat} />
-        </Tooltip>
-      </FloatButton.Group>
+      <div ref={floatButtonRef}>
+        <FloatButton.Group
+          trigger="click"
+          type="primary"
+          style={{ right: 24, bottom: 24 }}
+          icon={<BulbOutlined />}
+          open={isFloatGroupOpen}
+          onOpenChange={handleMainButtonClick}
+        >
+          <Tooltip title="Draft Assistant" placement="left">
+            <FloatButton icon={<FileTextOutlined />} onClick={toggleDraft} />
+          </Tooltip>
+          <Tooltip title="Chat with AI" placement="left">
+            <FloatButton icon={<MessageOutlined />} onClick={toggleChat} />
+          </Tooltip>
+        </FloatButton.Group>
+      </div>
       
-      {isChatOpen && (
+      {isChatVisible && (
         <ChatWidget
-          extractedTexts={extractedTexts}
-          onClose={() => setIsChatOpen(false)}
+          extractedTexts={useSelectedFiles ? extractedTexts : allExtractedTexts}
+          onClose={toggleChat}
           chatMessages={chatMessages}
           setChatMessages={setChatMessages}
           chatInput={chatInput}
           setChatInput={setChatInput}
+          useSelectedFiles={useSelectedFiles}
+          setUseSelectedFiles={setUseSelectedFiles}
+          isClosing={isChatClosing}
         />
       )}
-      {isDraftOpen && (
+      {isDraftVisible && (
         <Draft
-          extractedTexts={extractedTexts}
-          onClose={() => setIsDraftOpen(false)}
+          extractedTexts={useSelectedFiles ? extractedTexts : allExtractedTexts}
+          onClose={toggleDraft}
           draftQuery={draftQuery}
           setDraftQuery={setDraftQuery}
           draftResult={draftResult}
           setDraftResult={setDraftResult}
+          useSelectedFiles={useSelectedFiles}
+          setUseSelectedFiles={setUseSelectedFiles}
+          isClosing={isDraftClosing}
         />
       )}
     </>

@@ -268,6 +268,14 @@ const LegalAnalyzer = () => {
     setSelectedFile(fileName);
   };
 
+  const getSelectedFilesExtractedTexts = () => {
+    return Object.fromEntries(
+      Object.entries(files)
+        .filter(([_, file]) => file.isChecked)
+        .map(([fileName, file]) => [fileName, file.extractedText])
+    );
+  };
+
   return (
     <Layout className="h-screen overflow-hidden">
       <Helmet>
@@ -316,9 +324,12 @@ const LegalAnalyzer = () => {
           />
         </Sider>
       </Layout>
-      <MagicEffect extractedTexts={Object.fromEntries(
-        Object.entries(files).map(([fileName, file]) => [fileName, file.extractedText])
-      )} />
+      <MagicEffect 
+        extractedTexts={getSelectedFilesExtractedTexts()}
+        allExtractedTexts={Object.fromEntries(
+          Object.entries(files).map(([fileName, file]) => [fileName, file.extractedText])
+        )}
+      />
     </Layout>
   );
 };

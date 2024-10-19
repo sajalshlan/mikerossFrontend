@@ -5,7 +5,7 @@ import { performAnalysis } from '../api';
 
 const { Title, Paragraph } = Typography;
 
-const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult, setDraftResult }) => {
+const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult, setDraftResult, useSelectedFiles, setUseSelectedFiles, isClosing }) => {
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const draftResultRef = useRef(null);
   const textAreaRef = useRef(null);
@@ -22,7 +22,8 @@ const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult
       setIsWaitingForResponse(true);
 
       try {
-        const fullText = Object.values(extractedTexts).join('\n\n');
+        const textsToUse = extractedTexts
+        const fullText = Object.values(textsToUse).join('\n\n');
         const result = await performAnalysis('draft', `${fullText}\n\nUser Query: ${draftQuery}`);
         
         if (result) {
@@ -75,7 +76,7 @@ const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult
   };
 
   return (
-    <div className="fixed bottom-24 right-24 w-[600px] h-[600px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-200 animate-slide-up">
+    <div className={`fixed bottom-24 right-24 w-[600px] h-[600px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-200 transition-transform duration-300 ease-in-out ${isClosing ? 'translate-y-full' : 'translate-y-0'} animate-slide-up`}>
       <header className="bg-gray-100 p-4 text-gray-800 flex justify-between items-center rounded-t-2xl">
         <h4 className="text-lg font-bold m-0">Draft Assistant</h4>
         <Button
@@ -85,6 +86,23 @@ const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult
           className="text-gray-600 hover:text-gray-800"
         />
       </header>
+      <div className="px-4 py-2 bg-gray-200">
+        <label className="flex items-center cursor-pointer">
+          <div className="relative">
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={useSelectedFiles}
+              onChange={() => setUseSelectedFiles(!useSelectedFiles)}
+            />
+            <div className="w-10 h-4 bg-gray-400 rounded-full shadow-inner"></div>
+            <div className={`absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition ${useSelectedFiles ? 'transform translate-x-full bg-blue-500' : ''}`}></div>
+          </div>
+          <div className="ml-3 text-gray-700 font-medium">
+            Use selected files only
+          </div>
+        </label>
+      </div>
       <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={draftResultRef}>
         {draftResult ? (
           <div className="bg-white p-6 rounded-lg shadow-md">
