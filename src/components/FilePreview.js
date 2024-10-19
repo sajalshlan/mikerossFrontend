@@ -122,13 +122,13 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   };
 
   const renderPlaceholder = () => (
-    <div className="flex flex-col items-center justify-center h-full">
-      <img src="/law4.png" alt="Placeholder" className="max-w-full h-auto mb-4" />
+    <div className="h-full w-full">
+      <img src="/law4.png" alt="Placeholder" className="w-full h-full object-cover" />
     </div>
   );
 
   return (
-    <div className="bg-gray-900 rounded-lg shadow-lg p-6 h-full overflow-auto">
+    <div className={`h-full overflow-auto ${selectedFile && files[selectedFile] ? 'bg-gray-900 rounded-lg shadow-lg p-4' : ''}`}>
       {selectedFile && files[selectedFile] ? (
         renderFilePreview(files[selectedFile])
       ) : (

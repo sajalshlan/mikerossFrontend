@@ -331,7 +331,7 @@ const LegalAnalyzer = () => {
           reverseArrow={true}
           trigger={null}
           collapsedWidth={55}
-          style={{ position: 'fixed', right: 0, top: 0, bottom: 0, zIndex: 999 }}
+          style={{ position: 'fixed', right: 0, top: 0, bottom: 0, zIndex: 999, backgroundColor: '#F5F5F5' }}
         >
           <FileUploader
             onFileUpload={handleFileUpload}

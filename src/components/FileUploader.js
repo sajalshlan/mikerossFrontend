@@ -188,7 +188,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
         theme="light"
         items={menuItems}
         className="flex-grow custom-menu"
-        style={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'auto' }}
+        style={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'auto', backgroundColor: '#F5F5F5' }}
       />
     </div>
   );
