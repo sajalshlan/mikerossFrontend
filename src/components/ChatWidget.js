@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, Spin } from 'antd';
+import { Button, Input, Spin, Tooltip } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 
@@ -94,7 +94,7 @@ const ChatWidget = ({ extractedTexts, onClose, chatMessages, setChatMessages, ch
   };
 
   return (
-    <div className={`fixed bottom-24 right-24 w-96 h-[500px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-200 transition-transform duration-300 ease-in-out ${isClosing ? 'translate-y-full' : 'translate-y-0'} animate-slide-up`}>
+    <div className={`fixed bottom-12 right-16 w-96 h-[500px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-200 transition-transform duration-300 ease-in-out ${isClosing ? 'translate-y-full' : 'translate-y-0'} animate-slide-up`}>
       <header className="bg-gray-100 p-4 text-gray-800 flex justify-between items-center rounded-t-2xl">
         <h4 className="text-lg font-bold m-0">Chat with AI</h4>
         <Button
@@ -106,18 +106,20 @@ const ChatWidget = ({ extractedTexts, onClose, chatMessages, setChatMessages, ch
       </header>
       <div className="px-4 py-2 bg-gray-200">
         <label className="flex items-center cursor-pointer">
-          <div className="relative">
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={useSelectedFiles}
-              onChange={() => setUseSelectedFiles(!useSelectedFiles)}
-            />
-            <div className="w-10 h-4 bg-gray-400 rounded-full shadow-inner"></div>
-            <div className={`absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition ${useSelectedFiles ? 'transform translate-x-full bg-blue-500' : ''}`}></div>
-          </div>
+          <Tooltip title={useSelectedFiles ? null : "Currently all files selected"} placement="top">
+            <div className="relative">
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={useSelectedFiles}
+                onChange={() => setUseSelectedFiles(!useSelectedFiles)}
+              />
+              <div className={`w-10 h-4 rounded-full shadow-inner transition-colors duration-200 ease-in-out ${useSelectedFiles ? 'bg-blue-300' : 'bg-gray-400'}`}></div>
+              <div className={`absolute w-6 h-6 rounded-full shadow transition-transform duration-200 ease-in-out ${useSelectedFiles ? 'transform translate-x-full bg-blue-500' : 'bg-white'} -left-1 -top-1`}></div>
+            </div>
+          </Tooltip>
           <div className="ml-3 text-gray-700 font-medium">
-            Use selected files only
+            Work only with the files you've selected from the sidebar
           </div>
         </label>
       </div>

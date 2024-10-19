@@ -5,8 +5,6 @@ import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 
 const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
-    console.log("extracted texts", extractedTexts);
-    console.log("all extracted texts", allExtractedTexts);
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isDraftVisible, setIsDraftVisible] = useState(false);
   const [isChatClosing, setIsChatClosing] = useState(false);
@@ -90,7 +88,7 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
         <FloatButton.Group
           trigger="click"
           type="primary"
-          style={{ right: 24, bottom: 24 }}
+          style={{ right: 5, bottom: 24 }}
           icon={<BulbOutlined />}
           open={isFloatGroupOpen}
           onOpenChange={handleMainButtonClick}
