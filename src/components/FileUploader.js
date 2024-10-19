@@ -7,6 +7,7 @@ const { Text } = Typography;
 const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection, collapsed, setCollapsed }) => {
   const [selectedFiles, setSelectedFiles] = useState({});
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [filesSelected, setFilesSelected] = useState(false);
 
   useEffect(() => {
     const initialSelectedFiles = Object.entries(files).reduce((acc, [fileName, file]) => {
@@ -18,17 +19,18 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
 
   const handleFileChange = (info) => {
     const { fileList } = info;
-      setPendingFiles(fileList.map(file => file.originFileObj));
+    setPendingFiles(fileList.map(file => file.originFileObj));
+    setFilesSelected(true);
   };
 
   const handleUploadClick = () => {
     console.log('handleUploadClick clicked');
     if (pendingFiles.length > 0) {
-      // Remove any duplicate files before uploading
       const uniqueFiles = Array.from(new Set(pendingFiles.map(file => file.name)))
         .map(name => pendingFiles.find(file => file.name === name));
       onFileUpload(uniqueFiles);
       setPendingFiles([]);
+      setFilesSelected(false);  // Reset filesSelected immediately after clicking upload
     } else {
       message.warning('Please select files or a directory to upload');
     }
@@ -61,10 +63,10 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   const handleDirectoryUpload = (info) => {
     const { fileList } = info;
     const directoryFiles = fileList.map(file => file.originFileObj);
-    // Use a Set to remove duplicates based on file names
     const uniqueFiles = Array.from(new Set(directoryFiles.map(file => file.name)))
       .map(name => directoryFiles.find(file => file.name === name));
     setPendingFiles(prevFiles => [...prevFiles, ...uniqueFiles]);
+    setFilesSelected(true);
   };
 
   const directoryProps = {
@@ -95,7 +97,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
           label: (
             <div>
               <Upload {...uploadProps}>
-                <Button icon={<UploadOutlined />} disabled={isFileProcessing}>
+                <Button icon={<UploadOutlined />} disabled={filesSelected}>
                   Select Files
                 </Button>
               </Upload>
@@ -107,7 +109,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
           label: (
             <div>
               <Upload {...directoryProps}>
-                <Button icon={<FolderOutlined />} disabled={isFileProcessing}>
+                <Button icon={<FolderOutlined />} disabled={filesSelected}>
                   Select Directory
                 </Button>
               </Upload>
