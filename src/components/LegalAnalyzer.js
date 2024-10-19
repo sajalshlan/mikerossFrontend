@@ -7,6 +7,7 @@ import FilePreview from './FilePreview';
 import ChatWidget from './ChatWidget';
 import { performAnalysis, uploadFile, performConflictCheck } from '../api';
 import '../styles/App.css';
+import MagicEffect from './MagicEffect';
 
 const { Sider, Content } = Layout;
 
@@ -315,7 +316,7 @@ const LegalAnalyzer = () => {
           />
         </Sider>
       </Layout>
-      <ChatWidget extractedTexts={Object.fromEntries(
+      <MagicEffect extractedTexts={Object.fromEntries(
         Object.entries(files).map(([fileName, file]) => [fileName, file.extractedText])
       )} />
     </Layout>

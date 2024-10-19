@@ -3,16 +3,16 @@ import { Button, Input, Spin } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 
-const ChatWidget = ({ extractedTexts, onClose }) => {
-  const [chatMessages, setChatMessages] = useState([]);
-  const [chatInput, setChatInput] = useState('');
+const Draft = ({ extractedTexts, onClose }) => {
+  const [draftMessages, setDraftMessages] = useState([]);
+  const [draftInput, setDraftInput] = useState('');
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
-  const chatMessagesRef = useRef(null);
+  const draftMessagesRef = useRef(null);
   const latestMessageRef = useRef(null);
 
   useEffect(() => {
     scrollToLatestMessage();
-  }, [chatMessages]);
+  }, [draftMessages]);
 
   const scrollToLatestMessage = () => {
     if (latestMessageRef.current) {
@@ -20,21 +20,21 @@ const ChatWidget = ({ extractedTexts, onClose }) => {
     }
   };
 
-  const handleChatSubmit = async (e) => {
+  const handleDraftSubmit = async (e) => {
     e.preventDefault();
-    if (chatInput.trim() && !isWaitingForResponse) {
+    if (draftInput.trim() && !isWaitingForResponse) {
       const newUserMessage = { 
         role: 'user', 
-        content: chatInput,
+        content: draftInput,
         timestamp: new Date().toLocaleTimeString()
       };
-      setChatMessages(prev => [...prev, newUserMessage]);
-      setChatInput('');
+      setDraftMessages(prev => [...prev, newUserMessage]);
+      setDraftInput('');
       setIsWaitingForResponse(true);
 
       try {
         const fullText = Object.values(extractedTexts).join('\n\n');
-        const result = await performAnalysis('ask', `${fullText}\n\nUser Query: ${newUserMessage.content}`);
+        const result = await performAnalysis('draft', `${fullText}\n\nUser Query: ${newUserMessage.content}`);
         
         if (result) {
           const newAssistantMessage = { 
@@ -42,13 +42,13 @@ const ChatWidget = ({ extractedTexts, onClose }) => {
             content: result,
             timestamp: new Date().toLocaleTimeString()
           };
-          setChatMessages(prev => [...prev, newAssistantMessage]);
+          setDraftMessages(prev => [...prev, newAssistantMessage]);
         } else {
           throw new Error('No response from the server');
         }
       } catch (error) {
-        console.error('Error in chat submission:', error);
-        setChatMessages(prev => [...prev, { 
+        console.error('Error in draft submission:', error);
+        setDraftMessages(prev => [...prev, { 
           role: 'assistant', 
           content: `An error occurred: ${error.message}. Please try again.`, 
           timestamp: new Date().toLocaleTimeString() 
@@ -72,7 +72,7 @@ const ChatWidget = ({ extractedTexts, onClose }) => {
   return (
     <div className="fixed bottom-24 right-24 w-96 h-[500px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 border border-gray-200 animate-slide-up">
       <header className="bg-gray-100 p-4 text-gray-800 flex justify-between items-center rounded-t-2xl">
-        <h4 className="text-lg font-bold m-0">Chat with AI</h4>
+        <h4 className="text-lg font-bold m-0">Draft Assistant</h4>
         <Button
           type="text"
           icon={<CloseOutlined />}
@@ -80,14 +80,14 @@ const ChatWidget = ({ extractedTexts, onClose }) => {
           className="text-gray-600 hover:text-gray-800"
         />
       </header>
-      <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={chatMessagesRef}>
-        {chatMessages.map((message, index) => (
+      <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={draftMessagesRef}>
+        {draftMessages.map((message, index) => (
           <div 
             key={index} 
             className={`max-w-[80%] mb-4 ${
               message.role === 'user' ? 'ml-auto' : 'mr-auto'
             }`}
-            ref={index === chatMessages.length - 1 ? latestMessageRef : null}
+            ref={index === draftMessages.length - 1 ? latestMessageRef : null}
           >
             <div className={`p-3 rounded-2xl ${
               message.role === 'user' 
@@ -108,18 +108,18 @@ const ChatWidget = ({ extractedTexts, onClose }) => {
         )}
       </div>
       <footer className="bg-gray-100 p-4 rounded-b-2xl">
-        <form onSubmit={handleChatSubmit} className="flex">
+        <form onSubmit={handleDraftSubmit} className="flex">
           <Input
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Type your question here..."
+            value={draftInput}
+            onChange={(e) => setDraftInput(e.target.value)}
+            placeholder="Type your draft request here..."
             className="flex-grow mr-2 bg-white border-gray-300 text-gray-800 placeholder-gray-400 rounded-xl"
           />
           <Button
             type="primary"
             htmlType="submit"
             icon={<SendOutlined />}
-            disabled={isWaitingForResponse || !chatInput.trim()}
+            disabled={isWaitingForResponse || !draftInput.trim()}
             className="bg-blue-500 border-blue-500 hover:bg-blue-600 rounded-xl"
           />
         </form>
@@ -128,4 +128,4 @@ const ChatWidget = ({ extractedTexts, onClose }) => {
   );
 };
 
-export default ChatWidget;
+export default Draft;
