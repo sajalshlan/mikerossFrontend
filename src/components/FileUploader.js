@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Upload, Button, Progress, message, Tooltip, Typography } from 'antd';
-import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, BulbFilled } from '@ant-design/icons';
 
 const { Text } = Typography;
 
@@ -181,7 +181,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
         type="primary"
         onClick={() => setCollapsed(!collapsed)}
         style={{ alignSelf: 'flex-start', margin: '16px 0 16px 12px' }}
-        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+        icon={collapsed ? <MenuFoldOutlined/> : <MenuUnfoldOutlined />}
       />
       <Menu
         defaultSelectedKeys={['upload']}

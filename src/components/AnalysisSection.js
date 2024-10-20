@@ -39,6 +39,16 @@ const AnalysisSection = ({
     return "Click or select files to start analysis";
   };
 
+  const toggleVisibility = (type) => {
+    onToggleVisibility(type);
+    // Close other analysis results
+    analysisTypes.forEach((otherType) => {
+      if (otherType !== type && analysisState[otherType].isVisible) {
+        onToggleVisibility(otherType);
+      }
+    });
+  };
+
   const handleAnalysisClick = (type) => {
     const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
 
@@ -49,7 +59,7 @@ const AnalysisSection = ({
     
     if (type === 'conflict' && selectedFileNames.length < 2) {
       if (analysisState[type].isVisible) {
-        onToggleVisibility(type);
+        toggleVisibility(type);
       }
       alert("Please select at least two files for conflict analysis.");
       return;
@@ -57,13 +67,19 @@ const AnalysisSection = ({
 
     const unprocessedFiles = selectedFileNames.filter(fileName => !analysisState[type].result[fileName]);
     if (unprocessedFiles.length === 0) {
-      onToggleVisibility(type);
+      toggleVisibility(type);
     } else {
       const selectedTexts = unprocessedFiles.reduce((acc, fileName) => {
         acc[fileName] = files[fileName].extractedText;
         return acc;
       }, {});
       onAnalysis(type, selectedTexts);
+      // Close other analysis results when starting a new analysis
+      analysisTypes.forEach((otherType) => {
+        if (otherType !== type && analysisState[otherType].isVisible) {
+          onToggleVisibility(otherType);
+        }
+      });
     }
   };
 
