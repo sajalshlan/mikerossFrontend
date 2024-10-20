@@ -82,11 +82,14 @@ const ChatWidget = ({ extractedTexts, onClose, chatMessages, setChatMessages, ch
   };
 
   const renderInlineFormatting = (text) => {
+    // eslint-disable-next-line react/no-array-index-key
     const parts = text.split(/(\*\*.*?\*\*|\`.*?\`)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
+        // eslint-disable-next-line react/no-array-index-key
         return <strong key={index} className="text-blue-600">{part.slice(2, -2)}</strong>;
       } else if (part.startsWith('`') && part.endsWith('`')) {
+        // eslint-disable-next-line react/no-array-index-key
         return <code key={index} className="bg-gray-200 text-red-600 px-1 rounded">{part.slice(1, -1)}</code>;
       }
       return part;

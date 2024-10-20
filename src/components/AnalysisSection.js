@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Tooltip, Space } from 'antd';
+import { Typography, Tooltip} from 'antd';
 import { LoadingOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import AnalysisResult from './AnalysisResult';
 

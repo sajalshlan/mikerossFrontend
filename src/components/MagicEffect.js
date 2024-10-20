@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FloatButton, Tooltip } from 'antd';
-import { BulbOutlined, MessageOutlined, FileTextOutlined } from '@ant-design/icons';
+import { MessageOutlined, FileTextOutlined } from '@ant-design/icons';
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 

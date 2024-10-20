@@ -1,29 +1,6 @@
 import React from 'react';
-import { Card, Typography, List, Tooltip, Divider } from 'antd';
+import { Typography, List, Tooltip, Divider } from 'antd';
 import '../styles/AnalysisResult.css'
-
-const { Title, Text, Paragraph } = Typography;
-
-const wrapWithAnchor = (text, fileName) => {
-  const words = text.split(' ');
-  return words.map((word, index) => {
-    if (word.toLowerCase() === fileName.toLowerCase()) {
-      return (
-        <a
-          key={index}
-          href={`#${fileName}`}
-          onClick={(e) => {
-            e.preventDefault();
-            document.dispatchEvent(new CustomEvent('scrollToDocument', { detail: fileName }));
-          }}
-        >
-          {word}
-        </a>
-      );
-    }
-    return word + ' ';
-  });
-};
 
 const wrapReferences = (text) => {
   const clauseRegex = /\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/gi;

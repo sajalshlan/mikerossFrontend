@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { renderAsync } from 'docx-preview';
-import ReactDOM from 'react-dom';
-import { Anchor } from 'antd';
 
 const FilePreview = ({ files, selectedFile, onFileSelect }) => {
-  const [docxPreviews, setDocxPreviews] = useState({});
   const containerRef = useRef(null);
 
   useEffect(() => {

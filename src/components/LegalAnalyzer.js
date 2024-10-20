@@ -12,7 +12,6 @@ import MagicEffect from './MagicEffect';
 const { Sider, Content } = Layout;
 
 const LegalAnalyzer = () => {
-  let count=0
 
   const [files, setFiles] = useState({});
   const [analysisState, setAnalysisState] = useState({
