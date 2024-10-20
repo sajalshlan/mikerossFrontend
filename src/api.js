@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL = 'https://mikerossbackend.onrender.com/api';
 
 export const performAnalysis = async (type, text) => {
   console.log(`[API] Performing ${type} analysis...`);
@@ -78,5 +78,43 @@ export const uploadFile = async (file, onProgress) => {
       error: error.message,
       file: file
     };
+  }
+};
+
+export const performAskAnalysis = async (texts, query) => {
+  console.log('[API] Performing Ask AI analysis...');
+  try {
+    const response = await fetch(`${API_BASE_URL}/perform_ask_analysis/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ texts, query }),
+    });
+    const result = await response.json();
+    console.log('[API] Ask AI analysis result:', result);
+    return result.success ? result.result : null;
+  } catch (error) {
+    console.error('[API] Error performing Ask AI analysis:', error);
+    return null;
+  }
+};
+
+export const performDraftAnalysis = async (texts, query) => {
+  console.log('[API] Performing Draft analysis...');
+  try {
+    const response = await fetch(`${API_BASE_URL}/perform_draft_analysis/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ texts, query }),
+    });
+    const result = await response.json();
+    console.log('[API] Draft analysis result:', result);
+    return result.success ? result.result : null;
+  } catch (error) {
+    console.error('[API] Error performing Draft analysis:', error);
+    return null;
   }
 };
