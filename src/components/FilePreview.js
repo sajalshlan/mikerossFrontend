@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { renderAsync } from 'docx-preview';
+import ReactDOM from 'react-dom';
+import { Anchor } from 'antd';
 
 const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   const [docxPreviews, setDocxPreviews] = useState({});
@@ -15,9 +17,31 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
 
   useEffect(() => {
     if (selectedFile && files[selectedFile] && getFileTypeFromName(files[selectedFile].file.name) === 'document') {
-      renderDocxPreview(files[selectedFile].file, files[selectedFile].base64);
+      renderDocxPreview(files[selectedFile].file, files[selectedFile].base64).then(() => {
+        addIdsToDocumentElements();
+      });
     }
   }, [selectedFile, files]);
+
+  useEffect(() => {
+    const handleScrollToElement = (event) => {
+      const id = event.detail;
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.style.backgroundColor = 'yellow';
+        setTimeout(() => {
+          element.style.backgroundColor = '';
+        }, 2000);
+      }
+    };
+
+    document.addEventListener('scrollToElement', handleScrollToElement);
+
+    return () => {
+      document.removeEventListener('scrollToElement', handleScrollToElement);
+    };
+  }, []);
 
   const getFileTypeFromName = (fileName) => {
     if (!fileName) return 'unknown';
@@ -50,22 +74,28 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       }
     };
 
+    const commonProps = {
+      id: file.name,
+      className: "w-full h-full"
+    };
+
     switch (fileType) {
       case 'image':
-        return <img src={fileUrl} alt={file.name} className="max-w-full h-auto" onLoad={cleanup} />;
+        return <img {...commonProps} src={fileUrl} alt={file.name} onLoad={cleanup} />;
       case 'pdf':
-        return <embed src={fileUrl} type="application/pdf" className="w-full h-screen" onLoad={cleanup} />;
+        return <embed {...commonProps} src={fileUrl} type="application/pdf" onLoad={cleanup} />;
       case 'document':
         return (
           <div 
+            {...commonProps}
             ref={containerRef} 
-            className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto max-h-screen"
+            className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto"
           />
         );
       default:
         cleanup();
         return (
-          <div className="bg-gray-800 p-4 rounded-lg">
+          <div {...commonProps} className="bg-gray-800 p-4 rounded-lg">
             <p className="text-white mb-2">Preview not available. Showing file name:</p>
             <pre className="bg-gray-700 p-2 rounded text-white">{file.name || 'Unnamed file'}</pre>
             {fileObj.extractedText && (
@@ -108,11 +138,27 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       }
 
       if (containerRef.current) {
+        // Render the docx
         await renderAsync(arrayBuffer, containerRef.current, null, {
           className: 'docx-preview',
           inWrapper: false,
         });
       }
+
+      // After rendering, find all links in the rendered content
+      const links = containerRef.current.querySelectorAll('a');
+      
+      // Replace each link with an Ant Design Anchor.Link
+      links.forEach(link => {
+        const anchorLink = document.createElement('div');
+        const linkText = link.textContent;
+        const linkHref = link.href;
+        const anchor = document.createElement('a');
+        anchor.href = linkHref;
+        anchor.textContent = linkText;
+        anchorLink.appendChild(anchor);
+        link.parentNode.replaceChild(anchorLink, link);
+      });
     } catch (error) {
       console.error('Error rendering docx:', error);
     }
@@ -123,6 +169,26 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       <img src="/law4.png" alt="Placeholder" className="w-full h-full object-cover" />
     </div>
   );
+
+  const addIdsToDocumentElements = () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const elements = container.querySelectorAll('p, h1, h2, h3, h4, h5, h6');
+    elements.forEach((element) => {
+      const text = element.textContent.trim();
+      const clauseMatch = text.match(/\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/i);
+      const sectionMatch = text.match(/^([A-Z\s&]+(?:\s+(?:OVER|AND)\s+[A-Z\s&]+)*):/);
+      
+      if (clauseMatch) {
+        const id = `doc-${clauseMatch[0].toLowerCase().replace(/\s+/g, '-')}`;
+        element.id = id;
+      } else if (sectionMatch) {
+        const id = `doc-${sectionMatch[0].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/:$/, '')}`;
+        element.id = id;
+      }
+    });
+  };
 
   return (
     <div className={`h-full overflow-auto ${selectedFile && files[selectedFile] ? 'bg-gray-900 rounded-lg shadow-lg p-4' : ''}`}>

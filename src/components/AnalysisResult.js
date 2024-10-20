@@ -4,6 +4,67 @@ import '../styles/AnalysisResult.css'
 
 const { Title, Text, Paragraph } = Typography;
 
+const wrapWithAnchor = (text, fileName) => {
+  const words = text.split(' ');
+  return words.map((word, index) => {
+    if (word.toLowerCase() === fileName.toLowerCase()) {
+      return (
+        <a
+          key={index}
+          href={`#${fileName}`}
+          onClick={(e) => {
+            e.preventDefault();
+            document.dispatchEvent(new CustomEvent('scrollToDocument', { detail: fileName }));
+          }}
+        >
+          {word}
+        </a>
+      );
+    }
+    return word + ' ';
+  });
+};
+
+const wrapReferences = (text) => {
+  const clauseRegex = /\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/gi;
+  const sectionRegex = /^([A-Z\s&]+(?:\s+(?:OVER|AND)\s+[A-Z\s&]+)*):/;
+  
+  const parts = text.split(/((?:\b(?:clause\s+\d+(?:\.\d+)*|\d+(?:\.\d+)*\s+clause)\b)|(?:^[A-Z\s&]+(?:\s+(?:OVER|AND)\s+[A-Z\s&]+)*:))/gi);
+  
+  return parts.map((part, index) => {
+    if (clauseRegex.test(part)) {
+      const id = `doc-${part.toLowerCase().replace(/\s+/g, '-')}`;
+      return (
+        <a
+          key={index}
+          href={`#${id}`}
+          onClick={(e) => {
+            e.preventDefault();
+            document.dispatchEvent(new CustomEvent('scrollToElement', { detail: id }));
+          }}
+        >
+          {part}
+        </a>
+      );
+    } else if (sectionRegex.test(part)) {
+      const id = `doc-${part.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/:$/, '')}`;
+      return (
+        <a
+          key={index}
+          href={`#${id}`}
+          onClick={(e) => {
+            e.preventDefault();
+            document.dispatchEvent(new CustomEvent('scrollToElement', { detail: id }));
+          }}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 const AnalysisResult = ({ type, data, files, fileCount }) => {
   console.log('AnalysisResult props:', { type, data, files, fileCount });
   
@@ -54,18 +115,20 @@ const AnalysisResult = ({ type, data, files, fileCount }) => {
 
   const renderLine = (line, index) => {
     try {
+      const content = wrapReferences(line);
+
       if (line.trim().startsWith('•')) {
-        return <Typography.Paragraph key={index} className="text-gray-700 ml-4">{line}</Typography.Paragraph>;
+        return <Typography.Paragraph key={index} className="text-gray-700 ml-4">{content}</Typography.Paragraph>;
       } else if (line.includes('**')) {
         return (
           <Typography.Paragraph key={index} className="text-gray-700">
             {line.split('**').map((part, i) => 
-              i % 2 === 0 ? part : <Typography.Text strong key={i} className="text-gray-900">{part}</Typography.Text>
+              i % 2 === 0 ? wrapReferences(part) : <Typography.Text strong key={i} className="text-gray-900">{wrapReferences(part)}</Typography.Text>
             )}
           </Typography.Paragraph>
         );
       } else {
-        return <Typography.Paragraph key={index} className="text-gray-700">{line}</Typography.Paragraph>;
+        return <Typography.Paragraph key={index} className="text-gray-700">{content}</Typography.Paragraph>;
       }
     } catch (error) {
       console.error('Error in renderLine:', error);
