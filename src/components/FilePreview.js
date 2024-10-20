@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import mammoth from 'mammoth';
+import React, { useState, useEffect, useRef } from 'react';
+import { renderAsync } from 'docx-preview';
 
 const FilePreview = ({ files, selectedFile, onFileSelect }) => {
-
   const [docxPreviews, setDocxPreviews] = useState({});
+  const containerRef = useRef(null);
 
   useEffect(() => {
     if (Object.keys(files).length === 0) {
@@ -12,6 +12,12 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       onFileSelect(null);
     }
   }, [files, selectedFile, onFileSelect]);
+
+  useEffect(() => {
+    if (selectedFile && files[selectedFile] && getFileTypeFromName(files[selectedFile].file.name) === 'document') {
+      renderDocxPreview(files[selectedFile].file, files[selectedFile].base64);
+    }
+  }, [selectedFile, files]);
 
   const getFileTypeFromName = (fileName) => {
     if (!fileName) return 'unknown';
@@ -50,7 +56,12 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       case 'pdf':
         return <embed src={fileUrl} type="application/pdf" className="w-full h-screen" onLoad={cleanup} />;
       case 'document':
-        return renderDocxPreview(file, fileUrl);
+        return (
+          <div 
+            ref={containerRef} 
+            className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto max-h-screen"
+          />
+        );
       default:
         cleanup();
         return (
@@ -80,45 +91,31 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     }
   };
 
-  const renderDocxPreview = (file, fileUrl) => {
-    if (docxPreviews[file.name]) {
-      return (
-        <div 
-          className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto max-h-screen" 
-          dangerouslySetInnerHTML={{ __html: docxPreviews[file.name] }} 
-        />
-      );
-    }
+  const renderDocxPreview = async (file, base64) => {
+    try {
+      let arrayBuffer;
+      if (file instanceof Blob) {
+        arrayBuffer = await file.arrayBuffer();
+      } else if (base64) {
+        const binaryString = atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        arrayBuffer = bytes.buffer;
+      } else {
+        throw new Error('No valid file or base64 provided');
+      }
 
-    if (file instanceof Blob) {
-      mammoth.convertToHtml({ arrayBuffer: file.arrayBuffer() })
-        .then(result => {
-          setDocxPreviews(prev => ({
-            ...prev,
-            [file.name]: result.value
-          }));
-        })
-        .catch(error => {
-          console.error('Error converting docx to html:', error);
+      if (containerRef.current) {
+        await renderAsync(arrayBuffer, containerRef.current, null, {
+          className: 'docx-preview',
+          inWrapper: false,
         });
-    } else if (fileUrl) {
-      fetch(fileUrl)
-        .then(response => response.arrayBuffer())
-        .then(arrayBuffer => mammoth.convertToHtml({ arrayBuffer }))
-        .then(result => {
-          setDocxPreviews(prev => ({
-            ...prev,
-            [file.name]: result.value
-          }));
-        })
-        .catch(error => {
-          console.error('Error converting docx to html:', error);
-        });
-    } else {
-      return <p className="text-blue-500">DOCX preview not available</p>;
+      }
+    } catch (error) {
+      console.error('Error rendering docx:', error);
     }
-
-    return <p className="text-blue-500">Loading docx preview...</p>;
   };
 
   const renderPlaceholder = () => (
