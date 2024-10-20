@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Upload, Button, Progress, message, Tooltip, Typography } from 'antd';
-import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, BulbFilled } from '@ant-design/icons';
+import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 
