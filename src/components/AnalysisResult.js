@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, List, Tooltip, Divider } from 'antd';
+import { Typography, List, Tooltip } from 'antd';
 import '../styles/AnalysisResult.css'
 
 const wrapReferences = (text) => {
@@ -42,7 +42,7 @@ const wrapReferences = (text) => {
   });
 };
 
-const AnalysisResult = ({ type, data, files, fileCount }) => {
+const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
   console.log('AnalysisResult props:', { type, data, files, fileCount });
   
   const renderContent = (content) => {
@@ -144,10 +144,19 @@ const AnalysisResult = ({ type, data, files, fileCount }) => {
           selectedFiles.map((fileName, index) => (
             data[fileName] && (
               <React.Fragment key={fileName}>
-                {index > 0 && <Divider className="my-3" />}
+                {index > 0 && (
+                  <div className="page-break my-12 border-t-8 border-blue-400 relative">
+                  </div>
+                )}
                 <div className="mb-2 last:mb-0">
-                  <Tooltip title={fileName}>
-                    <Typography.Title level={4} className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2">{fileName}</Typography.Title>
+                  <Tooltip title="Click to preview file">
+                    <Typography.Title 
+                      level={4} 
+                      className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2 cursor-pointer hover:text-blue-600"
+                      onClick={() => onFilePreview(fileName)}
+                    >
+                      {fileName}
+                    </Typography.Title>
                   </Tooltip>
                   <div className="bg-gray-100 p-3 rounded-md">
                     {renderContent(data[fileName])}

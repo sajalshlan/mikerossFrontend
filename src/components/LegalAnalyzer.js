@@ -13,6 +13,8 @@ const { Sider, Content } = Layout;
 
 const LegalAnalyzer = () => {
 
+  
+
   const [files, setFiles] = useState({});
   const [analysisState, setAnalysisState] = useState({
     summary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
@@ -235,45 +237,37 @@ const LegalAnalyzer = () => {
     }));
   };
 
-  const removeFile = (fileName) => {
-    setFiles(prev => {
-      const updatedFiles = { ...prev };
+  const handleRemoveFile = (fileName) => {
+    setFiles((prevFiles) => {
+      const updatedFiles = { ...prevFiles };
       delete updatedFiles[fileName];
       return updatedFiles;
     });
 
-    setAnalysisState(prev => {
-      const updatedState = { ...prev };
-      Object.keys(updatedState).forEach(type => {
-        if (type === 'conflict') {
-          const remainingCheckedFiles = Object.values(files).filter(file => file.isChecked && file.file.name !== fileName).length;
-          if (remainingCheckedFiles < 2) {
-            updatedState[type] = {
-              ...updatedState[type],
-              result: '',
-              isPerformed: false,
-              isVisible: false
-            };
-          }
-        } else {
-          const { [fileName]: _, ...rest } = updatedState[type].result;
-          updatedState[type] = {
-            ...updatedState[type],
-            result: rest,
-            isPerformed: Object.keys(rest).length > 0,
-            isVisible: Object.keys(rest).length > 0
-          };
+    setAnalysisState((prevState) => {
+      const updatedState = { ...prevState };
+      Object.keys(updatedState).forEach((analysisType) => {
+        if (updatedState[analysisType].result[fileName]) {
+          delete updatedState[analysisType].result[fileName];
         }
       });
       return updatedState;
     });
 
     if (Object.keys(files).length === 1) {
+      setSelectedFile(null);
       setAnalysisState({
         summary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
         risky: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
         conflict: { isLoading: false, isPerformed: false, isVisible: false, result: '' }
       });
+    } else if (fileName === selectedFile) {
+      const remainingFiles = Object.keys(files).filter(file => file !== fileName);
+      if (remainingFiles.length > 0) {
+        setSelectedFile(remainingFiles[0]);
+      } else {
+        setSelectedFile(null);
+      }
     }
   };
 
@@ -346,6 +340,7 @@ const LegalAnalyzer = () => {
                     onAnalysis={handleAnalysis}
                     onToggleVisibility={toggleAnalysisVisibility}
                     isFileProcessing={isFileProcessing}
+                    onFileSelection={handleFileSelection}
                   />
                 </div>
               </Splitter.Panel>
@@ -354,7 +349,7 @@ const LegalAnalyzer = () => {
         </Content>
         <Sider
           ref={siderRef}
-          width={isMobile ? '100%' : 350}
+          width={isMobile ? '75%' : 350}
           theme="light"
           collapsible
           collapsed={collapsed}
@@ -381,7 +376,7 @@ const LegalAnalyzer = () => {
             onFileUpload={handleFileUpload}
             files={files}
             isFileProcessing={isFileProcessing}
-            onRemoveFile={removeFile}
+            onRemoveFile={handleRemoveFile}
             onCheckedFilesChange={handleCheckedFilesChange}
             isAnalysisInProgress={Object.values(analysisState).some(state => state.isLoading)}
             onFileSelection={handleFileSelection}

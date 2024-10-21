@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { renderAsync } from 'docx-preview';
 
 const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   const containerRef = useRef(null);
+  const [showPlaceholder, setShowPlaceholder] = useState(true);
 
   useEffect(() => {
     if (Object.keys(files).length === 0) {
@@ -10,6 +11,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     } else if (selectedFile && !files[selectedFile]) {
       onFileSelect(null);
     }
+
   }, [files, selectedFile, onFileSelect]);
 
   useEffect(() => {
@@ -17,6 +19,9 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       renderDocxPreview(files[selectedFile].file, files[selectedFile].base64).then(() => {
         addIdsToDocumentElements();
       });
+      setShowPlaceholder(false);
+    } else {
+      setShowPlaceholder(!selectedFile || !files[selectedFile]);
     }
   }, [selectedFile, files]);
 
@@ -163,7 +168,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
 
   const renderPlaceholder = () => (
     <div className="h-full w-full">
-      <img src="/law4.png" alt="Placeholder" className="w-full h-full object-cover" />
+      <img src="/law1.jpg" alt="Placeholder" className="w-full h-full object-cover" />
     </div>
   );
 
@@ -189,10 +194,10 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
 
   return (
     <div className={`h-full overflow-auto ${selectedFile && files[selectedFile] ? 'bg-gray-900 rounded-lg shadow-lg p-4' : ''}`}>
-      {selectedFile && files[selectedFile] ? (
-        renderFilePreview(files[selectedFile])
-      ) : (
+      {showPlaceholder ? (
         renderPlaceholder()
+      ) : (
+        selectedFile && files[selectedFile] && renderFilePreview(files[selectedFile])
       )}
     </div>
   );

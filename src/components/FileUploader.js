@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Upload, Button, Progress, message, Tooltip, Typography } from 'antd';
-import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { Menu, Upload, Button, Progress, message, Tooltip, Typography, Checkbox } from 'antd';
+import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 
@@ -134,44 +134,67 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
       key: 'files',
       icon: <FileOutlined />,
       label: 'Uploaded Files',
-      children: Object.entries(files).map(([fileName, file]) => ({
-        key: fileName,
-        label: (
-          <div className={`flex flex-col w-full ${selectedFiles[fileName] ? 'bg-blue-100 rounded-md p-2' : ''}`}>
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center space-x-2 flex-grow min-w-0">
-                <Tooltip title="Preview file">
-                  <FileOutlined 
-                    onClick={() => onFileSelection(fileName)}
-                    className="cursor-pointer text-blue-400 hover:text-blue-600 transition-colors duration-200 flex-shrink-0"
+      children: [
+        {
+          key: 'filesInstructions',
+          label: (
+            <Text type="secondary" className="text-s font-bold">
+              Click file name to select for analysis. 
+              <br />
+              Use eye icon to preview.
+            </Text>
+          ),
+        },
+        ...Object.entries(files).map(([fileName, file]) => ({
+          key: fileName,
+          label: (
+            <div className={`flex flex-col w-full ${selectedFiles[fileName] ? 'bg-blue-100 rounded-md p-2' : ''}`}>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center space-x-2 flex-grow min-w-0">
+                  <Checkbox
+                    checked={selectedFiles[fileName]}
+                    onChange={() => handleFileSelection(fileName)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <Tooltip title="Preview file">
+                    <EyeOutlined 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFileSelection(fileName);
+                      }}
+                      className="cursor-pointer text-blue-400 hover:text-blue-600 transition-colors duration-200 flex-shrink-0"
+                    />
+                  </Tooltip>
+                  <span 
+                    onClick={() => handleFileSelection(fileName)}
+                    className={`cursor-pointer transition-colors duration-200 truncate 
+                      ${selectedFiles[fileName] ? 'font-bold text-blue-700' : 'hover:text-blue-400'}
+                      ${file.progress && file.progress.status !== 'success' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {fileName}
+                  </span>
+                </div>
+                <Tooltip title="Delete file">
+                  <DeleteOutlined
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFile(fileName);
+                    }}
+                    className="cursor-pointer text-red-400 hover:text-red-600 transition-colors duration-200 flex-shrink-0 ml-2"
                   />
                 </Tooltip>
-                <span 
-                  onClick={() => handleFileSelection(fileName)}
-                  className={`cursor-pointer transition-colors duration-200 truncate 
-                    ${selectedFiles[fileName] ? 'font-bold text-blue-700' : 'hover:text-blue-400'}
-                    ${file.progress && file.progress.status !== 'success' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {fileName}
-                </span>
               </div>
-              <Tooltip title="Delete file">
-                <DeleteOutlined
-                  onClick={() => handleRemoveFile(fileName)}
-                  className="cursor-pointer text-red-400 hover:text-red-600 transition-colors duration-200 flex-shrink-0 ml-2"
+              {file.progress && (
+                <Progress 
+                  percent={Math.round(file.progress.progress)} 
+                  status={file.progress.status === 'error' ? 'exception' : file.progress.status === 'success' ? 'success' : 'active'}
+                  size="small"
                 />
-              </Tooltip>
+              )}
             </div>
-            {file.progress && (
-              <Progress 
-                percent={Math.round(file.progress.progress)} 
-                status={file.progress.status === 'error' ? 'exception' : file.progress.status === 'success' ? 'success' : 'active'}
-                size="small"
-              />
-            )}
-          </div>
-        ),
-      })),
+          ),
+        })),
+      ],
     },
   ];
 
