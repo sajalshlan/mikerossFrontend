@@ -141,6 +141,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
             <Text type="secondary" className="text-s font-bold">
               Click file name to select for analysis. 
               <br />
+              <br />
               Use eye icon to preview.
             </Text>
           ),

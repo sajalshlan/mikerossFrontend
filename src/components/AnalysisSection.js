@@ -12,7 +12,8 @@ const AnalysisSection = ({
   onAnalysis,
   onToggleVisibility,
   isFileProcessing,
-  onFileSelection
+  onFileSelection,
+  onStopAnalysis
 }) => {
   const analysisTypes = ['summary', 'risky', 'conflict'];
   const hasFiles = Object.keys(files).length > 0;

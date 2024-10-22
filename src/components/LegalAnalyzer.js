@@ -283,10 +283,28 @@ const LegalAnalyzer = () => {
     );
   };
 
+  const handleStopAnalysis = () => {
+    setAnalysisState(prevState => {
+      const newState = { ...prevState };
+      for (const type of Object.keys(newState)) {
+        if (newState[type].isLoading) {
+          newState[type] = {
+            ...newState[type],
+            isLoading: false,
+            result: {},
+          };
+        }
+      }
+      return newState;
+    });
+    // Here you would also need to cancel any ongoing API requests
+    // The implementation of this depends on how you're making API calls
+  };
+
   return (
     <Layout className="h-screen overflow-hidden">
       <Helmet>
-        <title>Mike Ross</title>
+        <title>Legal Assistant</title>
         <meta property="og:title" content="Your super intelligent legal assistant" />
         <meta property="og:description" content="AI-powered legal document analysis tool" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -309,6 +327,7 @@ const LegalAnalyzer = () => {
                   onAnalysis={handleAnalysis}
                   onToggleVisibility={toggleAnalysisVisibility}
                   isFileProcessing={isFileProcessing}
+                  onStopAnalysis={handleStopAnalysis}
                 />
               </div>
             </div>
@@ -341,6 +360,7 @@ const LegalAnalyzer = () => {
                     onToggleVisibility={toggleAnalysisVisibility}
                     isFileProcessing={isFileProcessing}
                     onFileSelection={handleFileSelection}
+                    onStopAnalysis={handleStopAnalysis}
                   />
                 </div>
               </Splitter.Panel>
