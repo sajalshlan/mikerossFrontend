@@ -1,20 +1,33 @@
-const API_BASE_URL = 'https://mikerossbackend.onrender.com/api';
+const API_BASE_URL = 'http://localhost:8000/api';
+
+if (!window.currentAnalysisControllers) {
+  window.currentAnalysisControllers = {};
+}
 
 export const performAnalysis = async (type, text) => {
   console.log(`[API] Performing ${type} analysis...`);
   try {
+    const controller = new AbortController();
+    window.currentAnalysisControllers[type] = controller;
+
     const response = await fetch(`${API_BASE_URL}/perform_analysis/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ analysis_type: type, text }),
+      signal: controller.signal
     });
     const result = await response.json();
     console.log(`[API] ${type} analysis result:`, result);
+    delete window.currentAnalysisControllers[type];
     return result.success ? result.result : null;
   } catch (error) {
-    console.error(`[API] Error performing ${type} analysis:`, error);
+    if (error.name === 'AbortError') {
+      console.log(`[API] ${type} analysis aborted`);
+    } else {
+      console.error(`[API] Error performing ${type} analysis:`, error);
+    }
     return null;
   }
 };
@@ -22,18 +35,27 @@ export const performAnalysis = async (type, text) => {
 export const performConflictCheck = async (texts) => {
   console.log('[API] Performing conflict check...');
   try {
+    const controller = new AbortController();
+    window.currentAnalysisControllers['conflict'] = controller;
+
     const response = await fetch(`${API_BASE_URL}/perform_conflict_check/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ texts }),
+      signal: controller.signal
     });
     const result = await response.json();
     console.log('[API] Conflict check result:', result);
+    delete window.currentAnalysisControllers['conflict'];
     return result.success ? result.result : null;
   } catch (error) {
-    console.error('[API] Error performing conflict check:', error);
+    if (error.name === 'AbortError') {
+      console.log('[API] Conflict check aborted');
+    } else {
+      console.error('[API] Error performing conflict check:', error);
+    }
     return null;
   }
 };

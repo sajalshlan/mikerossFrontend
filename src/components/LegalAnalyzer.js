@@ -291,14 +291,27 @@ const LegalAnalyzer = () => {
           newState[type] = {
             ...newState[type],
             isLoading: false,
-            result: {},
+            // Keep isPerformed and result as they were
           };
         }
       }
       return newState;
     });
-    // Here you would also need to cancel any ongoing API requests
-    // The implementation of this depends on how you're making API calls
+
+    // Reset the analysis in progress flags
+    Object.keys(analysisInProgress.current).forEach(type => {
+      analysisInProgress.current[type] = false;
+    });
+
+    // Cancel ongoing API requests
+    if (window.currentAnalysisControllers) {
+      Object.values(window.currentAnalysisControllers).forEach(controller => {
+        if (controller) {
+          controller.abort();
+        }
+      });
+      window.currentAnalysisControllers = {};
+    }
   };
 
   return (

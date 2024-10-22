@@ -89,7 +89,7 @@ const AnalysisSection = ({
     <div className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
       <div className="flex-shrink-0">
         <Title level={3} className="text-gray-800 mb-2 font-semibold text-center">Analyze</Title>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-2">
           {analysisTypes.map((type) => (
             <Tooltip key={type} title={getButtonTooltip(type)}>
               <button
@@ -121,6 +121,20 @@ const AnalysisSection = ({
               </button>
             </Tooltip>
           ))}
+          <Tooltip title="Stop all ongoing analyses">
+            <button
+              onClick={onStopAnalysis}
+              disabled={!analysisTypes.some(type => analysisState[type].isLoading)}
+              className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
+                ${analysisTypes.some(type => analysisState[type].isLoading) ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-300 text-gray-800'}
+                ${!analysisTypes.some(type => analysisState[type].isLoading) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+              `}
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <span>Stop Analysis</span>
+              </div>
+            </button>
+          </Tooltip>
         </div>
       </div>
       {hasFiles && checkedFilesCount > 0 && (
