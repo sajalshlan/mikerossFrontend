@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Tooltip} from 'antd';
+import { Typography, Tooltip, message } from 'antd';
 import { LoadingOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import AnalysisResult from './AnalysisResult';
 
@@ -38,7 +38,6 @@ const AnalysisSection = ({
     if (analysisState[type].isLoading) return "Analysis in progress...";
     if (allProcessed && selectedFileNames.length > 0) return "All files processed";
     if (someProcessed) return "Click to process newly selected files.";
-    return "Click or select files to start analysis";
   };
 
   const toggleVisibility = (type) => {
@@ -54,16 +53,16 @@ const AnalysisSection = ({
   const handleAnalysisClick = (type) => {
     const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
 
-    if (selectedFileNames.length === 0) {
-      alert("Please select at least one file for analysis.");
-      return;
-    }
-    
     if (type === 'conflict' && selectedFileNames.length < 2) {
       if (analysisState[type].isVisible) {
         toggleVisibility(type);
       }
-      alert("Please select at least two files for conflict analysis.");
+      message.warning("Please select at least two files for conflict analysis.");
+      return;
+    }
+    
+    if (selectedFileNames.length === 0) {
+      message.warning("Please select at least one file for analysis.");
       return;
     }
 

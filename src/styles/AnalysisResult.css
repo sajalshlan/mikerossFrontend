@@ -29,11 +29,11 @@
 }
 
 .result-content {
-  color: #ffffff;
+  color: inherit;
 }
 
 .ant-typography {
-  color: #ffffff;
+  color: inherit;
 }
 
 .ant-typography strong {
