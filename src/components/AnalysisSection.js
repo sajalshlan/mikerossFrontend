@@ -89,52 +89,61 @@ const AnalysisSection = ({
     <div className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
       <div className="flex-shrink-0">
         <Title level={3} className="text-gray-800 mb-2 font-semibold text-center">Analyze</Title>
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-2">
-          {analysisTypes.map((type) => (
-            <Tooltip key={type} title={getButtonTooltip(type)}>
+        <div className="flex gap-4 mb-2 items-start">
+          <div className="flex-grow">
+            <div className="grid grid-cols-3 gap-4">
+              {analysisTypes.map((type) => (
+                <Tooltip key={type} title={getButtonTooltip(type)}>
+                  <button
+                    onClick={() => handleAnalysisClick(type)}
+                    disabled={
+                      !hasFiles ||
+                      analysisState[type].isLoading || 
+                      isFileProcessing || 
+                      checkedFilesCount === 0 ||
+                      (type === 'conflict' && checkedFilesCount < 2)
+                    }
+                    className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
+                      ${getButtonColor(type)}
+                      ${(!hasFiles || isFileProcessing || checkedFilesCount === 0 || 
+                        (type === 'conflict' && checkedFilesCount < 2)) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                    `}
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      {analysisState[type].isLoading && <LoadingOutlined className="animate-spin" />}
+                      <span>
+                        {type === 'summary' ? 'Summary' : 
+                         type === 'risky' ? 'Risk Analysis' : 
+                         'Conflict Check'}
+                      </span>
+                      {analysisState[type].isPerformed && 
+                       ((type === 'conflict' && Object.keys(analysisState[type].result).length > 0) || 
+                        (type !== 'conflict' && Object.keys(analysisState[type].result).some(fileName => Object.keys(analysisState[type].result[fileName]).length > 0))) && (
+                        analysisState[type].isVisible ? <UpOutlined className="ml-1" /> : <DownOutlined className="ml-1" />
+                      )}
+                    </div>
+                  </button>
+                </Tooltip>
+              ))}
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <Tooltip title="Stop">
               <button
-                onClick={() => handleAnalysisClick(type)}
-                disabled={
-                  !hasFiles ||
-                  analysisState[type].isLoading || 
-                  isFileProcessing || 
-                  checkedFilesCount === 0 ||
-                  (type === 'conflict' && checkedFilesCount < 2)
-                }
-                className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
-                  ${getButtonColor(type)}
-                  ${(!hasFiles || isFileProcessing || checkedFilesCount === 0 || 
-                    (type === 'conflict' && checkedFilesCount < 2)) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                onClick={onStopAnalysis}
+                disabled={!analysisTypes.some(type => analysisState[type].isLoading)}
+                className={`w-10 h-10 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out flex items-center justify-center
+                  ${analysisTypes.some(type => analysisState[type].isLoading) ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-300 text-gray-800'}
+                  ${!analysisTypes.some(type => analysisState[type].isLoading) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg'}
                 `}
               >
-                <div className="flex items-center justify-center space-x-2">
-                  {analysisState[type].isLoading && <LoadingOutlined className="animate-spin" />}
-                  <span>
-                    {type === 'summary' ? 'Summary' : 
-                     type === 'risky' ? 'Risk Analysis' : 
-                     'Conflict Check'}
-                  </span>
-                  {analysisState[type].isPerformed && (
-                    analysisState[type].isVisible ? <UpOutlined className="ml-1" /> : <DownOutlined className="ml-1" />
-                  )}
-                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10h6v6H9z" />
+                </svg>
               </button>
             </Tooltip>
-          ))}
-          <Tooltip title="Stop all ongoing analyses">
-            <button
-              onClick={onStopAnalysis}
-              disabled={!analysisTypes.some(type => analysisState[type].isLoading)}
-              className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
-                ${analysisTypes.some(type => analysisState[type].isLoading) ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-300 text-gray-800'}
-                ${!analysisTypes.some(type => analysisState[type].isLoading) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
-              `}
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <span>Stop Analysis</span>
-              </div>
-            </button>
-          </Tooltip>
+          </div>
         </div>
       </div>
       {hasFiles && checkedFilesCount > 0 && (

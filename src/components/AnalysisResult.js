@@ -132,9 +132,11 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
   
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
-      <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-        <Typography.Title level={4} className="text-gray-800 text-center m-0">{getTitle()}</Typography.Title>
-      </div>
+      {(type === 'conflict' ? data : Object.keys(data).length > 0) && (
+        <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+          <Typography.Title level={4} className="text-gray-800 text-center m-0">{getTitle()}</Typography.Title>
+        </div>
+      )}
       <div className="flex-grow overflow-auto p-2">
         {type === 'conflict' ? (
           <div className="bg-gray-100 p-3 rounded-md">
@@ -144,7 +146,7 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
           selectedFiles.map((fileName, index) => (
             data[fileName] && (
               <React.Fragment key={fileName}>
-                {index > 0 && (
+                {index > 0 && Object.keys(data).length > 1 && (
                   <div className="page-break my-12 border-t-8 border-blue-400 relative">
                   </div>
                 )}
