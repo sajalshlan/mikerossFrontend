@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, List, Tooltip } from 'antd';
+import { Typography, List, Tooltip, Collapse } from 'antd';
 import '../styles/AnalysisResult.css'
 
 const wrapReferences = (text) => {
@@ -45,6 +45,32 @@ const wrapReferences = (text) => {
 const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
   console.log('AnalysisResult props:', { type, data, files, fileCount });
   
+  const renderRiskAnalysis = (content) => {
+    const parts = content.split('*****').filter(part => part.trim() !== '');
+    const parties = [];
+
+    for (let i = 0; i < parts.length; i += 2) {
+      if (i + 1 < parts.length) {
+        parties.push({
+          name: parts[i].trim(),
+          content: parts[i + 1].trim()
+        });
+      }
+    }
+
+    return (
+      <Collapse>
+        {parties.map((party, index) => (
+          <Collapse.Panel header={party.name} key={index} className="font-bold">
+            <Typography.Paragraph className="font-normal">
+              {party.content.split('\n').map((line, lineIndex) => renderLine(line, lineIndex))}
+            </Typography.Paragraph>
+          </Collapse.Panel>
+        ))}
+      </Collapse>
+    );
+  };
+
   const renderContent = (content) => {
     try {
       if (type === 'conflict') {
@@ -54,6 +80,8 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
             {conflictResult.split('\n').map((line, index) => renderLine(line, index))}
           </div>
         );
+      } else if (type === 'risky') {
+        return renderRiskAnalysis(content);
       } else if (typeof content === 'string') {
         return (
           <Typography.Paragraph className="text-gray-700">
