@@ -114,7 +114,8 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
   };
 
   const titleMap = {
-    summary: 'Summary Results',
+    shortSummary: 'Short Summary Results',
+    longSummary: 'Long Summary Results',
     risky: 'Risk Analysis Results',
     conflict: 'Conflict Check Results',
   };

@@ -1,13 +1,12 @@
-import React from 'react';
-import { Typography, Tooltip, message } from 'antd';
-import { LoadingOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Typography, Tooltip, message, Dropdown, Menu } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import AnalysisResult from './AnalysisResult';
 
 const { Title } = Typography;
 
 const AnalysisSection = ({
   files,
-  selectedFiles,
   analysisState,
   onAnalysis,
   onToggleVisibility,
@@ -15,9 +14,16 @@ const AnalysisSection = ({
   onFileSelection,
   onStopAnalysis
 }) => {
-  const analysisTypes = ['summary', 'risky', 'conflict'];
+  const analysisTypes = ['shortSummary', 'longSummary', 'risky', 'conflict'];
   const hasFiles = Object.keys(files).length > 0;
   const checkedFilesCount = Object.values(files).filter(file => file.isChecked).length;
+  const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
+
+  useEffect(() => {
+    if (!hasFiles) {
+      setSelectedSummaryType('Summary');
+    }
+  }, [hasFiles]);
 
   const getButtonColor = (type) => {
     const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
@@ -84,6 +90,20 @@ const AnalysisSection = ({
     }
   };
 
+  const summaryMenu = (
+    <Menu onClick={({ key }) => {
+      setSelectedSummaryType(key === 'shortSummary' ? 'Short Summary' : 'Long Summary');
+      handleAnalysisClick(key);
+    }}>
+      <Menu.Item key="shortSummary">Short Summary</Menu.Item>
+      <Menu.Item key="longSummary">Long Summary</Menu.Item>
+    </Menu>
+  );
+
+  const isSummaryLoading = () => {
+    return analysisState['shortSummary'].isLoading || analysisState['longSummary'].isLoading;
+  };
+
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
       <div className="flex-shrink-0">
@@ -91,35 +111,51 @@ const AnalysisSection = ({
         <div className="flex gap-4 mb-2 items-start">
           <div className="flex-grow">
             <div className="grid grid-cols-3 gap-4">
-              {analysisTypes.map((type) => (
+              <Tooltip title="Select Summary Type">
+                {hasFiles ? (
+                  <Dropdown overlay={summaryMenu} trigger={['click']}>
+                    <button
+                      className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
+                        ${getButtonColor(selectedSummaryType === 'Short Summary' ? 'shortSummary' : 'longSummary')}
+                        ${( isFileProcessing ) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                      `}
+                      disabled={ isFileProcessing || isSummaryLoading()}
+                    >
+                      <div className="flex items-center justify-center space-x-2">
+                        {isSummaryLoading() && <LoadingOutlined className="animate-spin" />}
+                        <span>{selectedSummaryType}</span>
+                      </div>
+                    </button>
+                  </Dropdown>
+                ) : (
+                  <button
+                    onClick={() => message.warning("Please select at least one file for analysis.")}
+                    className="w-full px-4 py-3 rounded-lg text-md font-semibold bg-gray-300 text-gray-800 cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <span>{selectedSummaryType}</span>
+                    </div>
+                  </button>
+                )}
+              </Tooltip>
+              {analysisTypes.slice(2).map((type) => (
                 <Tooltip key={type} title={getButtonTooltip(type)}>
                   <button
                     onClick={() => handleAnalysisClick(type)}
                     disabled={
-                      !hasFiles ||
                       analysisState[type].isLoading || 
-                      isFileProcessing || 
-                      checkedFilesCount === 0 ||
-                      (type === 'conflict' && checkedFilesCount < 2)
+                      isFileProcessing
                     }
                     className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
                       ${getButtonColor(type)}
-                      ${(!hasFiles || isFileProcessing || checkedFilesCount === 0 || 
-                        (type === 'conflict' && checkedFilesCount < 2)) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                      ${(isFileProcessing) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
                     `}
                   >
                     <div className="flex items-center justify-center space-x-2">
                       {analysisState[type].isLoading && <LoadingOutlined className="animate-spin" />}
                       <span>
-                        {type === 'summary' ? 'Summary' : 
-                         type === 'risky' ? 'Risk Analysis' : 
-                         'Conflict Check'}
+                        {type === 'risky' ? 'Risk Analysis' : 'Conflict Check'}
                       </span>
-                      {analysisState[type].isPerformed && 
-                       ((type === 'conflict' && Object.keys(analysisState[type].result).length > 0) || 
-                        (type !== 'conflict' && Object.keys(analysisState[type].result).some(fileName => Object.keys(analysisState[type].result[fileName]).length > 0))) && (
-                        analysisState[type].isVisible ? <UpOutlined className="ml-1" /> : <DownOutlined className="ml-1" />
-                      )}
                     </div>
                   </button>
                 </Tooltip>

@@ -17,13 +17,15 @@ const LegalAnalyzer = () => {
 
   const [files, setFiles] = useState({});
   const [analysisState, setAnalysisState] = useState({
-    summary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
+    shortSummary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
+    longSummary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
     risky: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
     conflict: { isLoading: false, isPerformed: false, isVisible: false, result: '' }
   });
   const [isFileProcessing, setIsFileProcessing] = useState(false);
   const analysisInProgress = useRef({
-    summary: false,
+    shortSummary: false,
+    longSummary: false,
     risky: false,
     conflict: false
   });
@@ -201,8 +203,6 @@ const LegalAnalyzer = () => {
             console.log("performing analysis", fileName);
             if (result) {
               results[fileName] = result;
-              console.log('##########################');
-              console.log(fileName, result);
             }
           }
         }
@@ -257,7 +257,8 @@ const LegalAnalyzer = () => {
     if (Object.keys(files).length === 1) {
       setSelectedFile(null);
       setAnalysisState({
-        summary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
+        shortSummary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
+        longSummary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
         risky: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
         conflict: { isLoading: false, isPerformed: false, isVisible: false, result: '' }
       });
