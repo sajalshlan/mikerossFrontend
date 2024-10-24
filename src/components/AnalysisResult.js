@@ -46,7 +46,12 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
   console.log('AnalysisResult props:', { type, data, files, fileCount });
   
   const renderRiskAnalysis = (content) => {
-    const parts = content.split('*****').filter(part => part.trim() !== '');
+    // Remove everything before the first '*****' and clean up '#' symbols
+    const cleanedContent = content.substring(content.indexOf('*****'))
+      .replace(/^#+\s*/gm, '')
+      .trim();
+
+    const parts = cleanedContent.split('*****').filter(part => part.trim() !== '');
     const parties = [];
 
     for (let i = 0; i < parts.length; i += 2) {
@@ -179,7 +184,7 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
                   <div className="page-break my-12 border-t-8 border-blue-400 relative">
                   </div>
                 )}
-                <div className="mb-2 last:mb-0">
+                <div className="first:mt-2 last:mb-0">
                   <Tooltip title="Click to preview file">
                     <Typography.Title 
                       level={4} 
