@@ -1,12 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button, Input, Spin, Typography, message, Tooltip } from 'antd';
 import { CloseOutlined, SendOutlined, CopyOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 
 const { Title, Paragraph } = Typography;
 
-const Draft = ({ extractedTexts, onClose, draftQuery, setDraftQuery, draftResult, setDraftResult, useSelectedFiles, setUseSelectedFiles, isClosing }) => {
-  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+const Draft = ({ 
+  extractedTexts, 
+  onClose, 
+  draftQuery, 
+  setDraftQuery, 
+  draftResult, 
+  setDraftResult, 
+  useSelectedFiles, 
+  setUseSelectedFiles, 
+  isClosing,
+  isWaitingForResponse,  // New prop
+  setIsWaitingForResponse  // New prop
+}) => {
   const draftResultRef = useRef(null);
   const textAreaRef = useRef(null);
 

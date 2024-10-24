@@ -15,6 +15,8 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
   const [draftResult, setDraftResult] = useState('');
   const [useSelectedFiles, setUseSelectedFiles] = useState(false);
   const [isFloatGroupOpen, setIsFloatGroupOpen] = useState(false);
+  const [isWaitingForChatResponse, setIsWaitingForChatResponse] = useState(false);
+  const [isWaitingForDraftResponse, setIsWaitingForDraftResponse] = useState(false);
 
   const floatButtonRef = useRef(null);
 
@@ -115,6 +117,8 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
           useSelectedFiles={useSelectedFiles}
           setUseSelectedFiles={setUseSelectedFiles}
           isClosing={isChatClosing}
+          isWaitingForResponse={isWaitingForChatResponse}
+          setIsWaitingForResponse={setIsWaitingForChatResponse}
         />
       )}
       {isDraftVisible && (
@@ -128,6 +132,8 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
           useSelectedFiles={useSelectedFiles}
           setUseSelectedFiles={setUseSelectedFiles}
           isClosing={isDraftClosing}
+          isWaitingForResponse={isWaitingForDraftResponse}
+          setIsWaitingForResponse={setIsWaitingForDraftResponse}
         />
       )}
     </>

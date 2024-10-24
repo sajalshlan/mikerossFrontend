@@ -3,8 +3,19 @@ import { Button, Input, Spin, Tooltip } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 
-const ChatWidget = ({ extractedTexts, onClose, chatMessages, setChatMessages, chatInput, setChatInput, useSelectedFiles, setUseSelectedFiles, isClosing }) => {
-  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+const ChatWidget = ({ 
+  extractedTexts, 
+  onClose, 
+  chatMessages, 
+  setChatMessages, 
+  chatInput, 
+  setChatInput, 
+  useSelectedFiles, 
+  setUseSelectedFiles, 
+  isClosing,
+  isWaitingForResponse,  // New prop
+  setIsWaitingForResponse  // New prop
+}) => {
   const chatMessagesRef = useRef(null);
   const latestMessageRef = useRef(null);
 
