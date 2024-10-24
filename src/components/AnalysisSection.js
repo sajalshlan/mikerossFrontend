@@ -20,10 +20,10 @@ const AnalysisSection = ({
   const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
 
   useEffect(() => {
-    if (!hasFiles) {
+    if (!hasFiles || checkedFilesCount === 0) {
       setSelectedSummaryType('Summary');
     }
-  }, [hasFiles]);
+  }, [hasFiles, checkedFilesCount]);
 
   const getButtonColor = (type) => {
     const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
