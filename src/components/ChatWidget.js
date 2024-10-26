@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button, Input, Spin, Tooltip } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
