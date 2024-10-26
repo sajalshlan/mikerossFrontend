@@ -18,12 +18,13 @@ const AnalysisSection = ({
   const hasFiles = Object.keys(files).length > 0;
   const checkedFilesCount = Object.values(files).filter(file => file.isChecked).length;
   const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
+  const selectedFiles = Object.keys(files).filter(fileName => files[fileName].isChecked);
 
   useEffect(() => {
-    if (!hasFiles) {
+    if (selectedFiles.length === 0) {
       setSelectedSummaryType('Summary');
     }
-  }, [hasFiles]);
+  }, [selectedFiles]);
 
   const getButtonColor = (type) => {
     const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
@@ -117,9 +118,9 @@ const AnalysisSection = ({
                     <button
                       className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
                         ${getButtonColor(selectedSummaryType === 'Short Summary' ? 'shortSummary' : 'longSummary')}
-                        ${( isFileProcessing ) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                        ${(isFileProcessing) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
                       `}
-                      disabled={ isFileProcessing || isSummaryLoading()}
+                      disabled={isFileProcessing || isSummaryLoading()}
                     >
                       <div className="flex items-center justify-center space-x-2">
                         {isSummaryLoading() && <LoadingOutlined className="animate-spin" />}

@@ -157,16 +157,12 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
     return titleMap[type] || 'Analysis Results';
   };
 
-  // Only render the component if it's not a conflict check or if there are multiple files
-  if (type === 'conflict' && fileCount <= 1) {
-    return null;
-  }
-
   const selectedFiles = Object.keys(files).filter(fileName => files[fileName].isChecked);
-  
+  const hasResults = type === 'conflict' ? !!data : selectedFiles.some(fileName => data[fileName]);
+
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
-      {(type === 'conflict' ? data : Object.keys(data).length > 0) && (
+      {hasResults && (
         <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
           <Typography.Title level={4} className="text-gray-800 text-center m-0">{getTitle()}</Typography.Title>
         </div>
