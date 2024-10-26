@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://ec2-16-171-62-20.eu-north-1.compute.amazonaws.com/api';
 
 if (!window.currentAnalysisControllers) {
   window.currentAnalysisControllers = {};
@@ -18,6 +18,14 @@ export const performAnalysis = async (type, text) => {
       body: JSON.stringify({ analysis_type: type, text }),
       signal: controller.signal
     });
+    // Log headers here
+    console.log('Response headers:', Object.fromEntries(response.headers));
+    // Or more detailed
+    console.log('All headers:');
+    response.headers.forEach((value, key) => {
+      console.log(`${key}: ${value}`);
+    });
+
     const result = await response.json();
     console.log(`[API] ${type} analysis result:`, result);
     delete window.currentAnalysisControllers[type];
@@ -46,6 +54,9 @@ export const performConflictCheck = async (texts) => {
       body: JSON.stringify({ texts }),
       signal: controller.signal
     });
+    // Log headers
+    console.log('Response headers:', Object.fromEntries(response.headers));
+    
     const result = await response.json();
     console.log('[API] Conflict check result:', result);
     delete window.currentAnalysisControllers['conflict'];
@@ -61,82 +72,42 @@ export const performConflictCheck = async (texts) => {
 };
 
 export const uploadFile = async (file, onProgress) => {
+  console.log(`[API] Uploading file...`);
   try {
-    console.log(`[API] Uploading file...`);
+    const controller = new AbortController();
+    window.currentAnalysisControllers['upload'] = controller;
+
     const formData = new FormData();
     formData.append('file', file);
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${API_BASE_URL}/upload_file/`, true);
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percentComplete = (event.loaded / event.total) * 100;
-        onProgress(Math.min(percentComplete, 90)); // Cap at 90%
-      }
-    };
-
-    const response = await new Promise((resolve, reject) => {
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(JSON.parse(xhr.responseText));
-        } else {
-          reject(new Error(`HTTP error! status: ${xhr.status}`));
-        }
-      };
-      xhr.onerror = () => reject(new Error('Network error'));
-      xhr.send(formData);
+    const response = await fetch(`${API_BASE_URL}/upload_file/`, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
     });
+    // Log headers
+    console.log('Response headers:', Object.fromEntries(response.headers));
 
-    if (response.success) {
-      return response;
+    const result = await response.json();
+    console.log('[API] Upload result:', result);
+    delete window.currentAnalysisControllers['upload'];
+
+    if (result.success) {
+      if (onProgress) onProgress(100);
+      return result;
     } else {
-      throw new Error(response.error || 'Unknown error occurred during file upload');
+      throw new Error(result.error || 'Unknown error occurred during file upload');
     }
   } catch (error) {
-    console.error(`[API] Error uploading ${file.name}:`, error);
+    if (error.name === 'AbortError') {
+      console.log('[API] File upload aborted');
+    } else {
+      console.error(`[API] Error uploading ${file.name}:`, error);
+    }
     return {
       success: false,
       error: error.message,
       file: file
     };
-  }
-};
-
-export const performAskAnalysis = async (texts, query) => {
-  console.log('[API] Performing Ask AI analysis...');
-  try {
-    const response = await fetch(`${API_BASE_URL}/perform_ask_analysis/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ texts, query }),
-    });
-    const result = await response.json();
-    console.log('[API] Ask AI analysis result:', result);
-    return result.success ? result.result : null;
-  } catch (error) {
-    console.error('[API] Error performing Ask AI analysis:', error);
-    return null;
-  }
-};
-
-export const performDraftAnalysis = async (texts, query) => {
-  console.log('[API] Performing Draft analysis...');
-  try {
-    const response = await fetch(`${API_BASE_URL}/perform_draft_analysis/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ texts, query }),
-    });
-    const result = await response.json();
-    console.log('[API] Draft analysis result:', result);
-    return result.success ? result.result : null;
-  } catch (error) {
-    console.error('[API] Error performing Draft analysis:', error);
-    return null;
   }
 };

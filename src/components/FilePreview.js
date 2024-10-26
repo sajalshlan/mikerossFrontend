@@ -144,6 +144,14 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
         await renderAsync(arrayBuffer, containerRef.current, null, {
           className: 'docx-preview',
           inWrapper: false,
+          ignoreWidth: true,
+          ignoreHeight: true,
+          ignoreFonts: false,
+          breakPages: true,
+          ignoreLastRenderedPageBreak: true,
+          experimental: true,
+          useBase64URL: true,
+          preserveNumbering: true
         });
       }
 
