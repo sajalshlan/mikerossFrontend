@@ -25,7 +25,11 @@ const SpreadsheetPreview = ({ fileObj }) => {
     while ((match = sheetRegex.exec(text)) !== null) {
       const sheetName = match[1];
       const sheetContent = match[2].trim();
-      const rows = sheetContent.split('\n').map(row => row.split(/\s+/));
+      const rows = sheetContent.split('\n').map(row => {
+        // Use a regex to split the row, keeping quoted strings intact
+        return row.match(/(".*?"|[^"\s]+)(?=\s*|\s*$)/g).map(item => item.replace(/^"|"$/g, ''));
+      });
+      
       const columns = rows[0].map((col, index) => ({
         title: col,
         dataIndex: index.toString(),

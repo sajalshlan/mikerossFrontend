@@ -101,7 +101,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       case 'csv':
         return (
           <div {...commonProps} className="bg-white p-4 rounded-lg shadow-lg overflow-hidden h-full">
-            <p className="text-gray-700 mb-2">{fileType.toUpperCase()} file preview:</p>
+            <p className="text-gray-700 mb-2">Sheets:</p>
             <SpreadsheetPreview fileObj={fileObj} />
           </div>
         );
