@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://ec2-16-171-62-20.eu-north-1.compute.amazonaws.com/api';
+const API_BASE_URL = '/api';
 
 if (!window.currentAnalysisControllers) {
   window.currentAnalysisControllers = {};
