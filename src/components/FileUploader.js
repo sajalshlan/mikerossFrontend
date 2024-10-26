@@ -54,6 +54,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   const uploadProps = {
     name: 'file',
     multiple: true,
+    accept: '.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.xls,.xlsx,.csv',
     onChange: handleFileChange,
     showUploadList: false,
     beforeUpload: () => false,

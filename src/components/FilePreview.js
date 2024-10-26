@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { renderAsync } from 'docx-preview';
+import SpreadsheetPreview from './SpreadsheetPreview';
 
 const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   const containerRef = useRef(null);
@@ -53,6 +54,8 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       pdf: 'pdf',
       doc: 'document', docx: 'document',
       txt: 'text',
+      xls: 'excel', xlsx: 'excel',
+      csv: 'csv'
     };
     return extensionMap[extension] || 'unknown';
   };
@@ -93,6 +96,14 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
             ref={containerRef} 
             className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto"
           />
+        );
+      case 'excel':
+      case 'csv':
+        return (
+          <div {...commonProps} className="bg-white p-4 rounded-lg shadow-lg overflow-hidden h-full">
+            <p className="text-gray-700 mb-2">{fileType.toUpperCase()} file preview:</p>
+            <SpreadsheetPreview fileObj={fileObj} />
+          </div>
         );
       default:
         cleanup();
