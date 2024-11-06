@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, Upload, Button, Progress, message, Tooltip, Typography, Checkbox } from 'antd';
 import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined } from '@ant-design/icons';
 import googleDriveService from '../utils/googleDriveService';
+import oneDriveService from '../utils/oneDriveService';
 
 const { Text } = Typography;
 
@@ -175,6 +176,74 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     }
   };
 
+  const handleOneDriveClick = async () => {
+    try {
+      if (!window.OneDrive) {
+        message.error('OneDrive SDK is not loaded yet. Please try again in a moment.');
+        return;
+      }
+      const response = await oneDriveService.authorize();
+      console.log('OneDrive response:', response);
+      if (response && response.value) {
+        await handleOneDriveSelect(response);
+      }
+    } catch (error) {
+      console.error('OneDrive integration error:', error);
+      message.error('Error loading OneDrive: ' + (error.message || 'Unknown error occurred'));
+    }
+  };
+
+  const handleOneDriveSelect = async (files) => {
+    if (!files || !files.value || files.value.length === 0) return;
+    
+    setIsFileProcessing(true);
+    const supportedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'image/jpeg',
+      'image/png',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv'
+    ];
+
+    try {
+      // Process all files from the value array
+      const filePromises = files.value.map(async (file) => {
+        try {
+          const fileData = await oneDriveService.loadDriveFiles({
+            id: file.id
+          });
+          
+          console.log('Received file data:', fileData);
+          return new File([fileData.blob], fileData.name, { 
+            type: fileData.mimeType 
+          });
+        } catch (error) {
+          console.error(`Error processing file:`, error);
+          message.error(`Failed to process file`);
+          return null;
+        }
+      });
+
+      const processedFiles = (await Promise.all(filePromises)).filter(Boolean);
+      
+      if (processedFiles.length > 0) {
+        onFileUpload(processedFiles);
+        message.success(`Successfully imported ${processedFiles.length} file${processedFiles.length > 1 ? 's' : ''}`);
+      } else {
+        message.error('No files were successfully processed');
+      }
+    } catch (error) {
+      console.error('Error processing OneDrive files:', error);
+      message.error('Error processing OneDrive files: ' + error.message);
+    } finally {
+      setIsFileProcessing(false);
+    }
+  };
+
   const menuItems = [
     {
       key: 'upload',
@@ -234,6 +303,18 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
               disabled={filesSelected}
             >
               Import from Google Drive
+            </Button>
+          ),
+        },
+        {
+          key: 'oneDrive',
+          label: (
+            <Button 
+              onClick={() => handleOneDriveClick()}
+              className="w-full"
+              disabled={filesSelected}
+            >
+              Import from OneDrive
             </Button>
           ),
         },
