@@ -12,9 +12,6 @@ import MagicEffect from './MagicEffect';
 const { Sider, Content } = Layout;
 
 const LegalAnalyzer = () => {
-
-  
-
   const [files, setFiles] = useState({});
   const [analysisState, setAnalysisState] = useState({
     shortSummary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
@@ -416,6 +413,7 @@ const LegalAnalyzer = () => {
             onFileSelection={handleFileSelection}
             collapsed={collapsed}
             setCollapsed={setCollapsed}
+            setIsFileProcessing={setIsFileProcessing}
           />
         </Sider>
       </Layout>

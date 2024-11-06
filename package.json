@@ -5,6 +5,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.5.1",
     "@ant-design/pro-chat": "^1.15.3",
+    "@google-cloud/local-auth": "^3.0.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -15,6 +16,7 @@
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "docx-preview": "^0.3.2",
+    "googleapis": "^144.0.0",
     "lucide-react": "^0.447.0",
     "mammoth": "^1.8.0",
     "pdfjs-dist": "^2.9.359",

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Upload, Button, Progress, message, Tooltip, Typography, Checkbox } from 'antd';
 import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined } from '@ant-design/icons';
+import googleDriveService from '../utils/googleDriveService';
 
 const { Text } = Typography;
 
-const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection, collapsed, setCollapsed }) => {
+const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection, collapsed, setCollapsed, setIsFileProcessing }) => {
   const [selectedFiles, setSelectedFiles] = useState({});
   const [pendingFiles, setPendingFiles] = useState([]);
   const [filesSelected, setFilesSelected] = useState(false);
@@ -79,6 +80,51 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     beforeUpload: () => false,
   };
 
+  const handleGoogleDriveClick = async () => {
+    try {
+      console.log('Starting Google Drive integration...');
+      console.log('Token Client before auth:', googleDriveService.tokenClient);
+      
+      await googleDriveService.authorize();
+      console.log('Authorization successful');
+      console.log('Access Token:', googleDriveService.accessToken);
+      
+      const picker = await googleDriveService.createPicker(handleGoogleDriveSelect);
+      console.log('Picker created');
+      
+      picker.setVisible(true);
+      console.log('Picker displayed');
+    } catch (error) {
+      console.error('Google Drive integration error:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      message.error('Error loading Google Drive: ' + (error.message || 'Unknown error occurred'));
+    }
+  };
+
+  const handleGoogleDriveSelect = async (data) => {
+    if (data.action === 'picked') {
+      setIsFileProcessing(true);
+      
+      try {
+        const filePromises = data.docs.map(async (file) => {
+          const blob = await googleDriveService.loadDriveFiles(file);
+          return new File([blob], file.name, { type: blob.type });
+        });
+
+        const files = await Promise.all(filePromises);
+        onFileUpload(files);
+      } catch (error) {
+        message.error('Error processing Google Drive files: ' + error.message);
+      } finally {
+        setIsFileProcessing(false);
+      }
+    }
+  };
+
   const menuItems = [
     {
       key: 'upload',
@@ -126,6 +172,18 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
               style={{ marginTop: '8px', width: '100%', marginBottom: '8px' }}
             >
               Upload
+            </Button>
+          ),
+        },
+        {
+          key: 'googleDrive',
+          label: (
+            <Button 
+              onClick={() => handleGoogleDriveClick()}
+              className="w-full"
+              disabled={filesSelected}
+            >
+              Import from Google Drive
             </Button>
           ),
         },
