@@ -10,7 +10,7 @@ class GoogleDriveService {
   }
 
   async init() {
-    if (this.initialized) return;
+    if (this.initialized && this.tokenClient) return;
 
     return new Promise((resolve, reject) => {
       try {
@@ -27,6 +27,8 @@ class GoogleDriveService {
             }
           },
         });
+        this.initialized = true;
+        resolve();
       } catch (error) {
         console.error('Error initializing token client:', error);
         reject(error);
@@ -35,29 +37,24 @@ class GoogleDriveService {
   }
 
   async authorize() {
-    try {
-      if (!this.tokenClient) {
-        await this.init();
-      }
-      
-      return new Promise((resolve) => {
-        this.tokenClient.callback = (response) => {
-          if (response.access_token) {
-            this.accessToken = response.access_token;
-            resolve(response.access_token);
-          }
-        };
-        
-        if (this.accessToken) {
-          resolve(this.accessToken);
-        } else {
-          this.tokenClient.requestAccessToken({ prompt: 'consent' });
-        }
-      });
-    } catch (error) {
-      console.error('Authorization error:', error);
-      throw error;
+    if (!this.initialized || !this.tokenClient) {
+      await this.init();
     }
+    
+    return new Promise((resolve) => {
+      this.tokenClient.callback = (response) => {
+        if (response.access_token) {
+          this.accessToken = response.access_token;
+          resolve(response.access_token);
+        }
+      };
+      
+      if (this.accessToken) {
+        resolve(this.accessToken);
+      } else {
+        this.tokenClient.requestAccessToken({ prompt: 'consent' });
+      }
+    });
   }
 
   async createPicker(callback) {

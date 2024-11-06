@@ -9,6 +9,20 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   const [selectedFiles, setSelectedFiles] = useState({});
   const [pendingFiles, setPendingFiles] = useState([]);
   const [filesSelected, setFilesSelected] = useState(false);
+  const [isGoogleApiInitialized, setIsGoogleApiInitialized] = useState(false);
+
+  useEffect(() => {
+    const initializeGoogleDrive = async () => {
+      try {
+        await googleDriveService.init();
+        setIsGoogleApiInitialized(true);
+      } catch (error) {
+        console.error('Failed to initialize Google Drive:', error);
+      }
+    };
+
+    initializeGoogleDrive();
+  }, []);
 
   useEffect(() => {
     const initialSelectedFiles = Object.entries(files).reduce((acc, [fileName, file]) => {
@@ -82,12 +96,14 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
 
   const handleGoogleDriveClick = async () => {
     try {
+      if (!isGoogleApiInitialized) {
+        await googleDriveService.init();
+        setIsGoogleApiInitialized(true);
+      }
+
       console.log('Starting Google Drive integration...');
-      console.log('Token Client before auth:', googleDriveService.tokenClient);
-      
       await googleDriveService.authorize();
       console.log('Authorization successful');
-      console.log('Access Token:', googleDriveService.accessToken);
       
       const picker = await googleDriveService.createPicker(handleGoogleDriveSelect);
       console.log('Picker created');
