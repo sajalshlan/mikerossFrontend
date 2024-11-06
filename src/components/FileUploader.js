@@ -124,17 +124,50 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   const handleGoogleDriveSelect = async (data) => {
     if (data.action === 'picked' && data.docs && data.docs.length > 0) {
       setIsFileProcessing(true);
+      const supportedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'image/jpeg',
+        'image/png',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/csv'
+      ];
       
       try {
-        const filePromises = data.docs.map(async (file) => {
-          const blob = await googleDriveService.loadDriveFiles(file);
-          return new File([blob], file.name, { type: blob.type });
+        const validFiles = data.docs.filter(file => 
+          supportedTypes.includes(file.mimeType)
+        );
+
+        if (validFiles.length !== data.docs.length) {
+          message.warning(`Some files were skipped because they are not supported.`);
+        }
+
+        if (validFiles.length === 0) {
+          message.error('No supported files were selected.');
+          return;
+        }
+
+        const filePromises = validFiles.map(async (file) => {
+          try {
+            const blob = await googleDriveService.loadDriveFiles(file);
+            return new File([blob], file.name, { type: file.mimeType });
+          } catch (error) {
+            console.error(`Error processing file ${file.name}:`, error);
+            message.error(`Failed to process ${file.name}`);
+            return null;
+          }
         });
 
-        const files = await Promise.all(filePromises);
-        onFileUpload(files);
-        message.success(`Successfully imported ${files.length} file${files.length > 1 ? 's' : ''}`);
+        const files = (await Promise.all(filePromises)).filter(Boolean);
+        if (files.length > 0) {
+          onFileUpload(files);
+          message.success(`Successfully imported ${files.length} file${files.length > 1 ? 's' : ''}`);
+        }
       } catch (error) {
+        console.error('Error processing Google Drive files:', error);
         message.error('Error processing Google Drive files: ' + error.message);
       } finally {
         setIsFileProcessing(false);
