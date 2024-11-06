@@ -122,7 +122,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   };
 
   const handleGoogleDriveSelect = async (data) => {
-    if (data.action === 'picked') {
+    if (data.action === 'picked' && data.docs && data.docs.length > 0) {
       setIsFileProcessing(true);
       
       try {
@@ -133,6 +133,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
 
         const files = await Promise.all(filePromises);
         onFileUpload(files);
+        message.success(`Successfully imported ${files.length} file${files.length > 1 ? 's' : ''}`);
       } catch (error) {
         message.error('Error processing Google Drive files: ' + error.message);
       } finally {

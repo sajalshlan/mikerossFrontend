@@ -70,6 +70,7 @@ class GoogleDriveService {
             .setOAuthToken(this.accessToken)
             .setDeveloperKey(this.apiKey)
             .setCallback(callback)
+            .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
             .build();
           resolve(picker);
         });
