@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Upload, Button, Progress, message, Tooltip, Typography, Checkbox } from 'antd';
-import { UploadOutlined, FolderOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined } from '@ant-design/icons';
+import { UploadOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined } from '@ant-design/icons';
 import googleDriveService from '../utils/googleDriveService';
 import oneDriveService from '../utils/oneDriveService';
 
@@ -75,24 +75,6 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     showUploadList: false,
     beforeUpload: () => false,
     fileList: pendingFiles,
-  };
-
-  const handleDirectoryUpload = (info) => {
-    const { fileList } = info;
-    const directoryFiles = fileList.map(file => file.originFileObj);
-    const uniqueFiles = Array.from(new Set(directoryFiles.map(file => file.name)))
-      .map(name => directoryFiles.find(file => file.name === name));
-    setPendingFiles(prevFiles => [...prevFiles, ...uniqueFiles]);
-    setFilesSelected(true);
-  };
-
-  const directoryProps = {
-    name: 'directory',
-    directory: true,
-    multiple: true,
-    onChange: handleDirectoryUpload,
-    showUploadList: false,
-    beforeUpload: () => false,
   };
 
   const handleGoogleDriveClick = async () => {
@@ -259,63 +241,62 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
           ),
         },
         {
-          key: 'uploadFiles',
+          key: 'mainUpload',
           label: (
-            <div>
-              <Upload {...uploadProps}>
-                <Button icon={<UploadOutlined />} disabled={filesSelected}>
-                  Select Files
+            <div className="p-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+                <Upload {...uploadProps}>
+                  <div className="cursor-pointer">
+                    <UploadOutlined className="text-4xl text-gray-400 mb-3" />
+                    <p className="text-gray-600 mb-2">Drag & drop files here</p>
+                    <p className="text-gray-400 text-sm mb-4">or click to browse</p>
+                  </div>
+                </Upload>
+                
+                <div className="flex justify-center space-x-4 pt-4 border-t border-gray-200">
+                  <Tooltip title="Import from Google Drive">
+                    <Button 
+                      onClick={handleGoogleDriveClick}
+                      className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
+                      disabled={filesSelected}
+                      icon={
+                        <img 
+                          src="/google-drive-icon.png" 
+                          alt="Google Drive" 
+                          className="w-6 h-6"
+                        />
+                      }
+                    />
+                  </Tooltip>
+                  
+                  <Tooltip title="Import from OneDrive">
+                    <Button 
+                      onClick={handleOneDriveClick}
+                      className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
+                      disabled={filesSelected}
+                      icon={
+                        <img 
+                          src="/onedrive-icon.png" 
+                          alt="OneDrive" 
+                          className="w-6 h-6"
+                        />
+                      }
+                    />
+                  </Tooltip>
+                </div>
+              </div>
+              
+              {pendingFiles.length > 0 && (
+                <Button 
+                  type="primary"
+                  onClick={handleUploadClick} 
+                  disabled={isFileProcessing}
+                  className="w-full mt-4"
+                >
+                  Upload {pendingFiles.length} file{pendingFiles.length !== 1 ? 's' : ''}
                 </Button>
-              </Upload>
+              )}
             </div>
-          ),
-        },
-        {
-          key: 'uploadDirectory',
-          label: (
-            <div>
-              <Upload {...directoryProps}>
-                <Button icon={<FolderOutlined />} disabled={filesSelected}>
-                  Select Directory
-                </Button>
-              </Upload>
-            </div>
-          ),
-        },
-        {
-          key: 'uploadButton',
-          label: (
-            <Button 
-              onClick={handleUploadClick} 
-              disabled={isFileProcessing || pendingFiles.length === 0}
-              style={{ marginTop: '8px', width: '100%', marginBottom: '8px' }}
-            >
-              Upload
-            </Button>
-          ),
-        },
-        {
-          key: 'googleDrive',
-          label: (
-            <Button 
-              onClick={() => handleGoogleDriveClick()}
-              className="w-full"
-              disabled={filesSelected}
-            >
-              Import from Google Drive
-            </Button>
-          ),
-        },
-        {
-          key: 'oneDrive',
-          label: (
-            <Button 
-              onClick={() => handleOneDriveClick()}
-              className="w-full"
-              disabled={filesSelected}
-            >
-              Import from OneDrive
-            </Button>
           ),
         },
       ],
