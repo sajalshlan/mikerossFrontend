@@ -2,7 +2,7 @@ class OneDriveService {
   constructor() {
     this.initialized = false;
     this.config = {
-      clientId: "933a2982-a64c-4584-ba9f-df2af77f7274",
+      clientId: process.env.REACT_APP_ONEDRIVE_CLIENT_ID,
       redirectUri: window.location.origin,
       scopes: ["Files.Read", "Files.Read.All", "User.Read"]
     };

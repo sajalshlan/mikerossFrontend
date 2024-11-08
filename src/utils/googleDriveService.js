@@ -5,8 +5,8 @@ class GoogleDriveService {
     this.initialized = false;
     this.accessToken = null;
     this.tokenClient = null;
-    this.apiKey = 'AIzaSyCX7q-b7C4QwXuklvJOdLN5qmYFT77uTAc';
-    this.clientId = '582627442016-bv7n3ntg4sglt625pdd4m7igmiei7f27.apps.googleusercontent.com';
+    this.apiKey = process.env.REACT_APP_GOOGLE_API_KEY;
+    this.clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
   }
 
   async init() {
