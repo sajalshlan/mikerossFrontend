@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Menu, Upload, Button, Progress, message, Tooltip, Typography, Checkbox } from 'antd';
 import { UploadOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined } from '@ant-design/icons';
 import googleDriveService from '../utils/googleDriveService';
@@ -8,9 +8,9 @@ const { Text } = Typography;
 
 const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection, collapsed, setCollapsed, setIsFileProcessing }) => {
   const [selectedFiles, setSelectedFiles] = useState({});
-  const [pendingFiles, setPendingFiles] = useState([]);
-  const [filesSelected, setFilesSelected] = useState(false);
   const [isGoogleApiInitialized, setIsGoogleApiInitialized] = useState(false);
+  const fileChangeTimeoutRef = useRef(null);
+  const [uploadQueue, setUploadQueue] = useState([]);
 
   useEffect(() => {
     const initializeGoogleDrive = async () => {
@@ -34,23 +34,29 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   }, [files]);
 
   const handleFileChange = (info) => {
-    const { fileList } = info;
-    setPendingFiles(fileList.map(file => file.originFileObj));
-    setFilesSelected(true);
+    const files = info.fileList.map(file => file.originFileObj);
+    
+    if (fileChangeTimeoutRef.current) {
+      clearTimeout(fileChangeTimeoutRef.current);
+    }
+
+    fileChangeTimeoutRef.current = setTimeout(() => {
+      if (files.length > 0) {
+        const uniqueFiles = Array.from(new Set(files.map(file => file.name)))
+          .map(name => files.find(file => file.name === name));
+        onFileUpload(uniqueFiles);
+        setUploadQueue([]);
+      }
+    }, 100);
   };
 
-  const handleUploadClick = () => {
-    console.log('handleUploadClick clicked');
-    if (pendingFiles.length > 0) {
-      const uniqueFiles = Array.from(new Set(pendingFiles.map(file => file.name)))
-        .map(name => pendingFiles.find(file => file.name === name));
-      onFileUpload(uniqueFiles);
-      setPendingFiles([]);
-      setFilesSelected(false);  // Reset filesSelected immediately after clicking upload
-    } else {
-      message.warning('Please select files or a directory to upload');
-    }
-  };
+  useEffect(() => {
+    return () => {
+      if (fileChangeTimeoutRef.current) {
+        clearTimeout(fileChangeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleFileSelection = (fileName) => {
     if (files[fileName].progress && files[fileName].progress.status !== 'success') {
@@ -74,7 +80,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     onChange: handleFileChange,
     showUploadList: false,
     beforeUpload: () => false,
-    fileList: pendingFiles,
+    fileList: uploadQueue,
   };
 
   const handleGoogleDriveClick = async () => {
@@ -254,11 +260,11 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
                 </Upload>
                 
                 <div className="flex justify-center space-x-4 pt-4 border-t border-gray-200">
-                  <Tooltip title="Import from Google Drive">
+                  <Tooltip title={isFileProcessing ? "Please wait for current upload to finish" : "Import from Google Drive"}>
                     <Button 
                       onClick={handleGoogleDriveClick}
                       className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
-                      disabled={filesSelected}
+                      disabled={isFileProcessing}
                       icon={
                         <img 
                           src="/google-drive-icon.png" 
@@ -269,11 +275,11 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
                     />
                   </Tooltip>
                   
-                  <Tooltip title="Import from OneDrive">
+                  <Tooltip title={isFileProcessing ? "Please wait for current upload to finish" : "Import from OneDrive"}>
                     <Button 
                       onClick={handleOneDriveClick}
                       className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
-                      disabled={filesSelected}
+                      disabled={isFileProcessing}
                       icon={
                         <img 
                           src="/onedrive-icon.png" 
@@ -285,17 +291,6 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
                   </Tooltip>
                 </div>
               </div>
-              
-              {pendingFiles.length > 0 && (
-                <Button 
-                  type="primary"
-                  onClick={handleUploadClick} 
-                  disabled={isFileProcessing}
-                  className="w-full mt-4"
-                >
-                  Upload {pendingFiles.length} file{pendingFiles.length !== 1 ? 's' : ''}
-                </Button>
-              )}
             </div>
           ),
         },
