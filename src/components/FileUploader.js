@@ -6,17 +6,29 @@ import oneDriveService from '../utils/oneDriveService';
 
 const { Text } = Typography;
 
-const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onCheckedFilesChange, isAnalysisInProgress, onFileSelection, collapsed, setCollapsed, setIsFileProcessing }) => {
-  const [selectedFiles, setSelectedFiles] = useState({});
-  const [isGoogleApiInitialized, setIsGoogleApiInitialized] = useState(false);
+const FileUploader = ({ 
+  files,              // fileState.uploadedFiles
+  isFileProcessing,   // fileState.isUploading
+  onFileUpload,       // Function to update fileState
+  onRemoveFile,       // Function to remove file from fileState
+  onCheckedFilesChange, // Function to update checked files in fileState
+  isAnalysisInProgress, // Derived from analysisState
+  onFileSelection,    // Function to update fileState.previewFile
+  collapsed,          // uiState.isSiderCollapsed
+  setCollapsed       // Function to update uiState
+}) => {
+  const [uploaderState, setUploaderState] = useState({
+    checkedFiles: {},              // Local tracking of checked files
+    isGoogleDriveReady: false,     // Google Drive integration state
+    uploadQueue: []                // Queue for pending uploads
+  });
   const fileChangeTimeoutRef = useRef(null);
-  const [uploadQueue, setUploadQueue] = useState([]);
 
   useEffect(() => {
     const initializeGoogleDrive = async () => {
       try {
         await googleDriveService.init();
-        setIsGoogleApiInitialized(true);
+        setUploaderState(prev => ({ ...prev, isGoogleDriveReady: true }));
       } catch (error) {
         console.error('Failed to initialize Google Drive:', error);
       }
@@ -26,11 +38,11 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   }, []);
 
   useEffect(() => {
-    const initialSelectedFiles = Object.entries(files).reduce((acc, [fileName, file]) => {
+    const initialCheckedFiles = Object.entries(files).reduce((acc, [fileName, file]) => {
       acc[fileName] = file.isChecked || false;
       return acc;
     }, {});
-    setSelectedFiles(initialSelectedFiles);
+    setUploaderState(prev => ({ ...prev, checkedFiles: initialCheckedFiles }));
   }, [files]);
 
   const handleFileChange = (info) => {
@@ -45,7 +57,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
         const uniqueFiles = Array.from(new Set(files.map(file => file.name)))
           .map(name => files.find(file => file.name === name));
         onFileUpload(uniqueFiles);
-        setUploadQueue([]);
+        setUploaderState(prev => ({ ...prev, uploadQueue: [] }));
       }
     }, 100);
   };
@@ -63,9 +75,18 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
       message.warning('Please wait for the file to finish uploading before selecting it.');
       return;
     }
-    const newSelectedFiles = { ...selectedFiles, [fileName]: !selectedFiles[fileName] };
-    setSelectedFiles(newSelectedFiles);
-    onCheckedFilesChange(newSelectedFiles);
+
+    setUploaderState(prev => {
+      const newCheckedFiles = { 
+        ...prev.checkedFiles, 
+        [fileName]: !prev.checkedFiles[fileName] 
+      };
+      onCheckedFilesChange(newCheckedFiles);
+      return {
+        ...prev,
+        checkedFiles: newCheckedFiles
+      };
+    });
   };
 
   const handleRemoveFile = (fileName) => {
@@ -80,14 +101,14 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
     onChange: handleFileChange,
     showUploadList: false,
     beforeUpload: () => false,
-    fileList: uploadQueue,
+    fileList: uploaderState.uploadQueue,
   };
 
   const handleGoogleDriveClick = async () => {
     try {
-      if (!isGoogleApiInitialized) {
+      if (!uploaderState.isGoogleDriveReady) {
         await googleDriveService.init();
-        setIsGoogleApiInitialized(true);
+        setUploaderState(prev => ({ ...prev, isGoogleDriveReady: true }));
       }
 
       console.log('Starting Google Drive integration...');
@@ -112,7 +133,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
 
   const handleGoogleDriveSelect = async (data) => {
     if (data.action === 'picked' && data.docs && data.docs.length > 0) {
-      setIsFileProcessing(true);
+      setUploaderState(prev => ({ ...prev, isUploading: true }));
       const supportedTypes = [
         'application/pdf',
         'application/msword',
@@ -159,7 +180,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
         console.error('Error processing Google Drive files:', error);
         message.error('Error processing Google Drive files: ' + error.message);
       } finally {
-        setIsFileProcessing(false);
+        setUploaderState(prev => ({ ...prev, isUploading: false }));
       }
     }
   };
@@ -184,7 +205,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
   const handleOneDriveSelect = async (files) => {
     if (!files || !files.value || files.value.length === 0) return;
     
-    setIsFileProcessing(true);
+    setUploaderState(prev => ({ ...prev, isUploading: true }));
     const supportedTypes = [
       'application/pdf',
       'application/msword',
@@ -228,7 +249,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
       console.error('Error processing OneDrive files:', error);
       message.error('Error processing OneDrive files: ' + error.message);
     } finally {
-      setIsFileProcessing(false);
+      setUploaderState(prev => ({ ...prev, isUploading: false }));
     }
   };
 
@@ -260,11 +281,11 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
                 </Upload>
                 
                 <div className="flex justify-center space-x-4 pt-4 border-t border-gray-200">
-                  <Tooltip title={isFileProcessing ? "Please wait for current upload to finish" : "Import from Google Drive"}>
+                  <Tooltip title={uploaderState.isUploading ? "Please wait for current upload to finish" : "Import from Google Drive"}>
                     <Button 
                       onClick={handleGoogleDriveClick}
                       className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
-                      disabled={isFileProcessing}
+                      disabled={uploaderState.isUploading}
                       icon={
                         <img 
                           src="/google-drive-icon.png" 
@@ -275,11 +296,11 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
                     />
                   </Tooltip>
                   
-                  <Tooltip title={isFileProcessing ? "Please wait for current upload to finish" : "Import from OneDrive"}>
+                  <Tooltip title={uploaderState.isUploading ? "Please wait for current upload to finish" : "Import from OneDrive"}>
                     <Button 
                       onClick={handleOneDriveClick}
                       className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
-                      disabled={isFileProcessing}
+                      disabled={uploaderState.isUploading}
                       icon={
                         <img 
                           src="/onedrive-icon.png" 
@@ -307,7 +328,6 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
             <Text type="secondary" className="text-s font-bold">
               Click file name to select for analysis. 
               <br />
-              <br />
               Use eye icon to preview.
             </Text>
           ),
@@ -315,11 +335,11 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
         ...Object.entries(files).map(([fileName, file]) => ({
           key: fileName,
           label: (
-            <div className={`flex flex-col w-full ${selectedFiles[fileName] ? 'bg-blue-100 rounded-md p-2' : ''}`}>
+            <div className={`flex flex-col w-full ${uploaderState.checkedFiles[fileName] ? 'bg-blue-100 rounded-md p-2' : ''}`}>
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center space-x-2 flex-grow min-w-0">
                   <Checkbox
-                    checked={selectedFiles[fileName]}
+                    checked={uploaderState.checkedFiles[fileName]}
                     onChange={() => handleFileSelection(fileName)}
                     onClick={(e) => e.stopPropagation()}
                   />
@@ -335,7 +355,7 @@ const FileUploader = ({ onFileUpload, files, isFileProcessing, onRemoveFile, onC
                   <span 
                     onClick={() => handleFileSelection(fileName)}
                     className={`cursor-pointer transition-colors duration-200 truncate 
-                      ${selectedFiles[fileName] ? 'font-bold text-blue-700' : 'hover:text-blue-400'}
+                      ${uploaderState.checkedFiles[fileName] ? 'font-bold text-blue-700' : 'hover:text-blue-400'}
                       ${file.progress && file.progress.status !== 'success' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {fileName}

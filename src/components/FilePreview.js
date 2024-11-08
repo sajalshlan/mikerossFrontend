@@ -7,19 +7,25 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   const [showPlaceholder, setShowPlaceholder] = useState(true);
 
   useEffect(() => {
-    if (Object.keys(files).length === 0) {
-      onFileSelect(null);
-    } else if (selectedFile && !files[selectedFile]) {
+    const shouldResetSelection = 
+      Object.keys(files).length === 0 || 
+      (selectedFile && !files[selectedFile]);
+      
+    if (shouldResetSelection) {
       onFileSelect(null);
     }
-
   }, [files, selectedFile, onFileSelect]);
 
   useEffect(() => {
-    if (selectedFile && files[selectedFile] && getFileTypeFromName(files[selectedFile].file.name) === 'document') {
-      renderDocxPreview(files[selectedFile].file, files[selectedFile].base64).then(() => {
-        addIdsToDocumentElements();
-      });
+    const isDocument = selectedFile && 
+      files[selectedFile] && 
+      getFileTypeFromName(files[selectedFile].file.name) === 'document';
+
+    if (isDocument) {
+      renderDocxPreview(files[selectedFile].file, files[selectedFile].base64)
+        .then(() => {
+          addIdsToDocumentElements();
+        });
       setShowPlaceholder(false);
     } else {
       setShowPlaceholder(!selectedFile || !files[selectedFile]);

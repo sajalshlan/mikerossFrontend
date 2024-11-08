@@ -18,18 +18,21 @@ const AnalysisSection = ({
   const hasFiles = Object.keys(files).length > 0;
   const checkedFilesCount = Object.values(files).filter(file => file.isChecked).length;
   const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
-  const selectedFiles = Object.keys(files).filter(fileName => files[fileName].isChecked);
 
-  useEffect(() => {
-    if (selectedFiles.length === 0) {
-      setSelectedSummaryType('Summary');
-    }
-  }, [selectedFiles]);
+  const getCheckedFiles = () => Object.keys(files).filter(fileName => files[fileName].isChecked);
+  
+  const isAnalysisComplete = (type, fileNames) => {
+    return fileNames.every(fileName => analysisState[type].result[fileName]);
+  };
+
+  const hasPartialAnalysis = (type, fileNames) => {
+    return fileNames.some(fileName => analysisState[type].result[fileName]);
+  };
 
   const getButtonColor = (type) => {
-    const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
-    const allProcessed = selectedFileNames.every(fileName => analysisState[type].result[fileName]);
-    const someProcessed = selectedFileNames.some(fileName => analysisState[type].result[fileName]);
+    const selectedFileNames = getCheckedFiles();
+    const allProcessed = isAnalysisComplete(type, selectedFileNames);
+    const someProcessed = hasPartialAnalysis(type, selectedFileNames);
 
     if (analysisState[type].isLoading) return 'bg-blue-600 hover:bg-blue-700 text-white';
     if (allProcessed && selectedFileNames.length > 0) return 'bg-green-600 hover:bg-green-700 text-white';
@@ -38,13 +41,14 @@ const AnalysisSection = ({
   };
 
   const getButtonTooltip = (type) => {
-    const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
-    const allProcessed = selectedFileNames.every(fileName => analysisState[type].result[fileName]);
-    const someProcessed = selectedFileNames.some(fileName => analysisState[type].result[fileName]);
+    const selectedFileNames = getCheckedFiles();
+    const allProcessed = isAnalysisComplete(type, selectedFileNames);
+    const someProcessed = hasPartialAnalysis(type, selectedFileNames);
 
     if (analysisState[type].isLoading) return "Analysis in progress...";
     if (allProcessed && selectedFileNames.length > 0) return "All files processed";
     if (someProcessed) return "Click to process newly selected files.";
+    return "Select files to analyze";
   };
 
   const toggleVisibility = (type) => {
@@ -58,7 +62,7 @@ const AnalysisSection = ({
   };
 
   const handleAnalysisClick = (type) => {
-    const selectedFileNames = Object.keys(files).filter(fileName => files[fileName].isChecked);
+    const selectedFileNames = getCheckedFiles();
 
     if (type === 'conflict' && selectedFileNames.length < 2) {
       if (analysisState[type].isVisible) {
@@ -73,7 +77,10 @@ const AnalysisSection = ({
       return;
     }
 
-    const unprocessedFiles = selectedFileNames.filter(fileName => !analysisState[type].result[fileName]);
+    const unprocessedFiles = selectedFileNames.filter(
+      fileName => !analysisState[type].result[fileName]
+    );
+
     if (unprocessedFiles.length === 0) {
       toggleVisibility(type);
     } else {
@@ -82,7 +89,7 @@ const AnalysisSection = ({
         return acc;
       }, {});
       onAnalysis(type, selectedTexts);
-      // Close other analysis results when starting a new analysis
+      // Close other analysis results
       analysisTypes.forEach((otherType) => {
         if (otherType !== type && analysisState[otherType].isVisible) {
           onToggleVisibility(otherType);
@@ -102,7 +109,7 @@ const AnalysisSection = ({
   );
 
   const isSummaryLoading = () => {
-    return analysisState['shortSummary'].isLoading || analysisState['longSummary'].isLoading;
+    return analysisState.shortSummary.isLoading || analysisState.longSummary.isLoading;
   };
 
   return (
@@ -112,13 +119,13 @@ const AnalysisSection = ({
         <div className="flex gap-4 mb-2 items-start">
           <div className="flex-grow">
             <div className="grid grid-cols-3 gap-4">
-              <Tooltip title="Select Summary Type">
+              <Tooltip title={hasFiles ? "Select Summary Type" : "Upload files first"}>
                 {hasFiles ? (
                   <Dropdown overlay={summaryMenu} trigger={['click']}>
                     <button
                       className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
                         ${getButtonColor(selectedSummaryType === 'Short Summary' ? 'shortSummary' : 'longSummary')}
-                        ${(isFileProcessing) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                        ${isFileProcessing ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
                       `}
                       disabled={isFileProcessing || isSummaryLoading()}
                     >
@@ -129,13 +136,8 @@ const AnalysisSection = ({
                     </button>
                   </Dropdown>
                 ) : (
-                  <button
-                    onClick={() => message.warning("Please select at least one file for analysis.")}
-                    className="w-full px-4 py-3 rounded-lg text-md font-semibold bg-gray-300 text-gray-800 cursor-not-allowed"
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <span>{selectedSummaryType}</span>
-                    </div>
+                  <button className="w-full px-4 py-3 rounded-lg text-md font-semibold bg-gray-300 text-gray-800 cursor-not-allowed">
+                    <span>{selectedSummaryType}</span>
                   </button>
                 )}
               </Tooltip>
@@ -143,20 +145,15 @@ const AnalysisSection = ({
                 <Tooltip key={type} title={getButtonTooltip(type)}>
                   <button
                     onClick={() => handleAnalysisClick(type)}
-                    disabled={
-                      analysisState[type].isLoading || 
-                      isFileProcessing
-                    }
+                    disabled={analysisState[type].isLoading || isFileProcessing}
                     className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
                       ${getButtonColor(type)}
-                      ${(isFileProcessing) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                      ${isFileProcessing ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
                     `}
                   >
                     <div className="flex items-center justify-center space-x-2">
                       {analysisState[type].isLoading && <LoadingOutlined className="animate-spin" />}
-                      <span>
-                        {type === 'risky' ? 'Risk Analysis' : 'Conflict Check'}
-                      </span>
+                      <span>{type === 'risky' ? 'Risk Analysis' : 'Conflict Check'}</span>
                     </div>
                   </button>
                 </Tooltip>
@@ -164,13 +161,13 @@ const AnalysisSection = ({
             </div>
           </div>
           <div className="flex-shrink-0">
-            <Tooltip title="Stop">
+            <Tooltip title="Stop Analysis">
               <button
                 onClick={onStopAnalysis}
-                disabled={!analysisTypes.some(type => analysisState[type].isLoading)}
+                disabled={!Object.values(analysisState).some(state => state.isLoading)}
                 className={`w-10 h-10 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out flex items-center justify-center
-                  ${analysisTypes.some(type => analysisState[type].isLoading) ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-300 text-gray-800'}
-                  ${!analysisTypes.some(type => analysisState[type].isLoading) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg'}
+                  ${Object.values(analysisState).some(state => state.isLoading) ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-300 text-gray-800'}
+                  ${!Object.values(analysisState).some(state => state.isLoading) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg'}
                 `}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
