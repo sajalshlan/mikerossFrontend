@@ -94,10 +94,10 @@ const AnalysisSection = ({
         return acc;
       }, {});
       onAnalysis(type, selectedTexts);
-      // Close other analysis results
-      analysisTypes.forEach((otherType) => {
-        if (otherType !== type && analysisState[otherType].isVisible) {
-          onToggleVisibility(otherType);
+      // Close all analysis results
+      analysisTypes.forEach((type) => {
+        if (analysisState[type].isVisible) {
+          onToggleVisibility(type);
         }
       });
     }
