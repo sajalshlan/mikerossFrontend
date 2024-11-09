@@ -15,14 +15,16 @@ const AnalysisSection = ({
   onStopAnalysis
 }) => {
   const analysisTypes = ['shortSummary', 'longSummary', 'risky', 'conflict'];
+  const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
+
   const hasFiles = useMemo(() => Object.keys(files).length > 0, [files]);
   const checkedFilesCount = useMemo(
     () => Object.values(files).filter(file => file.isChecked).length,
     [files]
   );
-  const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
 
-  const getCheckedFiles = () => Object.keys(files).filter(fileName => files[fileName].isChecked);
+    const checkedFiles = useMemo(() => Object.keys(files).filter(fileName => files[fileName].isChecked), [files]);
+
   
   const isAnalysisComplete = (type, fileNames) => {
     return fileNames.every(fileName => analysisState[type].result[fileName]);
@@ -33,7 +35,7 @@ const AnalysisSection = ({
   };
 
   const getButtonColor = (type) => {
-    const selectedFileNames = getCheckedFiles();
+    const selectedFileNames = checkedFiles;
     const allProcessed = isAnalysisComplete(type, selectedFileNames);
     const someProcessed = hasPartialAnalysis(type, selectedFileNames);
 
@@ -44,7 +46,7 @@ const AnalysisSection = ({
   };
 
   const getButtonTooltip = (type) => {
-    const selectedFileNames = getCheckedFiles();
+    const selectedFileNames = checkedFiles;
     const allProcessed = isAnalysisComplete(type, selectedFileNames);
     const someProcessed = hasPartialAnalysis(type, selectedFileNames);
 
@@ -66,7 +68,7 @@ const AnalysisSection = ({
   };
 
   const handleAnalysisClick = (type) => {
-    const selectedFileNames = getCheckedFiles();
+    const selectedFileNames = checkedFiles;
 
     if (type === 'conflict' && selectedFileNames.length < 2) {
       if (analysisState[type].isVisible) {
