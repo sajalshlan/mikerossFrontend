@@ -22,12 +22,6 @@ const LegalAnalyzer = () => {
       longSummary: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
       risky: { isLoading: false, isPerformed: false, isVisible: false, result: {} },
       conflict: { isLoading: false, isPerformed: false, isVisible: false, result: '' }
-    },
-    activeAnalyses: {
-      shortSummary: false,
-      longSummary: false,
-      risky: false,
-      conflict: false
     }
   });
   const [uiState, setUiState] = useState({
@@ -36,6 +30,8 @@ const LegalAnalyzer = () => {
   });
 
   const siderRef = useRef(null);
+
+  const shouldStopAnalysisRef = useRef(false);
 
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
@@ -188,13 +184,12 @@ const LegalAnalyzer = () => {
   };
 
   const handleAnalysis = async (type, texts = null) => {
-    if (analysisState.activeAnalyses[type]) {
+    if (analysisState.types[type].isLoading) {
       return;
     }
 
-    console.log("handleAnalysis", type, texts);
+    shouldStopAnalysisRef.current = false;
     
-    analysisState.activeAnalyses[type] = true;
     setAnalysisState(prev => ({
       ...prev,
       types: {
@@ -227,16 +222,17 @@ const LegalAnalyzer = () => {
             .filter(([_, file]) => file.isChecked)
             .map(([fileName, file]) => [fileName, file.extractedText])
         );
-        const filesToProcess = Object.keys(textsToAnalyze).filter(
-          fileName => !analysisState.types[fileName]
-        );
-
-        console.log("filesToProcess", filesToProcess);
+        const filesToProcess = Object.keys(textsToAnalyze);
 
         for (const fileName of filesToProcess) {
+          if (shouldStopAnalysisRef.current) {
+            console.log('Analysis stopped by user. Skipping remaining files.');
+            break;
+          }
+
           const text = textsToAnalyze[fileName];
           if (text) {
-            const result = await performAnalysis(type, text);
+            const result = await performAnalysis(type, text, fileName);
             console.log("performing analysis", fileName);
             if (result) {
               results[fileName] = result;
@@ -245,22 +241,24 @@ const LegalAnalyzer = () => {
         }
       }
 
-      setAnalysisState(prev => ({
-        ...prev,
-        types: {
-          ...prev.types,
-          [type]: {
-            ...prev.types[type],
-            isLoading: false,
-            isPerformed: true,
-            isVisible: true,
-            result: type === 'conflict' ? results : { ...prev.types[type].result, ...results },
-            selectedFiles: Object.keys(texts) // Store the selected files
+      if (!shouldStopAnalysisRef.current) {
+        setAnalysisState(prev => ({
+          ...prev,
+          types: {
+            ...prev.types,
+            [type]: {
+              ...prev.types[type],
+              isLoading: false,
+              isPerformed: true,
+              isVisible: true,
+              result: type === 'conflict' ? results : { ...prev.types[type].result, ...results }
+            }
           }
-        }
-      }));
+        }));
+      }
     } catch (error) {
-      // Handle error
+      console.error('Error in analysis:', error);
+    } finally {
       setAnalysisState(prev => ({
         ...prev,
         types: {
@@ -268,8 +266,6 @@ const LegalAnalyzer = () => {
           [type]: { ...prev.types[type], isLoading: false }
         }
       }));
-    } finally {
-      analysisState.activeAnalyses[type] = false;
     }
   };
 
@@ -315,34 +311,33 @@ const LegalAnalyzer = () => {
   };
 
   const handleStopAnalysis = () => {
-    setAnalysisState(prevState => {
-      const newState = { ...prevState };
-      for (const type of Object.keys(newState.types)) {
-        if (newState.types[type].isLoading) {
-          newState.types[type] = {
-            ...newState.types[type],
-            isLoading: false,
-            // Keep isPerformed and result as they were
-          };
-        }
-      }
-      return newState;
-    });
+    console.log('🔄 handleStopAnalysis - Starting cancellation process');
+    
+    shouldStopAnalysisRef.current = true;
 
-    // Reset the analysis in progress flags
-    Object.keys(analysisState.activeAnalyses).forEach(type => {
-      analysisState.activeAnalyses[type] = false;
-    });
-
-    // Cancel ongoing API requests
     if (window.currentAnalysisControllers) {
+      console.log('🚫 Aborting active controllers:', Object.keys(window.currentAnalysisControllers));
       Object.values(window.currentAnalysisControllers).forEach(controller => {
         if (controller) {
           controller.abort();
         }
       });
       window.currentAnalysisControllers = {};
+      console.log('✅ Controllers reset');
     }
+
+    setAnalysisState(prevState => ({
+      ...prevState,
+      types: Object.fromEntries(
+        Object.entries(prevState.types).map(([type, state]) => [
+          type,
+          {
+            ...state,
+            isLoading: false
+          }
+        ])
+      )
+    }));
   };
 
   const isUploading = useMemo(() => {

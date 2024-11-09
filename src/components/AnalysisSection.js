@@ -20,10 +20,6 @@ const AnalysisSection = ({
     () => Object.values(files).filter(file => file.isChecked).length,
     [files]
   );
-  const checkedFiles = useMemo(
-    () => Object.keys(files).filter(fileName => files[fileName].isChecked),
-    [files]
-  );
   const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
 
   const getCheckedFiles = () => Object.keys(files).filter(fileName => files[fileName].isChecked);
@@ -119,6 +115,12 @@ const AnalysisSection = ({
     return analysisState.shortSummary.isLoading || analysisState.longSummary.isLoading;
   };
 
+  useEffect(() => {
+    if (!hasFiles || checkedFilesCount === 0) {
+      setSelectedSummaryType('Summary');
+    }
+  }, [hasFiles, checkedFilesCount]);
+
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
       <div className="flex-shrink-0">
@@ -127,7 +129,7 @@ const AnalysisSection = ({
           <div className="flex-grow">
             <div className="grid grid-cols-3 gap-4">
               <Tooltip title={hasFiles ? "Select Summary Type" : "Upload files first"}>
-                {hasFiles ? (
+                {hasFiles && checkedFilesCount > 0 ? (
                   <Dropdown overlay={summaryMenu} trigger={['click']}>
                     <button
                       className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
@@ -143,26 +145,36 @@ const AnalysisSection = ({
                     </button>
                   </Dropdown>
                 ) : (
-                  <button className="w-full px-4 py-3 rounded-lg text-md font-semibold bg-gray-300 text-gray-800 cursor-not-allowed">
-                    <span>{selectedSummaryType}</span>
+                  <button 
+                    disabled={true}
+                    className="w-full px-4 py-3 rounded-lg text-md font-semibold bg-gray-300 text-gray-800 cursor-not-allowed">
+                    <span>Summary</span>
                   </button>
                 )}
               </Tooltip>
               {analysisTypes.slice(2).map((type) => (
-                <Tooltip key={type} title={getButtonTooltip(type)}>
-                  <button
-                    onClick={() => handleAnalysisClick(type)}
-                    disabled={analysisState[type].isLoading || isUploading}
-                    className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
-                      ${getButtonColor(type)}
-                      ${isUploading ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
-                    `}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      {analysisState[type].isLoading && <LoadingOutlined className="animate-spin" />}
+                <Tooltip key={type} title={hasFiles ? getButtonTooltip(type) : "Upload files first"}>
+                  {hasFiles ? (
+                    <button
+                      onClick={() => handleAnalysisClick(type)}
+                      disabled={analysisState[type].isLoading || isUploading}
+                      className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
+                        ${getButtonColor(type)}
+                        ${isUploading ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                      `}
+                    >
+                      <div className="flex items-center justify-center space-x-2">
+                        {analysisState[type].isLoading && <LoadingOutlined className="animate-spin" />}
+                        <span>{type === 'risky' ? 'Risk Analysis' : 'Conflict Check'}</span>
+                      </div>
+                    </button>
+                  ) : (
+                    <button 
+                      disabled={true}
+                      className="w-full px-4 py-3 rounded-lg text-md font-semibold bg-gray-300 text-gray-800 cursor-not-allowed">
                       <span>{type === 'risky' ? 'Risk Analysis' : 'Conflict Check'}</span>
-                    </div>
-                  </button>
+                    </button>
+                  )}
                 </Tooltip>
               ))}
             </div>

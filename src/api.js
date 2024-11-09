@@ -4,11 +4,13 @@ if (!window.currentAnalysisControllers) {
   window.currentAnalysisControllers = {};
 }
 
-export const performAnalysis = async (type, text) => {
-  console.log(`[API] Performing ${type} analysis...`);
+export const performAnalysis = async (type, text, fileName) => {
+  console.log(`[API] 🚀 Starting ${type} analysis for ${fileName}...`);
   try {
     const controller = new AbortController();
-    window.currentAnalysisControllers[type] = controller;
+    const controllerKey = `${type}_${fileName}`;
+    console.log(`[API] 🎮 Created controller for ${controllerKey}`);
+    window.currentAnalysisControllers[controllerKey] = controller;
 
     const response = await fetch(`${API_BASE_URL}/perform_analysis/`, {
       method: 'POST',
@@ -18,32 +20,28 @@ export const performAnalysis = async (type, text) => {
       body: JSON.stringify({ analysis_type: type, text }),
       signal: controller.signal
     });
-    // Log headers here
-    console.log('Response headers:', Object.fromEntries(response.headers));
-    // Or more detailed
-    console.log('All headers:');
-    response.headers.forEach((value, key) => {
-      console.log(`${key}: ${value}`);
-    });
 
     const result = await response.json();
-    console.log(`[API] ${type} analysis result:`, result);
-    delete window.currentAnalysisControllers[type];
+    console.log(`[API] ✅ ${type} analysis completed:`, result);
+    delete window.currentAnalysisControllers[controllerKey];
     return result.success ? result.result : null;
   } catch (error) {
     if (error.name === 'AbortError') {
-      console.log(`[API] ${type} analysis aborted`);
+      console.log(`[API] 🛑 ${type} analysis was manually aborted for ${fileName}`);
     } else {
-      console.error(`[API] Error performing ${type} analysis:`, error);
+      console.error(`[API] ❌ Error in ${type} analysis for ${fileName}:`, error);
     }
     return null;
+  } finally {
+    console.log(`[API] 🧹 Cleanup for ${type} analysis of ${fileName}`);
   }
 };
 
 export const performConflictCheck = async (texts) => {
-  console.log('[API] Performing conflict check...');
+  console.log('[API] 🚀 Starting conflict check...');
   try {
     const controller = new AbortController();
+    console.log(`[API] 🎮 Created controller for conflict check`);
     window.currentAnalysisControllers['conflict'] = controller;
 
     const response = await fetch(`${API_BASE_URL}/perform_conflict_check/`, {
@@ -58,23 +56,26 @@ export const performConflictCheck = async (texts) => {
     console.log('Response headers:', Object.fromEntries(response.headers));
     
     const result = await response.json();
-    console.log('[API] Conflict check result:', result);
+    console.log('[API] ✅ Conflict check completed:', result);
     delete window.currentAnalysisControllers['conflict'];
     return result.success ? result.result : null;
   } catch (error) {
     if (error.name === 'AbortError') {
-      console.log('[API] Conflict check aborted');
+      console.log('[API] 🛑 Conflict check was manually aborted');
     } else {
-      console.error('[API] Error performing conflict check:', error);
+      console.error('[API] ❌ Error in conflict check:', error);
     }
     return null;
+  } finally {
+    console.log('[API] 🧹 Cleanup for conflict check');
   }
 };
 
 export const uploadFile = async (file, onProgress) => {
-  console.log(`[API] Uploading file...`);
+  console.log(`[API] 🚀 Uploading file...`);
   try {
     const controller = new AbortController();
+    console.log(`[API] 🎮 Created controller for file upload`);
     window.currentAnalysisControllers['upload'] = controller;
 
     const formData = new FormData();
@@ -89,7 +90,7 @@ export const uploadFile = async (file, onProgress) => {
     console.log('Response headers:', Object.fromEntries(response.headers));
 
     const result = await response.json();
-    console.log('[API] Upload result:', result);
+    console.log('[API] ✅ File upload completed:', result);
     delete window.currentAnalysisControllers['upload'];
 
     if (result.success) {
@@ -100,14 +101,16 @@ export const uploadFile = async (file, onProgress) => {
     }
   } catch (error) {
     if (error.name === 'AbortError') {
-      console.log('[API] File upload aborted');
+      console.log('[API] 🛑 File upload was manually aborted');
     } else {
-      console.error(`[API] Error uploading ${file.name}:`, error);
+      console.error(`[API] ❌ Error uploading ${file.name}:`, error);
     }
     return {
       success: false,
       error: error.message,
       file: file
     };
+  } finally {
+    console.log('[API] 🧹 Cleanup for file upload');
   }
 };
