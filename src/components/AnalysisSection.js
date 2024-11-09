@@ -51,6 +51,7 @@ const AnalysisSection = ({
     if (analysisState[type].isLoading) return "Analysis in progress...";
     if (allProcessed && selectedFileNames.length > 0) return "All files processed";
     if (someProcessed) return "Click to process newly selected files.";
+    if (selectedFileNames.length > 0) return "Start analysis";
     return "Select files to analyze";
   };
 
@@ -128,7 +129,11 @@ const AnalysisSection = ({
         <div className="flex gap-4 mb-2 items-start">
           <div className="flex-grow">
             <div className="grid grid-cols-3 gap-4">
-              <Tooltip title={hasFiles ? "Select Summary Type" : "Upload files first"}>
+              <Tooltip title={hasFiles ? (
+                checkedFilesCount > 0 
+                  ? getButtonTooltip(selectedSummaryType === 'Short Summary' ? 'shortSummary' : 'longSummary')
+                  : "Select files to analyze"
+              ) : "Upload files first"}>
                 {hasFiles && checkedFilesCount > 0 ? (
                   <Dropdown overlay={summaryMenu} trigger={['click']}>
                     <button
