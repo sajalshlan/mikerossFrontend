@@ -47,35 +47,45 @@ const AnalysisSection = ({
   };
   
   const handleCopy = (fileName, data) => {
-  // const content = files[fileName].extractedText; // Assuming 'data' contains the file content for rendering.
-  const contentToCopy = JSON.stringify(data); // or any other logic to get the rendered content
-
-  if (navigator.clipboard) {
-    // Use Clipboard API if available
-    navigator.clipboard.writeText(contentToCopy)
-      .then(() => console.log(`Content copied for file: ${fileName}`))
-      .catch((error) => console.error('Failed to copy content: ', error));
-  } else {
-    // Fallback method using execCommand
-    const textArea = document.createElement("textarea");
-    textArea.value = contentToCopy;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      const successful = document.execCommand('copy');
-      if (successful) {
-        message.success(`Content copied for file: ${fileName}`);
-        console.log(`Content copied for file: ${fileName}`);
-      } else {
-        console.error('Fallback: Failed to copy content.');
+    const rawContent = data;  // Assuming this contains the raw file content
+  
+    // Function to format the text
+    const formatContent = (text) => {
+      return text
+        .replace(/\*/g, '')                       // Remove all asterisks
+        .replace(/^\s+|\s+$/gm, '')               // Trim spaces at the beginning and end of each line
+        .replace(/(?<=:)\s*\n/g, '\n\n')          // Add extra spacing after colons for section clarity
+        .replace(/^(Legal Risks:|Financial Risks:|Business Risks:)/gm, '\n$1\n') // Add spacing to main headers
+        .replace(/(\n\s*\*\s)/g, '\n\n* ')        // Add blank line before each bullet point
+        .replace(/(?<!\n)(?<=^|\n)(\d+\.\s)/g, '\n\n$1') // Place numbered sections (e.g., 1., 2.) on new lines
+        .replace(/\n/g, '\n\n')                   // Add blank line after each newline
+        .replace(/\n\n\n/g, '\n\n');              // Avoid triple newlines by reducing to double
+    };
+    
+    const formattedContent = formatContent(rawContent); 
+  
+    // Copy to clipboard
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(formattedContent)
+        .then(() => console.log(`Content copied for file: ${fileName}`))
+        .catch((error) => console.error('Failed to copy content: ', error));
+    } else {
+      // Fallback for environments without Clipboard API
+      const textArea = document.createElement("textarea");
+      textArea.value = formattedContent;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        const successful = document.execCommand('copy');
+        console.log(successful ? `Content copied for file: ${fileName}` : 'Fallback: Failed to copy content.');
+      } catch (err) {
+        console.error('Fallback: Failed to copy content. Error:', err);
+      } finally {
+        document.body.removeChild(textArea);
       }
-    } catch (err) {
-      console.error('Fallback: Failed to copy content. Error:', err);
-    } finally {
-      document.body.removeChild(textArea);
     }
-  }
-};
+  };
+  
   
   
 
