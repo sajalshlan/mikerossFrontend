@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { renderAsync } from 'docx-preview';
 import SpreadsheetPreview from './SpreadsheetPreview';
 
@@ -67,12 +67,14 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     return extensionMap[extension] || 'unknown';
   };
 
-  const renderFilePreview = (fileObj) => {
-
+  const renderFilePreview = useMemo(() => {
     if (containerRef.current) {
       containerRef.current.innerHTML = '';
     }
-    
+
+    const fileObj = files[selectedFile];
+    if (!fileObj) return null;
+
     const file = fileObj.file;
     const fileType = getFileTypeFromName(file.name);
     let fileUrl;
@@ -137,7 +139,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
           </div>
         );
     }
-  };
+  }, [selectedFile, files]);  // Memoize preview based on selectedFile and files
 
   const getMimeType = (fileType) => {
     switch (fileType) {
@@ -234,7 +236,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       {showPlaceholder ? (
         renderPlaceholder()
       ) : (
-        selectedFile && files[selectedFile] && renderFilePreview(files[selectedFile])
+        selectedFile && files[selectedFile] && renderFilePreview
       )}
     </div>
   );
