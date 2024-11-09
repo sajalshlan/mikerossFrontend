@@ -22,8 +22,7 @@ const AnalysisSection = ({
     () => Object.values(files).filter(file => file.isChecked).length,
     [files]
   );
-
-    const checkedFiles = useMemo(() => Object.keys(files).filter(fileName => files[fileName].isChecked), [files]);
+  const checkedFiles = useMemo(() => Object.keys(files).filter(fileName => files[fileName].isChecked), [files]);
 
   
   const isAnalysisComplete = (type, fileNames) => {

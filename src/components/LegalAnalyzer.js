@@ -444,7 +444,6 @@ const LegalAnalyzer = () => {
             onFileUpload={handleFileUpload}
             onRemoveFile={handleRemoveFile}
             onCheckedFilesChange={handleCheckedFilesChange}
-            isAnalysisInProgress={Object.values(analysisState.types).some(state => state.isLoading)}
             onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
             collapsed={uiState.isSiderCollapsed}
             setCollapsed={(collapsed) => setUiState(prev => ({ ...prev, isSiderCollapsed: collapsed }))}

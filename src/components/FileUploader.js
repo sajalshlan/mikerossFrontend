@@ -12,7 +12,6 @@ const FileUploader = ({
   onFileUpload,       
   onRemoveFile,       
   onCheckedFilesChange,
-  isAnalysisInProgress,
   onFileSelection,    
   collapsed,         
   setCollapsed       
@@ -388,6 +387,7 @@ const FileUploader = ({
         mode="inline"
         theme="light"
         items={menuItems}
+        triggerSubMenuAction="click"
         className="flex-grow custom-menu"
         style={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'auto', backgroundColor: '#F5F5F5' }}
       />

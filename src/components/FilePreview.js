@@ -7,30 +7,31 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   const [showPlaceholder, setShowPlaceholder] = useState(true);
 
   useEffect(() => {
-    const shouldResetSelection = 
-      Object.keys(files).length === 0 || 
-      (selectedFile && !files[selectedFile]);
-      
+    const isValidFile = selectedFile && files[selectedFile];  // Check if selected file is valid
+    const isDocument = isValidFile && getFileTypeFromName(files[selectedFile].file.name) === 'document';  // Check if the selected file is a document
+    const shouldResetSelection = Object.keys(files).length === 0 || !isValidFile;  // Condition for resetting selection
+  
     if (shouldResetSelection) {
-      onFileSelect(null);
-    }
-  }, [files, selectedFile]);
-
-  useEffect(() => {
-    const isDocument = selectedFile && 
-      files[selectedFile] && 
-      getFileTypeFromName(files[selectedFile].file.name) === 'document';
-
-    if (isDocument) {
-      renderDocxPreview(files[selectedFile].file, files[selectedFile].base64)
-        .then(() => {
-          addIdsToDocumentElements();
-        });
-      setShowPlaceholder(false);
+      onFileSelect(null);  // Reset file selection if no files or selected file is invalid
     } else {
-      setShowPlaceholder(!selectedFile || !files[selectedFile]);
+      if (isDocument) {
+        // If it is a document, render preview and add ids to document elements
+        renderDocxPreview(files[selectedFile].file, files[selectedFile].base64)
+          .then(() => {
+            addIdsToDocumentElements();  // Add IDs to elements in the document
+          });
+        setShowPlaceholder(false);  // Hide placeholder since the document is valid
+      } else {
+        setShowPlaceholder(!isValidFile);  // Show placeholder if no valid file
+      }
     }
-  }, [selectedFile, files]);
+  
+    // If the selected file is removed from the files, show the placeholder
+    if (!isValidFile) {
+      setShowPlaceholder(true);
+    }
+  
+  }, [selectedFile, files]);  // Dependency on selectedFile and files  
 
   useEffect(() => {
     const handleScrollToElement = (event) => {
@@ -67,6 +68,11 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   };
 
   const renderFilePreview = (fileObj) => {
+
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
+    }
+    
     const file = fileObj.file;
     const fileType = getFileTypeFromName(file.name);
     let fileUrl;
@@ -102,6 +108,12 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
             ref={containerRef} 
             className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto"
           />
+        );
+      case 'text':
+        return (
+          <div {...commonProps} className="bg-white text-black text-center p-4 rounded-lg shadow-lg overflow-auto">
+            <pre className="whitespace-pre-wrap font-sans">{fileObj.extractedText || 'No text content available'}</pre>
+          </div>
         );
       case 'excel':
       case 'csv':
