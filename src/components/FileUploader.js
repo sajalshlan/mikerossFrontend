@@ -7,15 +7,15 @@ import oneDriveService from '../utils/oneDriveService';
 const { Text } = Typography;
 
 const FileUploader = ({ 
-  files,              // fileState.uploadedFiles
-  isFileProcessing,   // fileState.isUploading
-  onFileUpload,       // Function to update fileState
-  onRemoveFile,       // Function to remove file from fileState
-  onCheckedFilesChange, // Function to update checked files in fileState
-  isAnalysisInProgress, // Derived from analysisState
-  onFileSelection,    // Function to update fileState.previewFile
-  collapsed,          // uiState.isSiderCollapsed
-  setCollapsed       // Function to update uiState
+  files,              
+  isUploading,       
+  onFileUpload,       
+  onRemoveFile,       
+  onCheckedFilesChange,
+  isAnalysisInProgress,
+  onFileSelection,    
+  collapsed,         
+  setCollapsed       
 }) => {
   const [uploaderState, setUploaderState] = useState({
     checkedFiles: {},              // Local tracking of checked files
@@ -133,20 +133,19 @@ const FileUploader = ({
 
   const handleGoogleDriveSelect = async (data) => {
     if (data.action === 'picked' && data.docs && data.docs.length > 0) {
-      setUploaderState(prev => ({ ...prev, isUploading: true }));
-      const supportedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain',
-        'image/jpeg',
-        'image/png',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'text/csv'
-      ];
-      
       try {
+        const supportedTypes = [
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'text/plain',
+          'image/jpeg',
+          'image/png',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'text/csv'
+        ];
+        
         const validFiles = data.docs.filter(file => 
           supportedTypes.includes(file.mimeType)
         );
@@ -176,11 +175,7 @@ const FileUploader = ({
           onFileUpload(files);
           message.success(`Successfully imported ${files.length} file${files.length > 1 ? 's' : ''}`);
         }
-      } catch (error) {
-        console.error('Error processing Google Drive files:', error);
-        message.error('Error processing Google Drive files: ' + error.message);
       } finally {
-        setUploaderState(prev => ({ ...prev, isUploading: false }));
       }
     }
   };
@@ -205,21 +200,19 @@ const FileUploader = ({
   const handleOneDriveSelect = async (files) => {
     if (!files || !files.value || files.value.length === 0) return;
     
-    setUploaderState(prev => ({ ...prev, isUploading: true }));
-    const supportedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain',
-      'image/jpeg',
-      'image/png',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/csv'
-    ];
-
     try {
-      // Process all files from the value array
+      const supportedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'image/jpeg',
+        'image/png',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/csv'
+      ];
+
       const filePromises = files.value.map(async (file) => {
         try {
           const fileData = await oneDriveService.loadDriveFiles({
@@ -245,11 +238,7 @@ const FileUploader = ({
       } else {
         message.error('No files were successfully processed');
       }
-    } catch (error) {
-      console.error('Error processing OneDrive files:', error);
-      message.error('Error processing OneDrive files: ' + error.message);
     } finally {
-      setUploaderState(prev => ({ ...prev, isUploading: false }));
     }
   };
 
@@ -281,11 +270,11 @@ const FileUploader = ({
                 </Upload>
                 
                 <div className="flex justify-center space-x-4 pt-4 border-t border-gray-200">
-                  <Tooltip title={uploaderState.isUploading ? "Please wait for current upload to finish" : "Import from Google Drive"}>
+                  <Tooltip title={isUploading ? "Please wait for current upload to finish" : "Import from Google Drive"}>
                     <Button 
                       onClick={handleGoogleDriveClick}
                       className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
-                      disabled={uploaderState.isUploading}
+                      disabled={isUploading}
                       icon={
                         <img 
                           src="/google-drive-icon.png" 
@@ -296,11 +285,11 @@ const FileUploader = ({
                     />
                   </Tooltip>
                   
-                  <Tooltip title={uploaderState.isUploading ? "Please wait for current upload to finish" : "Import from OneDrive"}>
+                  <Tooltip title={isUploading ? "Please wait for current upload to finish" : "Import from OneDrive"}>
                     <Button 
                       onClick={handleOneDriveClick}
                       className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
-                      disabled={uploaderState.isUploading}
+                      disabled={isUploading}
                       icon={
                         <img 
                           src="/onedrive-icon.png" 

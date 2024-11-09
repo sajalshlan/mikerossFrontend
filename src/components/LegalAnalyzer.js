@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Layout, Splitter, Button } from 'antd';
 import { Helmet } from 'react-helmet';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
@@ -15,7 +15,6 @@ const LegalAnalyzer = () => {
   const [fileState, setFileState] = useState({
     uploadedFiles: {},
     previewFile: null,
-    isUploading: false,
   });
   const [analysisState, setAnalysisState] = useState({
     types: {
@@ -86,7 +85,6 @@ const LegalAnalyzer = () => {
   const handleFileUpload = async (newFiles) => {
     setFileState(prev => ({
       ...prev,
-      isUploading: true,
       uploadedFiles: {
         ...prev.uploadedFiles,
         ...newFiles.reduce((acc, file) => ({
@@ -308,13 +306,6 @@ const LegalAnalyzer = () => {
     });
   };
 
-  const handleFileSelection = (fileName) => {
-    setFileState(prev => ({
-      ...prev,
-      previewFile: fileName
-    }));
-  };
-
   const getSelectedFilesExtractedTexts = () => {
     return Object.fromEntries(
       Object.entries(fileState.uploadedFiles)
@@ -354,6 +345,12 @@ const LegalAnalyzer = () => {
     }
   };
 
+  const isUploading = useMemo(() => {
+    return Object.values(fileState.uploadedFiles).some(
+      file => file.progress?.status === 'uploading'
+    );
+  }, [fileState.uploadedFiles]);
+
   return (
     <Layout className="h-screen overflow-hidden">
       <Helmet>
@@ -377,7 +374,7 @@ const LegalAnalyzer = () => {
                 <AnalysisSection
                   files={fileState.uploadedFiles}
                   analysisState={analysisState.types}
-                  isFileProcessing={fileState.isUploading}
+                  isFileProcessing={isUploading}
                   onAnalysis={handleAnalysis}
                   onToggleVisibility={toggleAnalysisVisibility}
                   onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
@@ -410,7 +407,7 @@ const LegalAnalyzer = () => {
                   <AnalysisSection
                     files={fileState.uploadedFiles}
                     analysisState={analysisState.types}
-                    isFileProcessing={fileState.isUploading}
+                    isFileProcessing={isUploading}
                     onAnalysis={handleAnalysis}
                     onToggleVisibility={toggleAnalysisVisibility}
                     onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
@@ -448,7 +445,7 @@ const LegalAnalyzer = () => {
         >
           <FileUploader
             files={fileState.uploadedFiles}
-            isFileProcessing={fileState.isUploading}
+            isFileProcessing={isUploading}
             onFileUpload={handleFileUpload}
             onRemoveFile={handleRemoveFile}
             onCheckedFilesChange={handleCheckedFilesChange}

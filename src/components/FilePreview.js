@@ -14,7 +14,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     if (shouldResetSelection) {
       onFileSelect(null);
     }
-  }, [files, selectedFile, onFileSelect]);
+  }, [files, selectedFile]);
 
   useEffect(() => {
     const isDocument = selectedFile && 

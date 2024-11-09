@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Typography, Tooltip, message, Dropdown, Menu } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import AnalysisResult from './AnalysisResult';
@@ -10,13 +10,20 @@ const AnalysisSection = ({
   analysisState,
   onAnalysis,
   onToggleVisibility,
-  isFileProcessing,
+  isUploading,
   onFileSelection,
   onStopAnalysis
 }) => {
   const analysisTypes = ['shortSummary', 'longSummary', 'risky', 'conflict'];
-  const hasFiles = Object.keys(files).length > 0;
-  const checkedFilesCount = Object.values(files).filter(file => file.isChecked).length;
+  const hasFiles = useMemo(() => Object.keys(files).length > 0, [files]);
+  const checkedFilesCount = useMemo(
+    () => Object.values(files).filter(file => file.isChecked).length,
+    [files]
+  );
+  const checkedFiles = useMemo(
+    () => Object.keys(files).filter(fileName => files[fileName].isChecked),
+    [files]
+  );
   const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
 
   const getCheckedFiles = () => Object.keys(files).filter(fileName => files[fileName].isChecked);
@@ -125,9 +132,9 @@ const AnalysisSection = ({
                     <button
                       className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
                         ${getButtonColor(selectedSummaryType === 'Short Summary' ? 'shortSummary' : 'longSummary')}
-                        ${isFileProcessing ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                        ${isUploading ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
                       `}
-                      disabled={isFileProcessing || isSummaryLoading()}
+                      disabled={isUploading || isSummaryLoading()}
                     >
                       <div className="flex items-center justify-center space-x-2">
                         {isSummaryLoading() && <LoadingOutlined className="animate-spin" />}
@@ -145,10 +152,10 @@ const AnalysisSection = ({
                 <Tooltip key={type} title={getButtonTooltip(type)}>
                   <button
                     onClick={() => handleAnalysisClick(type)}
-                    disabled={analysisState[type].isLoading || isFileProcessing}
+                    disabled={analysisState[type].isLoading || isUploading}
                     className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
                       ${getButtonColor(type)}
-                      ${isFileProcessing ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
+                      ${isUploading ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg transform hover:-translate-y-0.5'}
                     `}
                   >
                     <div className="flex items-center justify-center space-x-2">
