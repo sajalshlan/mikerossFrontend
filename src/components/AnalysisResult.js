@@ -1,6 +1,6 @@
 import React from 'react';
-import { Typography, List, Tooltip, Collapse } from 'antd';
-import '../styles/AnalysisResult.css'
+import { Typography, List, Tooltip, Collapse, Button } from 'antd';
+import '../styles/AnalysisResult.css';
 
 const wrapReferences = (text) => {
   const clauseRegex = /\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/gi;
@@ -42,11 +42,10 @@ const wrapReferences = (text) => {
   });
 };
 
-const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
+const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsUp, onThumbsDown, onFeedback, onCopy }) => {
   console.log('AnalysisResult props:', { type, data, files, fileCount });
   
   const renderRiskAnalysis = (content) => {
-    // Remove everything before the first '*****' and clean up '#' symbols
     const cleanedContent = content.substring(content.indexOf('*****'))
       .replace(/^#+\s*/gm, '')
       .trim();
@@ -192,6 +191,44 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview }) => {
                   </Tooltip>
                   <div className="bg-gray-100 p-3 rounded-md">
                     {renderContent(data[fileName])}
+                  </div>
+                  {/* Thumbs up/down buttons */}
+                  <div className="flex justify-end mt-2 space-x-2">
+                    <Tooltip title="I like this analysis">
+                    <Button 
+                      type="text" 
+                      icon={<img src="/like.png" alt="Thumbs Up" style={{ width: 20, height: 20 }} />} 
+                      onClick={() => onThumbsUp(fileName)} 
+                      style={{ color: '#4CAF50' }} 
+                    />
+                    </Tooltip>
+
+                    <Tooltip title="I don't like this analysis">
+                    <Button 
+                      type="text" 
+                      icon={<img src="/dislike.png" alt="Thumbs Down" style={{ width: 20, height: 20 }} />} 
+                      onClick={() => onThumbsDown(fileName)} 
+                      style={{ color: '#F44336' }} 
+                    />
+                    </Tooltip>
+
+                    <Tooltip title="Give Feedback">
+                    <Button 
+                      type="text" 
+                      icon={<img src="/review.png" alt="Feedback" style={{ width: 20, height: 20 }} />} 
+                      onClick={() => onFeedback(fileName)} 
+                      style={{ color: '#4CAF50' }} 
+                    />
+                    </Tooltip>
+
+                    <Tooltip title="Copy">
+                    <Button 
+                      type="text" 
+                      icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
+                      onClick={() => onCopy(fileName, data[fileName])} 
+                      style={{ color: '#F44336' }} 
+                    />
+                    </Tooltip>
                   </div>
                 </div>
               </React.Fragment>

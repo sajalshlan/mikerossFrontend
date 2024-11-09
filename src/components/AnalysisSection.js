@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Typography, Tooltip, message, Dropdown, Menu } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import AnalysisResult from './AnalysisResult';
+import navigator from 'navigator';
 
 const { Title } = Typography;
 
@@ -32,6 +33,51 @@ const AnalysisSection = ({
   const hasPartialAnalysis = (type, fileNames) => {
     return fileNames.some(fileName => analysisState[type].result[fileName]);
   };
+
+  const handleThumbsUp = (fileName) => {
+    console.log(`Thumbs up for file: ${fileName}`);
+  };
+  
+  const handleThumbsDown = (fileName) => {
+    console.log(`Thumbs down for file: ${fileName}`);
+  };
+  
+  const handleFeedback = (fileName) => {
+    console.log(`Feedback for file: ${fileName}`);
+  };
+  
+  const handleCopy = (fileName, data) => {
+  // const content = files[fileName].extractedText; // Assuming 'data' contains the file content for rendering.
+  const contentToCopy = JSON.stringify(data); // or any other logic to get the rendered content
+
+  if (navigator.clipboard) {
+    // Use Clipboard API if available
+    navigator.clipboard.writeText(contentToCopy)
+      .then(() => console.log(`Content copied for file: ${fileName}`))
+      .catch((error) => console.error('Failed to copy content: ', error));
+  } else {
+    // Fallback method using execCommand
+    const textArea = document.createElement("textarea");
+    textArea.value = contentToCopy;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        message.success(`Content copied for file: ${fileName}`);
+        console.log(`Content copied for file: ${fileName}`);
+      } else {
+        console.error('Fallback: Failed to copy content.');
+      }
+    } catch (err) {
+      console.error('Fallback: Failed to copy content. Error:', err);
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  }
+};
+  
+  
 
   const getButtonColor = (type) => {
     const selectedFileNames = checkedFiles;
@@ -215,6 +261,10 @@ const AnalysisSection = ({
                 files={files}
                 fileCount={Object.keys(files).length}
                 onFilePreview={onFileSelection}
+                onThumbsUp={handleThumbsUp}
+                onThumbsDown={handleThumbsDown}
+                onFeedback={handleFeedback}
+                onCopy={handleCopy}
               />
             )
           ))}
