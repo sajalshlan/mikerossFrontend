@@ -24,19 +24,6 @@ const FileUploader = ({
   const fileChangeTimeoutRef = useRef(null);
 
   useEffect(() => {
-    const initializeGoogleDrive = async () => {
-      try {
-        await googleDriveService.init();
-        setUploaderState(prev => ({ ...prev, isGoogleDriveReady: true }));
-      } catch (error) {
-        console.error('Failed to initialize Google Drive:', error);
-      }
-    };
-
-    initializeGoogleDrive();
-  }, []);
-
-  useEffect(() => {
     const initialCheckedFiles = Object.entries(files).reduce((acc, [fileName, file]) => {
       acc[fileName] = file.isChecked || false;
       return acc;
@@ -131,6 +118,8 @@ const FileUploader = ({
   };
 
   const handleGoogleDriveSelect = async (data) => {
+    console.log('handleGoogleDriveSelect');
+    console.log('data', data);
     if (data.action === 'picked' && data.docs && data.docs.length > 0) {
       try {
         const supportedTypes = [
@@ -142,8 +131,11 @@ const FileUploader = ({
           'image/png',
           'application/vnd.ms-excel',
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.google-apps.document',
           'text/csv'
         ];
+
+        console.log('data.docs', data.docs);
         
         const validFiles = data.docs.filter(file => 
           supportedTypes.includes(file.mimeType)
@@ -160,8 +152,23 @@ const FileUploader = ({
 
         const filePromises = validFiles.map(async (file) => {
           try {
-            const blob = await googleDriveService.loadDriveFiles(file);
-            return new File([blob], file.name, { type: file.mimeType });
+            let blob;
+            if (file.mimeType === 'application/vnd.google-apps.document') {
+              // For Google Docs, export as DOCX and create a proper File object
+              blob = await googleDriveService.exportGoogleDoc(file.id);
+              const fileName = `${file.name}.docx`;
+              return new File([blob], fileName, { 
+                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                lastModified: new Date().getTime()
+              });
+            } else {
+              // For regular files, use the existing method
+              blob = await googleDriveService.loadDriveFiles(file);
+              return new File([blob], file.name, { 
+                type: file.mimeType,
+                lastModified: new Date().getTime()
+              });
+            }
           } catch (error) {
             console.error(`Error processing file ${file.name}:`, error);
             message.error(`Failed to process ${file.name}`);
@@ -174,7 +181,9 @@ const FileUploader = ({
           onFileUpload(files);
           message.success(`Successfully imported ${files.length} file${files.length > 1 ? 's' : ''}`);
         }
-      } finally {
+      } catch (error) {
+        console.error('Error processing files:', error);
+        message.error('Failed to process files');
       }
     }
   };

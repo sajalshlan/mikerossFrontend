@@ -7,6 +7,7 @@ class OneDriveService {
       scopes: ["Files.Read", "Files.Read.All", "User.Read"]
     };
     this.accessToken = null;
+    this.tokenExpiryTime = null;  // Track token expiry time
   }
 
   waitForOneDrive() {
@@ -35,12 +36,31 @@ class OneDriveService {
     }
   }
 
+  // Check if access token is expired
+  isAccessTokenExpired() {
+    if (!this.tokenExpiryTime) return true;  // Token is not set or expired
+    const currentTime = new Date().getTime();
+    return currentTime >= this.tokenExpiryTime;
+  }
+
+  // Check if the user is already authorized
+  isAuthorized() {
+    return this.accessToken && !this.isAccessTokenExpired();
+  }
+
   async authorize() {
     try {
       if (!this.initialized) {
         await this.init();
       }
 
+      // Skip authorization if already authorized
+      if (this.isAuthorized()) {
+        console.log('Already authorized, skipping authorization...');
+        return Promise.resolve();  // Resolve because the user is already authorized
+      }
+
+      // Proceed to authorization flow if not authorized
       return new Promise((resolve, reject) => {
         const options = {
           clientId: this.config.clientId,
@@ -48,8 +68,11 @@ class OneDriveService {
           multiSelect: true,
           success: (response) => {
             console.log('OneDrive response:', response);
-            // Store the access token when we get it
             this.accessToken = response.accessToken;
+
+            // Set the expiration time for the token (e.g., 1 hour from now)
+            this.tokenExpiryTime = new Date().getTime() + response.expiresIn * 1000;
+
             resolve(response);
           },
           cancel: () => reject(new Error('User cancelled')),

@@ -10,25 +10,26 @@ class GoogleDriveService {
   }
 
   async init() {
-    if (this.initialized && this.tokenClient) return;
+    if (this.initialized && this.accessToken) return Promise.resolve(this.accessToken);
 
     return new Promise((resolve, reject) => {
       try {
         this.tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: this.clientId,
-          scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file',
+          scope: 'https://www.googleapis.com/auth/drive.readonly',  // or drive.file as needed
           callback: (tokenResponse) => {
             if (tokenResponse.access_token) {
               this.accessToken = tokenResponse.access_token;
               this.initialized = true;
-              resolve(tokenResponse.access_token);
+              resolve(this.accessToken);
             } else {
               reject(new Error('Failed to get access token'));
             }
           },
         });
-        this.initialized = true;
-        resolve();
+
+        // Prompt the user to authorize if accessToken not present
+        this.tokenClient.requestAccessToken();
       } catch (error) {
         console.error('Error initializing token client:', error);
         reject(error);
@@ -82,14 +83,53 @@ class GoogleDriveService {
   }
 
   async loadDriveFiles(file) {
-    console.log('accessToken', this.accessToken);
-    const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`,
-      {
-        headers: { Authorization: `Bearer ${this.accessToken}` }
+    if (!this.accessToken) {
+      throw new Error('Not authorized. Please call authorize() first.');
+    }
+
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`,
+        {
+          headers: { Authorization: `Bearer ${this.accessToken}` }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file: ${response.statusText}`);
       }
-    );
-    return await response.blob();
+
+      const blob = await response.blob();
+      return blob;
+    } catch (error) {
+      console.error('Error loading file from Google Drive:', error);
+      throw error;
+    }
+  }
+
+  async exportGoogleDoc(fileId) {
+    if (!this.accessToken) {
+      throw new Error('Not authorized. Please call authorize() first.');
+    }
+
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/vnd.openxmlformats-officedocument.wordprocessingml.document`,
+        {
+          headers: { Authorization: `Bearer ${this.accessToken}` }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to export file: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      return blob;
+    } catch (error) {
+      console.error('Error exporting Google Doc:', error);
+      throw error;
+    }
   }
 }
 
