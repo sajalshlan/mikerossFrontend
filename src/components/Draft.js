@@ -80,7 +80,7 @@ const Draft = ({
 
   // Add this function after the renderDraftContent function
   const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(draftResult).then(() => {
+    navigator.clipboard.writeText(draftResult.replace(/\*/g, '')).then(() => {
       message.success('Draft copied to clipboard');
     }).catch(err => {
       console.error('Failed to copy: ', err);
