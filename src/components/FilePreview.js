@@ -31,6 +31,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       setShowPlaceholder(true);
     }
   
+    //eslint-disable-next-line
   }, [selectedFile, files]);  // Dependency on selectedFile and files  
 
   useEffect(() => {

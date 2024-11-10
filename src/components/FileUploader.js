@@ -209,17 +209,17 @@ const FileUploader = ({
     if (!files || !files.value || files.value.length === 0) return;
     
     try {
-      const supportedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain',
-        'image/jpeg',
-        'image/png',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'text/csv'
-      ];
+      // const supportedTypes = [
+      //   'application/pdf',
+      //   'application/msword',
+      //   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      //   'text/plain',
+      //   'image/jpeg',
+      //   'image/png',
+      //   'application/vnd.ms-excel',
+      //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      //   'text/csv'
+      // ];
 
       const filePromises = files.value.map(async (file) => {
         try {
