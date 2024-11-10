@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from 'react';
-import { Button, Input, Spin, Typography, message, Tooltip } from 'antd';
+import { Button, Input, Spin, Typography, message, Tooltip, Select } from 'antd';
 import { CloseOutlined, SendOutlined, CopyOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 
 const { Title, Paragraph } = Typography;
+const { Option } = Select;
 
 const Draft = ({ 
   extractedTexts, 
@@ -99,25 +100,6 @@ const Draft = ({
           className="text-gray-600 hover:text-gray-800"
         />
       </header>
-      <div className="px-4 py-2 bg-gray-200">
-        <label className="flex items-center cursor-pointer">
-          <Tooltip title={useSelectedFiles ? null : "Currently all files selected"} placement="top">
-            <div className="relative">
-              <input
-                type="checkbox"
-                className="sr-only"
-                checked={useSelectedFiles}
-                onChange={() => setUseSelectedFiles(!useSelectedFiles)}
-              />
-              <div className={`w-10 h-4 rounded-full shadow-inner transition-colors duration-200 ease-in-out ${useSelectedFiles ? 'bg-blue-300' : 'bg-gray-400'}`}></div>
-              <div className={`absolute w-6 h-6 rounded-full shadow transition-transform duration-200 ease-in-out ${useSelectedFiles ? 'transform translate-x-full bg-blue-500' : 'bg-white'} -left-1 -top-1`}></div>
-            </div>
-          </Tooltip>
-          <div className="ml-3 text-gray-700 font-medium">
-           Work only with the files you've selected in the sidebar
-          </div>
-        </label>
-      </div>
       <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={draftResultRef}>
         {draftResult ? (
           <div className="bg-white p-6 rounded-lg shadow-md">
@@ -147,31 +129,39 @@ const Draft = ({
         )}
       </div>
       <footer className="bg-gray-100 p-4 rounded-b-2xl">
-        <form onSubmit={handleDraftSubmit} className="flex flex-col">
-          <div className="text-xs text-gray-500 mb-2">
+          <div className="text-xs text-gray-500 mb-2 mr-4">
             Press Enter to generate the draft. Press Shift+Enter to add a new line.
           </div>
-          <div className="flex">
-            <Input.TextArea
-              ref={textAreaRef}
-              value={draftQuery}
-              onChange={(e) => setDraftQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Describe the draft you want to create..."
-              className="flex-grow mr-2 bg-white border-gray-300 text-gray-800 placeholder-gray-400 rounded-xl"
-              autoSize={{ minRows: 2, maxRows: 4 }}
-              disabled={isWaitingForResponse}
-            />
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<SendOutlined />}
-              disabled={isWaitingForResponse || !draftQuery.trim()}
-              className="bg-blue-500 border-blue-500 hover:bg-blue-600 rounded-xl"
-            >
-              Generate
-            </Button>
-          </div>
+        <form onSubmit={handleDraftSubmit} className="flex items-center">
+          <Input.TextArea
+            ref={textAreaRef}
+            value={draftQuery}
+            onChange={(e) => setDraftQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Describe the draft you want to create..."
+            className="flex-grow mr-2 bg-white border-gray-300 text-gray-800 placeholder-gray-400 rounded-xl"
+            autoSize={{ minRows: 2, maxRows: 4 }}
+            disabled={isWaitingForResponse}
+          />
+          <Select
+            defaultValue={useSelectedFiles ? 'selected' : 'all'}
+            style={{ width: 60 }}
+            onChange={(value) => setUseSelectedFiles(value === 'selected')}
+            dropdownStyle={{ width: 200 }}
+            className="mr-2"
+          >
+            <Option value="all">All</Option>
+            <Option value="selected">Selected Files</Option>
+          </Select>
+          <Button
+            type="primary"
+            htmlType="submit"
+            icon={<SendOutlined />}
+            disabled={isWaitingForResponse || !draftQuery.trim()}
+            className="bg-blue-500 border-blue-500 hover:bg-blue-600 rounded-xl"
+          >
+            Generate
+          </Button>
         </form>
       </footer>
     </div>
