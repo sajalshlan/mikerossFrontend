@@ -143,6 +143,8 @@ const Draft = ({
             autoSize={{ minRows: 2, maxRows: 4 }}
             disabled={isWaitingForResponse}
           />
+          <Tooltip title="Select the mode for this query">
+
           <Select
             defaultValue={useSelectedFiles ? 'selected' : 'all'}
             style={{ width: 60 }}
@@ -153,6 +155,7 @@ const Draft = ({
             <Option value="all">All</Option>
             <Option value="selected">Selected Files</Option>
           </Select>
+          </Tooltip>
           <Button
             type="primary"
             htmlType="submit"

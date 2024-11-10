@@ -159,6 +159,7 @@ const ChatWidget = ({
           />
           
           {/* Dropdown for file selection */}
+          <Tooltip title="Select the mode for this query">
           <Select
             defaultValue={useSelectedFiles ? 'selected' : 'all'}
             style={{ width: 80 }}  // Set width of the Select dropdown button
@@ -168,7 +169,7 @@ const ChatWidget = ({
             <Option value="all">All</Option>
             <Option value="selected">Selected Files</Option>
           </Select>
-
+          </Tooltip>
 
           {/* Submit button */}
           <Button
