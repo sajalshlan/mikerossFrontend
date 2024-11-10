@@ -55,7 +55,7 @@ const Draft = ({
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleDraftSubmit(e);
     }
@@ -149,7 +149,7 @@ const Draft = ({
       <footer className="bg-gray-100 p-4 rounded-b-2xl">
         <form onSubmit={handleDraftSubmit} className="flex flex-col">
           <div className="text-xs text-gray-500 mb-2">
-            Press Enter for a new line. Press Shift+Enter to generate the draft.
+            Press Enter to generate the draft. Press Shift+Enter to add a new line.
           </div>
           <div className="flex">
             <Input.TextArea

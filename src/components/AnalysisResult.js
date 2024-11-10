@@ -1,5 +1,5 @@
-import React from 'react';
-import { Typography, List, Tooltip, Collapse, Button } from 'antd';
+import React, { useState } from 'react';
+import { Typography, List, Tooltip, Collapse, Button, Input, message } from 'antd';
 import '../styles/AnalysisResult.css';
 
 const wrapReferences = (text) => {
@@ -42,8 +42,70 @@ const wrapReferences = (text) => {
   });
 };
 
-const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsUp, onThumbsDown, onFeedback, onCopy }) => {
+const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsUp, onThumbsDown }) => {
   console.log('AnalysisResult props:', { type, data, files, fileCount });
+
+  const [feedbackVisible, setFeedbackVisible] = useState({});
+  const [feedbackText, setFeedbackText] = useState({});
+
+  const handleCopy = (fileName, data) => {
+    const rawContent = data;  // Assuming this contains the raw file content
+  
+    // Function to format the text
+    const formatContent = (text) => {
+      return text
+        .replace(/\*/g, '')                       // Remove all asterisks
+        .replace(/^\s+|\s+$/gm, '')               // Trim spaces at the beginning and end of each line
+        .replace(/(?<=:)\s*\n/g, '\n\n')          // Add extra spacing after colons for section clarity
+        .replace(/^(Legal Risks:|Financial Risks:|Business Risks:)/gm, '\n$1\n') // Add spacing to main headers
+        .replace(/(\n\s*\*\s)/g, '\n\n* ')        // Add blank line before each bullet point
+        .replace(/(?<!\n)(?<=^|\n)(\d+\.\s)/g, '\n\n$1') // Place numbered sections (e.g., 1., 2.) on new lines
+        .replace(/\n/g, '\n\n')                   // Add blank line after each newline
+        .replace(/\n\n\n/g, '\n\n');              // Avoid triple newlines by reducing to double
+    };
+    
+    const formattedContent = formatContent(rawContent); 
+  
+      const textArea = document.createElement("textarea");
+      textArea.value = formattedContent;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        const successful = document.execCommand('copy');
+        message.success(`Content copied for file: ${fileName}`);
+        console.log(successful ? `Content copied for file: ${fileName}` : 'Fallback: Failed to copy content.');
+      } catch (err) {
+        console.error('Fallback: Failed to copy content. Error:', err);
+      } finally {
+        document.body.removeChild(textArea);
+      }
+  };
+
+  // Toggles feedback visibility per file
+  const toggleFeedback = (fileName) => {
+    setFeedbackVisible((prev) => ({
+      ...prev,
+      [fileName]: !prev[fileName],
+    }));
+    setFeedbackText((prev) => ({
+      ...prev,
+      [fileName]: '',
+    }));
+  };
+
+  // Handle feedback submission
+  const handleFeedbackSubmit = (fileName) => {
+    message.success(`Feedback recorded for file: ${fileName}`);
+    console.log(`Feedback for file: ${fileName}: ${feedbackText[fileName]}`);
+    setFeedbackVisible((prev) => ({
+      ...prev,
+      [fileName]: false,
+    }));
+    setFeedbackText((prev) => ({
+      ...prev,
+      [fileName]: '',
+    }));
+  };
   
   const renderRiskAnalysis = (content) => {
     const cleanedContent = content.substring(content.indexOf('*****'))
@@ -192,6 +254,30 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsU
                   <div className="bg-gray-100 p-3 rounded-md">
                     {renderContent(data[fileName])}
                   </div>
+
+                  {feedbackVisible[fileName] && (
+                    <div className="mt-2">
+                      <Input.TextArea
+                        value={feedbackText[fileName] || ''}
+                        onChange={(e) => setFeedbackText((prev) => ({ ...prev, [fileName]: e.target.value }))}
+                        rows={4}
+                        placeholder="Enter your feedback here"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {  // Only triggers if Enter is pressed without Shift
+                            e.preventDefault();  // Prevents adding a new line
+                            handleFeedbackSubmit(fileName);  // Calls the submit function
+                          }
+                        }}
+                      />
+                      <Button 
+                        type="primary" 
+                        onClick={() => handleFeedbackSubmit(fileName)}
+                        style={{ marginTop: "5px" }}
+                      >
+                        Submit Feedback
+                      </Button>
+                    </div>
+                  )}
                   {/* Thumbs up/down buttons */}
                   <div className="flex justify-end mt-2 space-x-2">
                     <Tooltip title="I like this analysis">
@@ -216,7 +302,7 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsU
                     <Button 
                       type="text" 
                       icon={<img src="/review.png" alt="Feedback" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => onFeedback(fileName)} 
+                      onClick={() => toggleFeedback(fileName)} 
                       style={{ color: '#4CAF50' }} 
                     />
                     </Tooltip>
@@ -225,11 +311,13 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsU
                     <Button 
                       type="text" 
                       icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => onCopy(fileName, data[fileName])} 
+                      onClick={() => handleCopy(fileName, data[fileName])} 
                       style={{ color: '#F44336' }} 
                     />
                     </Tooltip>
                   </div>
+
+                  
                 </div>
               </React.Fragment>
             )

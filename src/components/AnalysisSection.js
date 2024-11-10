@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Typography, Tooltip, message, Dropdown, Menu } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import AnalysisResult from './AnalysisResult';
-import navigator from 'navigator';
 
 const { Title } = Typography;
 
@@ -35,59 +34,14 @@ const AnalysisSection = ({
   };
 
   const handleThumbsUp = (fileName) => {
+    message.success(`Positive feedback recorded`);
     console.log(`Thumbs up for file: ${fileName}`);
   };
   
   const handleThumbsDown = (fileName) => {
+    message.success(`Negative feedback recorded`);
     console.log(`Thumbs down for file: ${fileName}`);
   };
-  
-  const handleFeedback = (fileName) => {
-    console.log(`Feedback for file: ${fileName}`);
-  };
-  
-  const handleCopy = (fileName, data) => {
-    const rawContent = data;  // Assuming this contains the raw file content
-  
-    // Function to format the text
-    const formatContent = (text) => {
-      return text
-        .replace(/\*/g, '')                       // Remove all asterisks
-        .replace(/^\s+|\s+$/gm, '')               // Trim spaces at the beginning and end of each line
-        .replace(/(?<=:)\s*\n/g, '\n\n')          // Add extra spacing after colons for section clarity
-        .replace(/^(Legal Risks:|Financial Risks:|Business Risks:)/gm, '\n$1\n') // Add spacing to main headers
-        .replace(/(\n\s*\*\s)/g, '\n\n* ')        // Add blank line before each bullet point
-        .replace(/(?<!\n)(?<=^|\n)(\d+\.\s)/g, '\n\n$1') // Place numbered sections (e.g., 1., 2.) on new lines
-        .replace(/\n/g, '\n\n')                   // Add blank line after each newline
-        .replace(/\n\n\n/g, '\n\n');              // Avoid triple newlines by reducing to double
-    };
-    
-    const formattedContent = formatContent(rawContent); 
-  
-    // Copy to clipboard
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(formattedContent)
-        .then(() => console.log(`Content copied for file: ${fileName}`))
-        .catch((error) => console.error('Failed to copy content: ', error));
-    } else {
-      // Fallback for environments without Clipboard API
-      const textArea = document.createElement("textarea");
-      textArea.value = formattedContent;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        const successful = document.execCommand('copy');
-        console.log(successful ? `Content copied for file: ${fileName}` : 'Fallback: Failed to copy content.');
-      } catch (err) {
-        console.error('Fallback: Failed to copy content. Error:', err);
-      } finally {
-        document.body.removeChild(textArea);
-      }
-    }
-  };
-  
-  
-  
 
   const getButtonColor = (type) => {
     const selectedFileNames = checkedFiles;
@@ -273,8 +227,6 @@ const AnalysisSection = ({
                 onFilePreview={onFileSelection}
                 onThumbsUp={handleThumbsUp}
                 onThumbsDown={handleThumbsDown}
-                onFeedback={handleFeedback}
-                onCopy={handleCopy}
               />
             )
           ))}
