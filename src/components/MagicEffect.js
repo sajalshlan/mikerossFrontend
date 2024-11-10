@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FloatButton, Tooltip } from 'antd';
-import { MessageOutlined, FileTextOutlined } from '@ant-design/icons';
+import { MessageOutlined, FileTextOutlined, CloseOutlined } from '@ant-design/icons';
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 
@@ -84,6 +84,11 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
     };
   }, []);
 
+  const magicWandIcon = isChatVisible || isDraftVisible 
+  ? <CloseOutlined />
+  : <img src="/magic-wand2.svg" alt="Magic Wand" style={{ width: '34px', height: '24px' }} />;
+
+
   return (
     <>
       <div ref={floatButtonRef}>
@@ -92,7 +97,7 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
             trigger="click"
             type="primary"
             style={{ right: 9, bottom: 24 }}
-            icon={<img src="/magic-wand2.svg" alt="Magic Wand" style={{ width: '34px', height: '24px' }} />}
+            icon={magicWandIcon}
             open={isFloatGroupOpen}
             onOpenChange={handleMainButtonClick}
           >
