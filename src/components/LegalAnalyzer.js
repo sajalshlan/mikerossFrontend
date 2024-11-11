@@ -185,89 +185,92 @@ const LegalAnalyzer = () => {
 
   const handleAnalysis = async (type, texts = null) => {
     if (analysisState.types[type].isLoading) {
-      return;
+        return;
     }
 
     shouldStopAnalysisRef.current = false;
     
     setAnalysisState(prev => ({
-      ...prev,
-      types: {
-        ...prev.types,
-        [type]: { ...prev.types[type], isLoading: true }
-      }
+        ...prev,
+        types: {
+            ...prev.types,
+            [type]: { ...prev.types[type], isLoading: true }
+        }
     }));
     
     try {
-      let results;
+        let results;
 
-      if (type === 'conflict') {
-        const textsToAnalyze = Object.fromEntries(
-          Object.entries(fileState.uploadedFiles)
-            .filter(([_, file]) => file.isChecked)
-            .map(([fileName, file]) => [fileName, file.extractedText])
-        );
-        console.log("textsToAnalyze", textsToAnalyze);
-        const conflictResults = await performConflictCheck(textsToAnalyze);
+        if (type === 'conflict') {
+            const textsToAnalyze = Object.fromEntries(
+                Object.entries(fileState.uploadedFiles)
+                    .filter(([_, file]) => file.isChecked)
+                    .map(([fileName, file]) => [fileName, file.extractedText])
+            );
+            console.log("textsToAnalyze", textsToAnalyze);
+            const conflictResults = await performConflictCheck(textsToAnalyze);
 
-        // Assign the conflict check results to each file
-        results = Object.fromEntries(
-          Object.keys(textsToAnalyze).map(fileName => [fileName, conflictResults])
-        );
+            results = Object.fromEntries(
+                Object.keys(textsToAnalyze).map(fileName => [fileName, conflictResults])
+            );
+        } else {
+            const textsToAnalyze = texts || Object.fromEntries(
+                Object.entries(fileState.uploadedFiles)
+                    .filter(([_, file]) => file.isChecked)
+                    .map(([fileName, file]) => [fileName, file.extractedText])
+            );
 
-      } else {
-        results = {};
-        const textsToAnalyze = texts || Object.fromEntries(
-          Object.entries(fileState.uploadedFiles)
-            .filter(([_, file]) => file.isChecked)
-            .map(([fileName, file]) => [fileName, file.extractedText])
-        );
-        const filesToProcess = Object.keys(textsToAnalyze);
+            // Create an array of promises for parallel processing
+            const analysisPromises = Object.entries(textsToAnalyze).map(async ([fileName, text]) => {
+                if (shouldStopAnalysisRef.current) {
+                    return null;
+                }
+                
+                if (text) {
+                    console.log("performing analysis", fileName);
+                    const result = await performAnalysis(type, text, fileName);
+                    return result ? [fileName, result] : null;
+                }
+                return null;
+            });
 
-        for (const fileName of filesToProcess) {
-          if (shouldStopAnalysisRef.current) {
-            console.log('Analysis stopped by user. Skipping remaining files.');
-            break;
-          }
-
-          const text = textsToAnalyze[fileName];
-          if (text) {
-            const result = await performAnalysis(type, text, fileName);
-            console.log("performing analysis", fileName);
-            if (result) {
-              results[fileName] = result;
-            }
-          }
+            // Wait for all analyses to complete
+            const analysisResults = await Promise.all(analysisPromises);
+            
+            // Filter out null results and convert to object
+            results = Object.fromEntries(
+                analysisResults
+                    .filter(result => result !== null)
+            );
         }
-      }
 
-      if (!shouldStopAnalysisRef.current) {
-        setAnalysisState(prev => ({
-          ...prev,
-          types: {
-            ...prev.types,
-            [type]: {
-              ...prev.types[type],
-              isLoading: false,
-              isPerformed: true,
-              isVisible: true,
-              result: type === 'conflict' ? results : { ...prev.types[type].result, ...results }
-            }
-          }
-        }));
-      }
+        if (!shouldStopAnalysisRef.current) {
+            setAnalysisState(prev => ({
+                ...prev,
+                types: {
+                    ...prev.types,
+                    [type]: {
+                        ...prev.types[type],
+                        isLoading: false,
+                        isPerformed: true,
+                        isVisible: true,
+                        result: type === 'conflict' ? results : { ...prev.types[type].result, ...results }
+                    }
+                }
+            }));
+        }
     } catch (error) {
-      console.error('Error in analysis:', error);
+        console.error('Error in analysis:', error);
     } finally {
-      setAnalysisState(prev => ({
-        ...prev,
-        types: {
-          ...prev.types,
-          [type]: { ...prev.types[type], isLoading: false }
-        }
-      }));
+        setAnalysisState(prev => ({
+            ...prev,
+            types: {
+                ...prev.types,
+                [type]: { ...prev.types[type], isLoading: false }
+            }
+        }));
     }
-  };
+};
 
   const toggleAnalysisVisibility = (type) => {
     setAnalysisState(prev => ({
