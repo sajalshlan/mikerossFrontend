@@ -4,16 +4,17 @@ import { MessageOutlined, FileTextOutlined, CloseOutlined } from '@ant-design/ic
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 
-const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
+const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) => {
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isDraftVisible, setIsDraftVisible] = useState(false);
   const [isChatClosing, setIsChatClosing] = useState(false);
   const [isDraftClosing, setIsDraftClosing] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [draftHistory, setDraftHistory] = useState([]);
   const [draftQuery, setDraftQuery] = useState('');
   const [draftResult, setDraftResult] = useState('');
-  const [useSelectedFiles, setUseSelectedFiles] = useState(false);
+  const [useSelectedFiles, setUseSelectedFiles] = useState(true);
   const [isFloatGroupOpen, setIsFloatGroupOpen] = useState(false);
   const [isWaitingForChatResponse, setIsWaitingForChatResponse] = useState(false);
   const [isWaitingForDraftResponse, setIsWaitingForDraftResponse] = useState(false);
@@ -91,7 +92,13 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
 
   return (
     <>
-      <div ref={floatButtonRef}>
+      <div 
+        ref={floatButtonRef}
+        style={{ 
+          opacity: !isSiderCollapsed ? 0 : 1,
+          pointerEvents: !isSiderCollapsed ? 'none' : 'auto',
+        }}
+      >
         <Tooltip title="Magic Helpers" placement="left">
           <FloatButton.Group
             trigger="click"
@@ -134,6 +141,8 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
           setDraftQuery={setDraftQuery}
           draftResult={draftResult}
           setDraftResult={setDraftResult}
+          draftHistory={draftHistory}
+          setDraftHistory={setDraftHistory}
           useSelectedFiles={useSelectedFiles}
           setUseSelectedFiles={setUseSelectedFiles}
           isClosing={isDraftClosing}

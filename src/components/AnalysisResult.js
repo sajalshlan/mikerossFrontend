@@ -127,7 +127,7 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsU
     return (
       <Collapse>
         {parties.map((party, index) => (
-          <Collapse.Panel header={party.name} key={index} className="font-bold">
+          <Collapse.Panel header={`For ${party.name}`} key={index} className="font-bold">
             <Typography.Paragraph className="font-normal">
               {party.content.split('\n').map((line, lineIndex) => renderLine(line, lineIndex))}
             </Typography.Paragraph>

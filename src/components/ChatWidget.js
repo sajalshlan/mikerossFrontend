@@ -1,9 +1,8 @@
 import React, { useRef, useEffect } from 'react';
-import { Button, Input, Spin, Tooltip, Select } from 'antd';
+import { Button, Input, Spin, Tooltip } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
-
-const { Option } = Select;
+import ToggleSwitch from './common/ToggleSwitch';
 
 const ChatWidget = ({ 
   extractedTexts, 
@@ -15,11 +14,42 @@ const ChatWidget = ({
   useSelectedFiles, 
   setUseSelectedFiles, 
   isClosing,
-  isWaitingForResponse,  // New prop
-  setIsWaitingForResponse  // New prop
+  isWaitingForResponse,
+  setIsWaitingForResponse
 }) => {
   const chatMessagesRef = useRef(null);
   const latestMessageRef = useRef(null);
+  const previousTextsLengthRef = useRef(Object.keys(extractedTexts).length);
+  const lastDocChangeRef = useRef(0); // Track when documents last changed
+
+  // Add this at the start of the component
+  const initialTipMessage = {
+    role: 'assistant',
+    content: 'Changing file selection will update the conversation context',
+    isInitialTip: true,
+    timestamp: new Date().toLocaleTimeString()
+  };
+
+  // Add this useEffect to set the initial tip message
+  useEffect(() => {
+    if (chatMessages.length === 0) {
+      setChatMessages([initialTipMessage]);
+    }
+  }, []);
+
+  // Update lastDocChangeRef when documents change
+  useEffect(() => {
+    const currentTextsLength = Object.keys(extractedTexts).length;
+    if (previousTextsLengthRef.current !== currentTextsLength) {
+      previousTextsLengthRef.current = currentTextsLength;
+      lastDocChangeRef.current = chatMessages.length;
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Conversation context updated',
+        timestamp: new Date().toLocaleTimeString()
+      }]);
+    }
+  }, [extractedTexts]);
 
   useEffect(() => {
     scrollToLatestMessage();
@@ -45,10 +75,36 @@ const ChatWidget = ({
 
       try {
         const textsToUse = extractedTexts;
+        const fileName = Object.keys(extractedTexts)[0];
         const indexedTexts = Object.entries(textsToUse).map(([fileName, content], index) => 
           `[${index + 1}] ${fileName}:\n${content}`
         ).join('\n\n\n\n');
-        const result = await performAnalysis('ask', `${indexedTexts}\n\nUser Query: ${newUserMessage.content}`);
+
+        // Only include messages since the last document change, excluding doc change messages
+        const messagesAfterDocChange = chatMessages
+          .slice(lastDocChangeRef.current)
+          .filter(msg => !msg.isInitialTip && msg.content !== 'Conversation context updated');
+        
+        const recentMessages = messagesAfterDocChange.slice(-10);
+        
+        const chatHistory = recentMessages.length < messagesAfterDocChange.length 
+          ? `[Earlier conversation omitted...]\n\n${recentMessages
+              .map(msg => `${msg.role}: ${msg.content}`)
+              .join('\n\n')}`
+          : recentMessages
+              .map(msg => `${msg.role}: ${msg.content}`)
+              .join('\n\n');
+
+        console.log(`[ChatWidget] 📄 Files included: ${indexedTexts.length}`);
+        console.log(`[ChatWidget] 📄 Chat history: ${chatHistory}`);
+        console.log(`[ChatWidget] 📄 Current query: ${newUserMessage.content}`);
+        
+        // Send both chat history and current query
+        const result = await performAnalysis('ask', 
+          `${indexedTexts}\n\n` +
+          `Previous Conversation (last ${recentMessages.length} messages):\n${chatHistory}\n\n` +
+          `Current Query: ${newUserMessage.content}`, fileName
+        );
         
         if (result) {
           const newAssistantMessage = { 
@@ -78,100 +134,138 @@ const ChatWidget = ({
     const paragraphs = content.split('\n\n');
     
     return paragraphs.map((paragraph, pIndex) => {
-      // Check if the paragraph is a numbered list
-      if (paragraph.match(/^\d+\./)) {
-        const listItems = paragraph.split(/\d+\.\s/).filter(item => item.trim());
+      // Check if this is a numbered list section
+      if (paragraph.includes('1.') && paragraph.includes('2.')) {
+        // Split into list items, keeping the numbers
+        const items = paragraph.split(/(?=\d+\.\s)/).filter(Boolean);
+        
         return (
-          <ol key={pIndex} className="list-decimal list-inside mb-4">
-            {listItems.map((item, lIndex) => (
-              <li key={lIndex} className="mb-2">{renderInlineFormatting(item.trim())}</li>
-            ))}
+          <ol key={pIndex} start="1" className="list-decimal list-outside mb-4 pl-6 space-y-2">
+            {items.map((item, itemIndex) => {
+              const itemContent = item.replace(/^\d+\.\s/, '').trim();
+              return (
+                <li key={itemIndex} value={itemIndex + 1} className="pl-2">
+                  {renderInlineFormatting(itemContent)}
+                </li>
+              );
+            })}
           </ol>
         );
-      } else {
-        return <p key={pIndex} className="mb-4">{renderInlineFormatting(paragraph)}</p>;
       }
+      
+      // Regular paragraph
+      return <p key={pIndex} className="mb-4">{renderInlineFormatting(paragraph)}</p>;
     });
   };
 
   const renderInlineFormatting = (text) => {
-    const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
+    const parts = text.split(/(\*\*.*?\*\*|`.*?`|\[[\d]+\])/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="text-blue-600">{part.slice(2, -2)}</strong>;
+        return <strong key={index} className="text-blue-600 font-semibold">{part.slice(2, -2)}</strong>;
       } else if (part.startsWith('`') && part.endsWith('`')) {
         return <code key={index} className="bg-gray-200 text-red-600 px-1 rounded">{part.slice(1, -1)}</code>;
+      } else if (part.match(/^\[[\d]+\]$/)) {
+        return <span key={index} className="text-blue-600 font-medium">{part}</span>;
       }
       return part;
     });
   };
 
   return (
-    <div className={`fixed inset-0 md:inset-auto md:bottom-12 md:right-16 md:w-96 md:h-[500px] bg-white rounded-lg border border-gray-400 md:rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 transition-opacity duration-300 ease-in-out ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
-      <header className="bg-gray-100 p-4 text-gray-800 flex justify-between items-center rounded-t-2xl">
+    <div className={`fixed inset-0 md:inset-auto md:bottom-12 md:right-16 md:w-96 md:h-[500px] bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 transition-opacity duration-300 ease-in-out ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
+      <header className="bg-blue-600 p-4 text-white flex justify-between items-center rounded-t-2xl">
         <h4 className="text-lg font-bold m-0">AI Assistant</h4>
         <Button
           type="text"
           icon={<CloseOutlined />}
           onClick={onClose}
-          className="text-gray-600 hover:text-gray-800"
+          className="text-white hover:text-blue-200"
         />
       </header>
+      
+      <ToggleSwitch
+        checked={useSelectedFiles}
+        onChange={() => setUseSelectedFiles(!useSelectedFiles)}
+        label={useSelectedFiles ? "Using selected files" : "Using all files"}
+        tooltipText={useSelectedFiles ? "Click to work with all files" : "Click to work with selected files only"}
+        containerClassName="px-4 py-2 bg-blue-50 border-b border-blue-100"
+      />
+
       <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={chatMessagesRef}>
-        {chatMessages.map((message, index) => (
-          <div 
-            key={index} 
-            className={`max-w-[80%] mb-4 ${
-              message.role === 'user' ? 'ml-auto' : 'mr-auto'
-            }`}
-            ref={index === chatMessages.length - 1 ? latestMessageRef : null}
-          >
-            <div className={`p-3 rounded-2xl shadow-sm ${
-              message.role === 'user' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-white border border-gray-200 text-gray-800'
-            }`}>
-              <div className="break-words text-sm leading-relaxed">
-                {renderMessageContent(message.content)}
-              </div>
+        {chatMessages.map((message, index) => {
+          const isDocChangeMessage = message.content === 'Conversation context updated';
+          const isInitialTip = message.isInitialTip;
+          
+          return (
+            <div 
+              key={index} 
+              className={`mb-2 ${
+                isDocChangeMessage || isInitialTip
+                  ? 'flex justify-center' 
+                  : `max-w-[80%] ${message.role === 'user' ? 'ml-auto' : 'mr-auto'}`
+              }`}
+              ref={index === chatMessages.length - 1 ? latestMessageRef : null}
+            >
+              {isDocChangeMessage || isInitialTip ? (
+                <div className="w-full flex justify-center my-2">
+                  <div className="flex items-center gap-2 px-6 py-2.5 bg-gray-50 rounded-full 
+                    text-xs font-medium text-gray-500 border border-gray-200 shadow-sm
+                    transition-all duration-200 hover:bg-gray-100">
+                    <svg 
+                      className="w-3.5 h-3.5" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d={isInitialTip 
+                          ? "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"  // Info icon
+                          : "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"  // Refresh icon
+                        }
+                      />
+                    </svg>
+                    {message.content}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className={`p-3 rounded-2xl shadow-sm ${
+                    message.role === 'user' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-white border border-blue-100 text-gray-800'
+                  }`}>
+                    <div className="break-words text-sm leading-relaxed">
+                      {renderMessageContent(message.content)}
+                    </div>
+                  </div>
+                  <div className={`text-xs mt-1 ${
+                    message.role === 'user' ? 'text-right text-blue-600' : 'text-left text-gray-500'
+                  }`}>
+                    {message.timestamp}
+                  </div>
+                </>
+              )}
             </div>
-            <div className={`text-xs mt-1 ${
-              message.role === 'user' ? 'text-right text-gray-600' : 'text-left text-gray-500'
-            }`}>
-              {message.timestamp}
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {isWaitingForResponse && (
           <div className="flex justify-center items-center p-4">
             <Spin size="small" />
           </div>
         )}
       </div>
-      <footer className="bg-gray-100 p-4 rounded-b-2xl">
-        <form onSubmit={handleChatSubmit} className="flex items-center space-x-2">
-          {/* Input field */}
+      <footer className="bg-blue-50 p-4 rounded-b-2xl border-t border-blue-100">
+        <form onSubmit={handleChatSubmit} className="flex">
           <Input
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Type your question here..."
-            className="flex-grow bg-white border-gray-300 text-gray-800 placeholder-gray-400 rounded-xl"
+            className="flex-grow mr-2 bg-white border-blue-200 text-gray-800 placeholder-gray-400 rounded-xl focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
           />
-          
-          {/* Dropdown for file selection */}
-          <Tooltip title="Select the mode for this query">
-          <Select
-            defaultValue={useSelectedFiles ? 'selected' : 'all'}
-            style={{ width: 80 }}  // Set width of the Select dropdown button
-            onChange={(value) => setUseSelectedFiles(value === 'selected')}
-            dropdownStyle={{ width: 200 }}  // Set width of the dropdown options
-          >
-            <Option value="all">All</Option>
-            <Option value="selected">Selected Files</Option>
-          </Select>
-          </Tooltip>
-
-          {/* Submit button */}
           <Button
             type="primary"
             htmlType="submit"

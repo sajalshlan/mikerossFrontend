@@ -5,26 +5,54 @@ if (!window.currentAnalysisControllers) {
   window.currentAnalysisControllers = {};
 }
 
-export const performAnalysis = async (type, text, fileName) => {
+export const performAnalysis = async (type, text, fileName, onProgress, signal) => {
   console.log(`[API] 🚀 Starting ${type} analysis for ${fileName}...`);
   try {
-    const controller = new AbortController();
-    const controllerKey = `${type}_${fileName}`;
-    console.log(`[API] 🎮 Created controller for ${controllerKey}`);
-    window.currentAnalysisControllers[controllerKey] = controller;
+    // Initial progress for this file
+    onProgress && onProgress(fileName, 0);
+
+    const requestBody = {
+      analysis_type: type,
+      text: text,
+      include_history: type === 'ask'
+    };
 
     const response = await fetch(`${API_BASE_URL}/perform_analysis/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ analysis_type: type, text }),
-      signal: controller.signal
+      body: JSON.stringify(requestBody),
+      signal  // Use the passed signal
     });
 
-    const result = await response.json();
-    console.log(`[API] ✅ ${type} analysis completed:`, result);
-    delete window.currentAnalysisControllers[controllerKey];
+    // Update progress to show request is complete
+    onProgress && onProgress(fileName, 50);
+
+    const reader = response.body.getReader();
+    const contentLength = +response.headers.get('Content-Length') || 0;
+    let receivedLength = 0;
+    let chunks = [];
+
+    while(true) {
+      const {done, value} = await reader.read();
+      
+      if (done) break;
+      
+      chunks.push(value);
+      receivedLength += value.length;
+      
+      // Calculate progress for response reading (0% - 100%)
+      const progress = Math.round((receivedLength / contentLength) * 100);
+      onProgress && onProgress(fileName, progress);
+    }
+
+    // Combine chunks and parse JSON
+    const result = JSON.parse(new TextDecoder().decode(
+      new Uint8Array(chunks.reduce((acc, chunk) => [...acc, ...chunk], []))
+    ));
+    
+    console.log(`[API] ✅ ${type} analysis completed for ${fileName}:`, result);
     return result.success ? result.result : null;
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -32,13 +60,12 @@ export const performAnalysis = async (type, text, fileName) => {
     } else {
       console.error(`[API] ❌ Error in ${type} analysis for ${fileName}:`, error);
     }
-    return null;
-  } finally {
-    console.log(`[API] 🧹 Cleanup for ${type} analysis of ${fileName}`);
+    onProgress && onProgress(fileName, 0); // Reset progress on error
+    throw error; // Re-throw to handle in handleAnalysis
   }
 };
 
-export const performConflictCheck = async (texts) => {
+export const performConflictCheck = async (texts, onProgress) => {
   console.log('[API] 🚀 Starting conflict check...');
   try {
     const controller = new AbortController();
@@ -53,10 +80,33 @@ export const performConflictCheck = async (texts) => {
       body: JSON.stringify({ texts }),
       signal: controller.signal
     });
-    // Log headers
-    console.log('Response headers:', Object.fromEntries(response.headers));
-    
-    const result = await response.json();
+
+    // Initial progress update
+    onProgress && onProgress(0);
+
+    const reader = response.body.getReader();
+    const contentLength = +response.headers.get('Content-Length') || 0;
+    let receivedLength = 0;
+    let chunks = [];
+
+    while(true) {
+      const {done, value} = await reader.read();
+      
+      if (done) break;
+      
+      chunks.push(value);
+      receivedLength += value.length;
+      
+      // Calculate progress (0% - 100%)
+      const progress = Math.round((receivedLength / contentLength) * 100);
+      onProgress && onProgress(progress);
+    }
+
+    // Combine chunks and parse JSON
+    const result = JSON.parse(new TextDecoder().decode(
+      new Uint8Array(chunks.reduce((acc, chunk) => [...acc, ...chunk], []))
+    ));
+
     console.log('[API] ✅ Conflict check completed:', result);
     delete window.currentAnalysisControllers['conflict'];
     return result.success ? result.result : null;
@@ -66,6 +116,7 @@ export const performConflictCheck = async (texts) => {
     } else {
       console.error('[API] ❌ Error in conflict check:', error);
     }
+    onProgress && onProgress(0); // Reset progress on error
     return null;
   } finally {
     console.log('[API] 🧹 Cleanup for conflict check');
