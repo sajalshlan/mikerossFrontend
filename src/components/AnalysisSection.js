@@ -133,6 +133,27 @@ const AnalysisSection = ({
     }
   }, [hasFiles, checkedFilesCount]);
 
+  const calculateProgress = (type, fileNames, analysisState) => {
+    if (type === 'conflict') {
+      return analysisState[type].isLoading ? analysisState[type].progress || 50 : 0;
+    }
+    
+    if (!fileNames.length) return 0;
+    
+    // Calculate average progress across all files
+    const fileProgresses = fileNames.map(fileName => {
+      if (analysisState[type].result[fileName]) return 100;
+      return analysisState[type].fileProgress?.[fileName] || 0;
+    });
+    
+    const totalProgress = fileProgresses.reduce((sum, progress) => sum + progress, 0);
+    return Math.round(totalProgress / fileNames.length);
+  };
+
+  const isAnyAnalysisInProgress = () => {
+    return Object.values(analysisState).some(state => state.isLoading);
+  };
+
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
       <div className="flex-shrink-0">
@@ -228,6 +249,35 @@ const AnalysisSection = ({
                 onThumbsUp={handleThumbsUp}
                 onThumbsDown={handleThumbsDown}
               />
+            )
+          ))}
+        </div>
+      )}
+      {isAnyAnalysisInProgress() && (
+        <div className="mt-4">
+          {analysisTypes.map((type) => (
+            analysisState[type].isLoading && (
+              <div key={type} className="mb-2">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm text-gray-600">
+                    {type === 'shortSummary' ? 'Short Summary' :
+                     type === 'longSummary' ? 'Long Summary' :
+                     type === 'risky' ? 'Risk Analysis' :
+                     'Conflict Check'}
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {calculateProgress(type, checkedFiles, analysisState)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+                    style={{ 
+                      width: `${calculateProgress(type, checkedFiles, analysisState)}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
             )
           ))}
         </div>
