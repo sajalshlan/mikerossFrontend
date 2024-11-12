@@ -12,12 +12,18 @@ export const performAnalysis = async (type, text, fileName) => {
     console.log(`[API] 🎮 Created controller for ${controllerKey}`);
     window.currentAnalysisControllers[controllerKey] = controller;
 
+    const requestBody = {
+      analysis_type: type,
+      text: text,
+      include_history: type === 'ask'
+    };
+
     const response = await fetch(`${API_BASE_URL}/perform_analysis/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ analysis_type: type, text }),
+      body: JSON.stringify(requestBody),
       signal: controller.signal
     });
 

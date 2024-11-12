@@ -11,9 +11,10 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
   const [isDraftClosing, setIsDraftClosing] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [draftHistory, setDraftHistory] = useState([]);
   const [draftQuery, setDraftQuery] = useState('');
   const [draftResult, setDraftResult] = useState('');
-  const [useSelectedFiles, setUseSelectedFiles] = useState(false);
+  const [useSelectedFiles, setUseSelectedFiles] = useState(true);
   const [isFloatGroupOpen, setIsFloatGroupOpen] = useState(false);
   const [isWaitingForChatResponse, setIsWaitingForChatResponse] = useState(false);
   const [isWaitingForDraftResponse, setIsWaitingForDraftResponse] = useState(false);
@@ -134,6 +135,8 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
           setDraftQuery={setDraftQuery}
           draftResult={draftResult}
           setDraftResult={setDraftResult}
+          draftHistory={draftHistory}
+          setDraftHistory={setDraftHistory}
           useSelectedFiles={useSelectedFiles}
           setUseSelectedFiles={setUseSelectedFiles}
           isClosing={isDraftClosing}
