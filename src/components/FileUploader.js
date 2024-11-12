@@ -251,14 +251,12 @@ const FileUploader = ({
   };
 
   const handleSelectAll = () => {
-    // Check if all files that can be selected are currently selected
     const allSelected = Object.keys(files).every(fileName => 
       (!files[fileName].progress || files[fileName].progress.status === 'success') && 
       uploaderState.checkedFiles[fileName]
     );
     
     const newCheckedFiles = Object.keys(files).reduce((acc, fileName) => {
-      // If all are selected, deselect all. Otherwise, select all available files
       acc[fileName] = !allSelected && 
         (!files[fileName].progress || files[fileName].progress.status === 'success');
       return acc;
@@ -269,6 +267,7 @@ const FileUploader = ({
       checkedFiles: newCheckedFiles
     }));
     onCheckedFilesChange(newCheckedFiles);
+    return !allSelected;
   };
 
   const handleDeleteAll = () => {
@@ -349,28 +348,43 @@ const FileUploader = ({
         {
           key: 'fileActions',
           label: (
-            <div className="flex justify-between items-center px-2 py-1">
+            <div className="flex justify-between items-center px-2 py-1 gap2">
               <Tooltip title="Select all uploaded files">
                 <Button
                   size="small"
                   type="primary"
-                  ghost
+                  ghost={!Object.keys(files).length > 0 || 
+                        !Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSelectAll();
                   }}
-                  className="flex items-center text-xs hover:scale-105 transition-all duration-200 shadow-sm"
+                  className="flex items-center text-xs hover:scale-105 transition-all duration-200 shadow-sm "
                   style={{
                     borderRadius: '6px',
                     padding: '4px 12px',
                     height: '28px',
+                    minWidth: '50px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
-                    background: 'rgba(24, 144, 255, 0.05)',
-                    margin: '0 0 8px 0'
+                    justifyContent: 'center',
+                    gap: '8px',
+                    background: Object.keys(files).length > 0 && 
+                               Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
+                      ? '#1890ff'
+                      : 'rgba(24, 144, 255, 0.05)',
+                    color: Object.keys(files).length > 0 && 
+                           Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
+                      ? 'white'
+                      : '#1890ff',
                   }}
-                  icon={<CheckSquareOutlined style={{ fontSize: '14px' }} />}
+                  icon={<CheckSquareOutlined style={{ 
+                    fontSize: '14px',
+                    color: Object.keys(files).length > 0 && 
+                           Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
+                      ? 'white'
+                      : '#1890ff'
+                  }} />}
                 >
                   Select All
                 </Button>
@@ -389,9 +403,11 @@ const FileUploader = ({
                     borderRadius: '6px',
                     padding: '4px 12px',
                     height: '28px',
+                    minWidth: '50px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
+                    justifyContent: 'center',
+                    gap: '8px',
                     background: 'rgba(255, 77, 79, 0.05)'
                   }}
                   icon={<DeleteColumnOutlined style={{ fontSize: '14px' }} />}
