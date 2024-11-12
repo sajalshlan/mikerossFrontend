@@ -235,6 +235,32 @@ const AnalysisSection = ({
           </div>
         </div>
       </div>
+      {isAnyAnalysisInProgress() && (
+        <div className="mt-4">
+          {analysisTypes.map((type) => (
+            analysisState[type].isLoading && (
+              <div key={type} className="mb-2">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm text-gray-600">
+                    {type === 'shortSummary' ? 'Short Summary' :
+                     type === 'longSummary' ? 'Long Summary' :
+                     type === 'risky' ? 'Risk Analysis' :
+                     'Conflict Check'}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+                    style={{ 
+                      width: `${calculateProgress(type, checkedFiles, analysisState)}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
+            )
+          ))}
+        </div>
+      )}
       {hasFiles && checkedFilesCount > 0 && (
         <div className="flex-grow overflow-hidden bg-gray-50 rounded-lg">
           {analysisTypes.map((type) => (
@@ -253,35 +279,7 @@ const AnalysisSection = ({
           ))}
         </div>
       )}
-      {isAnyAnalysisInProgress() && (
-        <div className="mt-4">
-          {analysisTypes.map((type) => (
-            analysisState[type].isLoading && (
-              <div key={type} className="mb-2">
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-gray-600">
-                    {type === 'shortSummary' ? 'Short Summary' :
-                     type === 'longSummary' ? 'Long Summary' :
-                     type === 'risky' ? 'Risk Analysis' :
-                     'Conflict Check'}
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {calculateProgress(type, checkedFiles, analysisState)}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
-                    style={{ 
-                      width: `${calculateProgress(type, checkedFiles, analysisState)}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
-            )
-          ))}
-        </div>
-      )}
+      
     </div>
   );
 };

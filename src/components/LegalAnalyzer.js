@@ -199,43 +199,69 @@ const LegalAnalyzer = () => {
       }
     }));
 
-    const updateProgress = (fileName, progress) => {
-      setAnalysisState(prev => ({
-        ...prev,
-        types: {
-          ...prev.types,
-          [type]: {
-            ...prev.types[type],
-            fileProgress: {
-              ...prev.types[type].fileProgress,
-              [fileName]: progress
-            }
-          }
-        }
-      }));
-    };
-
     try {
       // Create a single controller for all requests
       const controller = new AbortController();
       window.currentAnalysisControllers[type] = controller;
 
-      const analysisPromises = Object.entries(selectedTexts).map(
-        async ([fileName, text]) => {
-          const result = await performAnalysis(
-            type,
-            text,
-            fileName,
-            (fileName, progress) => updateProgress(fileName, progress),
-            controller.signal  // Pass the signal to performAnalysis
-          );
-          
-          return [fileName, result];
-        }
-      );
+      let results;
+      if (type === 'conflict') {
+        // Handle conflict check separately
+        const result = await performConflictCheck(
+          selectedTexts,
+          (progress) => {
+            setAnalysisState(prev => ({
+              ...prev,
+              types: {
+                ...prev.types,
+                conflict: {
+                  ...prev.types.conflict,
+                  fileProgress: {
+                    'overall': progress
+                  }
+                }
+              }
+            }));
+          }
+        );
+        
+        // Create entries for each filename
+        results = result ? Object.keys(selectedTexts).map(fileName => [
+          fileName,
+          result
+        ]) : [];
+      } else {
+        // Handle other analysis types
+        const analysisPromises = Object.entries(selectedTexts).map(
+          async ([fileName, text]) => {
+            const result = await performAnalysis(
+              type,
+              text,
+              fileName,
+              (fileName, progress) => {
+                setAnalysisState(prev => ({
+                  ...prev,
+                  types: {
+                    ...prev.types,
+                    [type]: {
+                      ...prev.types[type],
+                      fileProgress: {
+                        ...prev.types[type].fileProgress,
+                        [fileName]: progress
+                      }
+                    }
+                  }
+                }));
+              },
+              controller.signal
+            );
+            return [fileName, result];
+          }
+        );
 
-      // Wait for all analyses to complete
-      const results = await Promise.all(analysisPromises);
+        // Wait for all analyses to complete
+        results = await Promise.all(analysisPromises);
+      }
       
       // Filter out null results and update state
       const newResults = Object.fromEntries(

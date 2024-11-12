@@ -41,8 +41,8 @@ export const performAnalysis = async (type, text, fileName, onProgress, signal) 
       chunks.push(value);
       receivedLength += value.length;
       
-      // Calculate progress for response reading (50% - 100%)
-      const progress = 50 + Math.round((receivedLength / contentLength) * 50);
+      // Calculate progress for response reading (0% - 100%)
+      const progress = Math.round((receivedLength / contentLength) * 100);
       onProgress && onProgress(fileName, progress);
     }
 
@@ -64,7 +64,7 @@ export const performAnalysis = async (type, text, fileName, onProgress, signal) 
   }
 };
 
-export const performConflictCheck = async (texts) => {
+export const performConflictCheck = async (texts, onProgress) => {
   console.log('[API] 🚀 Starting conflict check...');
   try {
     const controller = new AbortController();
@@ -79,10 +79,33 @@ export const performConflictCheck = async (texts) => {
       body: JSON.stringify({ texts }),
       signal: controller.signal
     });
-    // Log headers
-    console.log('Response headers:', Object.fromEntries(response.headers));
-    
-    const result = await response.json();
+
+    // Initial progress update
+    onProgress && onProgress(0);
+
+    const reader = response.body.getReader();
+    const contentLength = +response.headers.get('Content-Length') || 0;
+    let receivedLength = 0;
+    let chunks = [];
+
+    while(true) {
+      const {done, value} = await reader.read();
+      
+      if (done) break;
+      
+      chunks.push(value);
+      receivedLength += value.length;
+      
+      // Calculate progress (0% - 100%)
+      const progress = Math.round((receivedLength / contentLength) * 100);
+      onProgress && onProgress(progress);
+    }
+
+    // Combine chunks and parse JSON
+    const result = JSON.parse(new TextDecoder().decode(
+      new Uint8Array(chunks.reduce((acc, chunk) => [...acc, ...chunk], []))
+    ));
+
     console.log('[API] ✅ Conflict check completed:', result);
     delete window.currentAnalysisControllers['conflict'];
     return result.success ? result.result : null;
@@ -92,6 +115,7 @@ export const performConflictCheck = async (texts) => {
     } else {
       console.error('[API] ❌ Error in conflict check:', error);
     }
+    onProgress && onProgress(0); // Reset progress on error
     return null;
   } finally {
     console.log('[API] 🧹 Cleanup for conflict check');
