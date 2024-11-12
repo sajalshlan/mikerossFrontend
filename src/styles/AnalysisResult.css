@@ -1,92 +1,57 @@
 .analysis-result {
   background-color: #2a2a2a;
-  border-radius: 5px;
-  margin-bottom: 15px;
-  overflow: hidden;
+  border: 1px solid #444444;
+  margin-bottom: 16px;
 }
 
-.result-header {
-  padding: 10px 15px;
-  background-color: #3a3a3a;
+.analysis-result .ant-card-head {
+  background-color: #333333;
+  border-bottom: 1px solid #444444;
 }
 
-.result-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.result-body {
-  padding: 15px;
+.analysis-result .ant-card-head-title {
+  color: #ffffff;
 }
 
 .file-result {
-  background-color: #2c3e50;
-  border-radius: 5px;
-  padding: 15px;
-  margin-bottom: 15px;
+  background-color: #333333;
+  border: 1px solid #444444;
+  margin-bottom: 16px;
 }
 
-.file-result h4 {
-  color: #3498db;
-  margin-top: 0;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #3498db;
-  padding-bottom: 5px;
+.file-result .ant-card-head {
+  background-color: #3a3a3a;
+  border-bottom: 1px solid #444444;
+}
+
+.file-result .ant-card-head-title {
+  color: #ffffff;
 }
 
 .result-content {
-  white-space: pre-wrap;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #e0e0e0;
+  color: inherit;
 }
 
-.result-content p {
-  margin: 5px 0;
+.ant-typography {
+  color: inherit;
+}
+
+.ant-typography strong {
+  color: #1890ff;
+}
+
+.ant-list-item {
+  border-bottom: 1px solid #444444;
+}
+
+.ant-list-item:last-child {
+  border-bottom: none;
 }
 
 .result-content ul {
   list-style-type: disc;
   padding-left: 20px;
-  margin: 10px 0;
-}
-
-.result-content li {
-  margin-bottom: 5px;
-}
-
-.result-content strong {
-  font-weight: bold;
-  color: #3498db;
-}
-
-.result-list {
-  list-style-type: none;
-  padding-left: 20px;
-}
-
-.result-object {
-  margin-left: 20px;
-}
-
-.result-item {
-  margin-bottom: 5px;
-}
-
-.result-item strong {
-  color: #3498db;
-}
-
-.result-content h1,
-.result-content h2,
-.result-content h3,
-.result-content h4,
-.result-content h5,
-.result-content h6 {
-  color: #3498db;
-  margin-top: 15px;
-  margin-bottom: 10px;
+  margin: 8px 0;
 }
 
 .result-content ol {
@@ -100,7 +65,7 @@
 }
 
 .result-content pre {
-  background-color: #34495e;
+  background-color: #333333;
   padding: 10px;
   border-radius: 5px;
   overflow-x: auto;
@@ -110,4 +75,8 @@
   font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
   color: #e74c3c;
+}
+
+.page-break {
+  page-break-after: always;
 }

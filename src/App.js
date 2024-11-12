@@ -1,4 +1,5 @@
 import LegalAnalyzer from './components/LegalAnalyzer';
+import './index.css';
 
 function App() {
   return (
