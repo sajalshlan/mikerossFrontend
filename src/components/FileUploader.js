@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Menu, Upload, Button, Progress, message, Tooltip, Typography, Checkbox } from 'antd';
-import { UploadOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined } from '@ant-design/icons';
+import { UploadOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined, CheckSquareOutlined, DeleteColumnOutlined } from '@ant-design/icons';
 import googleDriveService from '../utils/googleDriveService';
 import oneDriveService from '../utils/oneDriveService';
 
@@ -250,6 +250,33 @@ const FileUploader = ({
     }
   };
 
+  const handleSelectAll = () => {
+    // Check if all files that can be selected are currently selected
+    const allSelected = Object.keys(files).every(fileName => 
+      (!files[fileName].progress || files[fileName].progress.status === 'success') && 
+      uploaderState.checkedFiles[fileName]
+    );
+    
+    const newCheckedFiles = Object.keys(files).reduce((acc, fileName) => {
+      // If all are selected, deselect all. Otherwise, select all available files
+      acc[fileName] = !allSelected && 
+        (!files[fileName].progress || files[fileName].progress.status === 'success');
+      return acc;
+    }, {});
+    
+    setUploaderState(prev => ({
+      ...prev,
+      checkedFiles: newCheckedFiles
+    }));
+    onCheckedFilesChange(newCheckedFiles);
+  };
+
+  const handleDeleteAll = () => {
+    Object.keys(files).forEach(fileName => {
+      onRemoveFile(fileName);
+    });
+  };
+
   const menuItems = [
     {
       key: 'upload',
@@ -267,27 +294,27 @@ const FileUploader = ({
         {
           key: 'mainUpload',
           label: (
-            <div className="p-4">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+            <div className="p-2">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-500 transition-colors">
                 <Upload {...uploadProps}>
                   <div className="cursor-pointer">
-                    <UploadOutlined className="text-4xl text-gray-400 mb-3" />
-                    <p className="text-gray-600 mb-2">Drag & drop files here</p>
-                    <p className="text-gray-400 text-sm mb-4">or click to browse</p>
+                    <UploadOutlined className="text-2xl text-gray-400 mb-1" />
+                    <p className="text-gray-600 text-sm mb-1">Drag & drop files here</p>
+                    <p className="text-gray-400 text-xs mb-2">or click to browse</p>
                   </div>
                 </Upload>
                 
-                <div className="flex justify-center space-x-4 pt-4 border-t border-gray-200">
+                <div className="flex justify-center space-x-3 pt-2 border-t border-gray-200">
                   <Tooltip title={isUploading ? "Please wait for current upload to finish" : "Import from Google Drive"}>
                     <Button 
                       onClick={handleGoogleDriveClick}
-                      className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
+                      className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-1"
                       disabled={isUploading}
                       icon={
                         <img 
                           src="/google-drive-icon.png" 
                           alt="Google Drive" 
-                          className="w-6 h-6"
+                          className="w-5 h-5"
                         />
                       }
                     />
@@ -296,13 +323,13 @@ const FileUploader = ({
                   <Tooltip title={isUploading ? "Please wait for current upload to finish" : "Import from OneDrive"}>
                     <Button 
                       onClick={handleOneDriveClick}
-                      className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-2"
+                      className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-1"
                       disabled={isUploading}
                       icon={
                         <img 
                           src="/onedrive-icon.png" 
                           alt="OneDrive" 
-                          className="w-6 h-6"
+                          className="w-5 h-5"
                         />
                       }
                     />
@@ -317,16 +344,62 @@ const FileUploader = ({
     {
       key: 'files',
       icon: <FileOutlined />,
-      label: 'Uploaded Files',
+      label: 'Click files to select, eye to preview',
       children: [
         {
-          key: 'filesInstructions',
+          key: 'fileActions',
           label: (
-            <Text type="secondary" className="text-s font-bold">
-              Click file name to select for analysis. 
-              <br />
-              Use eye icon to preview.
-            </Text>
+            <div className="flex justify-between items-center px-2 py-1">
+              <Tooltip title="Select all uploaded files">
+                <Button
+                  size="small"
+                  type="primary"
+                  ghost
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectAll();
+                  }}
+                  className="flex items-center text-xs hover:scale-105 transition-all duration-200 shadow-sm"
+                  style={{
+                    borderRadius: '6px',
+                    padding: '4px 12px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    background: 'rgba(24, 144, 255, 0.05)',
+                    margin: '0 0 8px 0'
+                  }}
+                  icon={<CheckSquareOutlined style={{ fontSize: '14px' }} />}
+                >
+                  Select All
+                </Button>
+              </Tooltip>
+              <Tooltip title="Remove all files">
+                <Button
+                  size="small"
+                  danger
+                  ghost
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteAll();
+                  }}
+                  className="flex items-center text-xs hover:scale-105 transition-all duration-200 shadow-sm"
+                  style={{
+                    borderRadius: '6px',
+                    padding: '4px 12px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    background: 'rgba(255, 77, 79, 0.05)'
+                  }}
+                  icon={<DeleteColumnOutlined style={{ fontSize: '14px' }} />}
+                >
+                  Delete All
+                </Button>
+              </Tooltip>
+            </div>
           ),
         },
         ...Object.entries(files).map(([fileName, file]) => ({
@@ -383,11 +456,15 @@ const FileUploader = ({
   ];
 
   return (
-    <div className="file-uploader h-full flex flex-col">
+    <div className="file-uploader h-full flex flex-col bg-white shadow-lg">
       <Button
         type="primary"
         onClick={() => setCollapsed(!collapsed)}
-        style={{ alignSelf: 'flex-start', margin: '16px 0 16px 12px' }}
+        style={{ 
+          alignSelf: 'flex-start', 
+          margin: '16px 16px 16px 12px',
+          borderRadius: '6px'
+        }}
         icon={collapsed ? <MenuFoldOutlined/> : <MenuUnfoldOutlined />}
       />
       <Menu
@@ -397,8 +474,14 @@ const FileUploader = ({
         theme="light"
         items={menuItems}
         triggerSubMenuAction="click"
-        className="flex-grow custom-menu"
-        style={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'auto', backgroundColor: '#F5F5F5' }}
+        className="flex-grow custom-menu border-t border-gray-100"
+        style={{ 
+          maxHeight: 'calc(100vh - 64px)', 
+          overflowY: 'auto',
+          backgroundColor: 'white',
+          padding: '4px',
+          margin: '0 6px 0px 12px'
+        }}
       />
     </div>
   );

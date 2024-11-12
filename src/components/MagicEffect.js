@@ -4,7 +4,7 @@ import { MessageOutlined, FileTextOutlined, CloseOutlined } from '@ant-design/ic
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 
-const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
+const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) => {
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isDraftVisible, setIsDraftVisible] = useState(false);
   const [isChatClosing, setIsChatClosing] = useState(false);
@@ -92,7 +92,13 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts }) => {
 
   return (
     <>
-      <div ref={floatButtonRef}>
+      <div 
+        ref={floatButtonRef}
+        style={{ 
+          opacity: !isSiderCollapsed ? 0 : 1,
+          pointerEvents: !isSiderCollapsed ? 'none' : 'auto',
+        }}
+      >
         <Tooltip title="Magic Helpers" placement="left">
           <FloatButton.Group
             trigger="click"

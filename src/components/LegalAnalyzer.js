@@ -471,6 +471,7 @@ const LegalAnalyzer = () => {
         allExtractedTexts={Object.fromEntries(
           Object.entries(fileState.uploadedFiles).map(([fileName, file]) => [fileName, file.extractedText])
         )}
+        isSiderCollapsed={uiState.isSiderCollapsed}
       />
     </Layout>
   );
