@@ -99,23 +99,44 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
           pointerEvents: !isSiderCollapsed ? 'none' : 'auto',
         }}
       >
-        <Tooltip title="Magic Helpers" placement="left">
-          <FloatButton.Group
-            trigger="click"
+        <FloatButton.Group
+          trigger="hover"
             type="primary"
-            style={{ right: 9, bottom: 24 }}
-            icon={magicWandIcon}
-            open={isFloatGroupOpen}
-            onOpenChange={handleMainButtonClick}
+            style={{ 
+              right: 10, 
+              bottom: 24,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+            className="float-button-group"
+            onClick={handleMainButtonClick}
+            icon={
+              <div className="magic-wand-icon">
+                {magicWandIcon}
+              </div>
+            }
           >
             <Tooltip title="Draft Assistant" placement="left">
-              <FloatButton icon={<FileTextOutlined />} onClick={toggleDraft} />
+              <FloatButton 
+                icon={<FileTextOutlined />} 
+                onClick={toggleDraft}
+                style={{
+                  transform: isDraftVisible ? 'scale(1.1)' : 'scale(1)',
+                  transition: 'transform 0.3s ease'
+                }}
+              />
             </Tooltip>
+            
             <Tooltip title="AI Assistant" placement="left">
-              <FloatButton icon={<MessageOutlined />} onClick={toggleChat} />
+              <FloatButton 
+                icon={<MessageOutlined />} 
+                onClick={toggleChat}
+                style={{
+                  transform: isChatVisible ? 'scale(1.1)' : 'scale(1)',
+                  transition: 'transform 0.3s ease'
+                }}
+              />
             </Tooltip>
           </FloatButton.Group>
-        </Tooltip>
       </div>
       
       {isChatVisible && (

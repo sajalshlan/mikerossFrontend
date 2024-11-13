@@ -472,14 +472,19 @@ const FileUploader = ({
   ];
 
   return (
-    <div className="file-uploader h-full flex flex-col bg-white shadow-lg">
+    <div className="file-uploader h-full flex flex-col shadow-lg rounded-l-2xl" style={{
+      background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
+      borderLeft: '1px solid rgba(0, 0, 0, 0.06)'
+    }}>
       <Button
         type="primary"
         onClick={() => setCollapsed(!collapsed)}
         style={{ 
           alignSelf: 'flex-start', 
           margin: '16px 16px 16px 12px',
-          borderRadius: '6px'
+          borderRadius: '6px',
+          background: '#1677ff',
+          boxShadow: '0 2px 4px rgba(22, 119, 255, 0.2)'
         }}
         icon={collapsed ? <MenuFoldOutlined/> : <MenuUnfoldOutlined />}
       />
@@ -490,13 +495,13 @@ const FileUploader = ({
         theme="light"
         items={menuItems}
         triggerSubMenuAction="click"
-        className="flex-grow custom-menu border-t border-gray-100"
+        className="flex-grow custom-menu"
         style={{ 
           maxHeight: 'calc(100vh - 64px)', 
           overflowY: 'auto',
-          backgroundColor: 'white',
-          padding: '4px',
-          margin: '0 6px 0px 12px'
+          background: 'transparent',
+          padding: '4px 12px',
+          borderTop: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       />
     </div>

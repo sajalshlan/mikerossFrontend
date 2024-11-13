@@ -480,7 +480,11 @@ const LegalAnalyzer = () => {
             top: 0,
             bottom: 0,
             zIndex: 999,
-            backgroundColor: '#F5F5F5',
+            background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
+            borderTopLeftRadius: '24px',
+            borderBottomLeftRadius: '24px',
+            overflow: 'hidden',
+            boxShadow: '-4px 0 15px rgba(0, 0, 0, 0.05)',
             ...(uiState.isMobileView && {
               position: 'fixed',
               height: '100%',
