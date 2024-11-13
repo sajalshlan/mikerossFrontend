@@ -31,7 +31,7 @@ const triviaData = [
   { title: "Achievement", fact: "In 1904, Sorabji became the first woman to be appointed as a legal advisor to the Court of Wards in Bengal." }
 ];
 
-const TriviaCard = () => {
+const TriviaCard = React.memo(() => {
   const randomTrivia = triviaData[Math.floor(Math.random() * triviaData.length)];
 
   return (
@@ -64,6 +64,6 @@ const TriviaCard = () => {
       </div>
     </Card>
   );
-};
+}, () => true);
 
 export default TriviaCard; 

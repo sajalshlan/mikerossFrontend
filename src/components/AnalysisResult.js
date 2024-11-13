@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Typography, List, Tooltip, Collapse, Button, Input, message } from 'antd';
 import '../styles/AnalysisResult.css';
 import TriviaCard from './TriviaCard';
@@ -43,7 +43,7 @@ const wrapReferences = (text) => {
   });
 };
 
-const AnalysisResult = ({ 
+const AnalysisResult = React.memo(({ 
   type, 
   data, 
   files, 
@@ -242,6 +242,13 @@ const AnalysisResult = ({
     (!!data && Object.values(data)[0]) : 
     (!!data && !!files && selectedFiles.some(fileName => data[fileName]));
 
+  const triviaCard = useMemo(() => {
+    if (type === 'placeholder' || !data || isLoading) {
+      return <TriviaCard />;
+    }
+    return null;
+  }, [type, !!data, isLoading]);
+
   // Only render if we have valid results
   if (type === 'placeholder' || !hasResults || !data || isLoading) {
     console.log('Showing trivia card...');  // Debug log
@@ -253,7 +260,7 @@ const AnalysisResult = ({
           </Typography.Title>
         </div>
         <div className="flex-grow flex items-center justify-center p-8">
-          <TriviaCard />
+          {triviaCard}
         </div>
       </div>
     );
@@ -362,6 +369,13 @@ const AnalysisResult = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if these specific props change
+  return (
+    prevProps.type === nextProps.type &&
+    prevProps.isLoading === nextProps.isLoading &&
+    prevProps.data === nextProps.data
+  );
+});
 
 export default AnalysisResult;
