@@ -80,3 +80,16 @@
 .page-break {
   page-break-after: always;
 }
+
+.ant-card.bg-blue-50 {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ant-card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
