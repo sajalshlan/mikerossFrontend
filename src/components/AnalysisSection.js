@@ -279,8 +279,23 @@ const AnalysisSection = ({
                   )}
                 </Tooltip>
               ))}
+
+              <button
+                onClick={onStopAnalysis}
+                disabled={!Object.values(analysisState).some(state => state.isLoading)}
+                className={`mobile-stop-button
+                  ${!Object.values(analysisState).some(state => state.isLoading) ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10h6v6H9z" />
+                </svg>
+                <span>Stop Analysis</span>
+              </button>
             </div>
           </div>
+          
           <div className="flex-shrink-0">
             <Tooltip title="Stop Analysis">
               <button
