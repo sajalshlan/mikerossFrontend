@@ -326,25 +326,52 @@ const AnalysisSection = ({
           ))}
         </div>
       )}
-      {hasFiles && checkedFilesCount > 0 && (
-        <div className="flex-grow overflow-hidden bg-gray-50 rounded-lg">
-          {analysisTypes.map((type) => (
-            analysisState[type].isPerformed && analysisState[type].isVisible && (
-              <AnalysisResult 
-                key={type}
-                type={type}
-                data={analysisState[type].result}
-                files={files}
-                fileCount={Object.keys(files).length}
-                onFilePreview={onFileSelection}
-                onThumbsUp={handleThumbsUp}
-                onThumbsDown={handleThumbsDown}
-              />
-            )
-          ))}
-        </div>
-      )}
-      
+      <div className="flex-grow overflow-hidden bg-gray-50 rounded-lg">
+        {hasFiles && checkedFilesCount > 0 ? (
+          // Show analysis results if they exist
+          analysisTypes.some(type => analysisState[type].isPerformed && analysisState[type].isVisible) ? (
+            analysisTypes.map((type) => (
+              analysisState[type].isPerformed && analysisState[type].isVisible && (
+                <AnalysisResult 
+                  key={type}
+                  type={type}
+                  data={analysisState[type].result || null}
+                  files={files || {}}
+                  fileCount={Object.keys(files || {}).length}
+                  onFilePreview={onFileSelection}
+                  onThumbsUp={handleThumbsUp}
+                  onThumbsDown={handleThumbsDown}
+                  isLoading={analysisState[type].isLoading}
+                />
+              )
+            ))
+          ) : (
+            // Show trivia when files are selected but no analysis is shown
+            <AnalysisResult 
+              type="placeholder"
+              data={null}
+              files={files || {}}
+              fileCount={Object.keys(files || {}).length}
+              onFilePreview={onFileSelection}
+              onThumbsUp={handleThumbsUp}
+              onThumbsDown={handleThumbsDown}
+              isLoading={false}
+            />
+          )
+        ) : (
+          // Show trivia when no files are selected
+          <AnalysisResult 
+            type="placeholder"
+            data={null}
+            files={{}}
+            fileCount={0}
+            onFilePreview={() => {}}
+            onThumbsUp={() => {}}
+            onThumbsDown={() => {}}
+            isLoading={false}
+          />
+        )}
+      </div>
     </div>
   );
 };

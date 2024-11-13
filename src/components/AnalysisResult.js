@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Typography, List, Tooltip, Collapse, Button, Input, message } from 'antd';
 import '../styles/AnalysisResult.css';
+import TriviaCard from './TriviaCard';
 
 const wrapReferences = (text) => {
   const clauseRegex = /\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/gi;
@@ -42,8 +43,17 @@ const wrapReferences = (text) => {
   });
 };
 
-const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsUp, onThumbsDown }) => {
-  console.log('AnalysisResult props:', { type, data, files, fileCount });
+const AnalysisResult = ({ 
+  type, 
+  data, 
+  files, 
+  fileCount, 
+  onFilePreview, 
+  onThumbsUp, 
+  onThumbsDown,
+  isLoading
+}) => {
+  console.log('AnalysisResult render:', { type, data, files, fileCount });
 
   const [feedbackVisible, setFeedbackVisible] = useState({});
   const [feedbackText, setFeedbackText] = useState({});
@@ -227,14 +237,26 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsU
     return titleMap[type] || 'Analysis Results';
   };
 
-  const selectedFiles = Object.keys(files).filter(fileName => files[fileName].isChecked);
+  const selectedFiles = files ? Object.keys(files).filter(fileName => files[fileName]?.isChecked) : [];
   const hasResults = type === 'conflict' ? 
-    (!!data && Object.values(data)[0]) : // For conflict, check if we have valid content
-    selectedFiles.some(fileName => data[fileName]); // For other types
+    (!!data && Object.values(data)[0]) : 
+    (!!data && !!files && selectedFiles.some(fileName => data[fileName]));
 
   // Only render if we have valid results
-  if (!hasResults || !data) {
-    return null;
+  if (type === 'placeholder' || !hasResults || !data || isLoading) {
+    console.log('Showing trivia card...');  // Debug log
+    return (
+      <div className="flex flex-col h-full bg-gray-50">
+        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200">
+          <Typography.Title level={4} className="text-gray-800 text-center m-0">
+            {type === 'placeholder' ? 'Did you know?' : 'While you wait...'}
+          </Typography.Title>
+        </div>
+        <div className="flex-grow flex items-center justify-center p-8">
+          <TriviaCard />
+        </div>
+      </div>
+    );
   }
 
   return (
