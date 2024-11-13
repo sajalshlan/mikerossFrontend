@@ -45,12 +45,50 @@ const AnalysisSection = ({
 
   const getButtonColor = (type) => {
     const selectedFileNames = checkedFiles;
-    const allProcessed = isAnalysisComplete(type, selectedFileNames);
-    const someProcessed = hasPartialAnalysis(type, selectedFileNames);
 
-    if (analysisState[type].isLoading) return 'bg-blue-600 hover:bg-blue-700 text-white';
-    if (allProcessed && selectedFileNames.length > 0) return 'bg-green-600 hover:bg-green-700 text-white';
-    if (someProcessed) return 'bg-yellow-600 hover:bg-yellow-700 text-white';
+    // For conflict type, require at least 2 files
+    if (type === 'conflict' && selectedFileNames.length < 2) {
+      return 'bg-gray-300 hover:bg-gray-400 text-gray-800';
+    }
+
+    // For any type, if no files selected, return gray
+    if (selectedFileNames.length === 0) {
+      return 'bg-gray-300 hover:bg-gray-400 text-gray-800';
+    }
+
+    if (analysisState[type].isLoading) {
+      return 'bg-blue-600 hover:bg-blue-700 text-white';
+    }
+
+    // Special handling for conflict type
+    if (type === 'conflict') {
+      // If we have results and files selection changed
+      if (analysisState[type].result && Object.keys(analysisState[type].result).length > 0) {
+        const resultFiles = Object.keys(analysisState[type].result);
+        const currentSelection = new Set(selectedFileNames);
+        
+        // If selections are different (some files added/removed)
+        if (resultFiles.length !== selectedFileNames.length || 
+            !resultFiles.every(file => currentSelection.has(file))) {
+          return 'bg-yellow-600 hover:bg-yellow-700 text-white';
+        }
+        
+        // If all currently selected files are processed
+        return 'bg-green-600 hover:bg-green-700 text-white';
+      }
+    } else {
+      // For other analysis types, keep existing logic
+      const allProcessed = isAnalysisComplete(type, selectedFileNames);
+      const someProcessed = hasPartialAnalysis(type, selectedFileNames);
+
+      if (allProcessed && selectedFileNames.length > 0) {
+        return 'bg-green-600 hover:bg-green-700 text-white';
+      }
+      if (someProcessed) {
+        return 'bg-yellow-600 hover:bg-yellow-700 text-white';
+      }
+    }
+
     return 'bg-gray-300 hover:bg-gray-400 text-gray-800';
   };
 
@@ -92,25 +130,52 @@ const AnalysisSection = ({
       return;
     }
 
-    const unprocessedFiles = selectedFileNames.filter(
-      fileName => !analysisState[type].result[fileName]
-    );
+    // For conflict analysis, check if we need to reprocess
+    if (type === 'conflict') {
+      const resultFiles = Object.keys(analysisState[type].result || {});
+      const currentSelection = new Set(selectedFileNames);
+      const previousSelection = new Set(resultFiles);
+      
+      // If selections are exactly the same (same files, same count)
+      if (resultFiles.length === selectedFileNames.length && 
+          resultFiles.every(file => currentSelection.has(file))) {
+        // Just toggle visibility, no need to reprocess
+        toggleVisibility(type);
+        return;
+      }
 
-    if (unprocessedFiles.length === 0) {
-      toggleVisibility(type);
-    } else {
-      const selectedTexts = unprocessedFiles.reduce((acc, fileName) => {
+      // Otherwise, process all selected files
+      const selectedTexts = selectedFileNames.reduce((acc, fileName) => {
         acc[fileName] = files[fileName].extractedText;
         return acc;
       }, {});
       onAnalysis(type, selectedTexts);
-      // Close all analysis results
-      analysisTypes.forEach((type) => {
-        if (analysisState[type].isVisible) {
-          onToggleVisibility(type);
-        }
-      });
+    } else {
+      // Existing logic for other analysis types
+      const unprocessedFiles = selectedFileNames.filter(
+        fileName => !analysisState[type].result[fileName]
+      );
+
+      if (unprocessedFiles.length === 0) {
+        // All files are processed, just toggle visibility
+        toggleVisibility(type);
+        return; // Add return here to prevent closing all results
+      } else {
+        // Some files need processing
+        const selectedTexts = unprocessedFiles.reduce((acc, fileName) => {
+          acc[fileName] = files[fileName].extractedText;
+          return acc;
+        }, {});
+        onAnalysis(type, selectedTexts);
+      }
     }
+
+    // Close all analysis results
+    analysisTypes.forEach((type) => {
+      if (analysisState[type].isVisible) {
+        onToggleVisibility(type);
+      }
+    });
   };
 
   const summaryMenu = (

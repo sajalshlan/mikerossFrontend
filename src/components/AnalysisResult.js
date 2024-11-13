@@ -139,8 +139,17 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsU
 
   const renderContent = (content) => {
     try {
+      // Early return if content is null, undefined, or empty
+      if (!content) {
+        return null;
+      }
+
       if (type === 'conflict') {
+        // For conflict analysis, check if we have valid content
         const conflictResult = Object.values(content)[0];
+        if (!conflictResult) {
+          return null;
+        }
         return (
           <div className="text-gray-700">
             {conflictResult.split('\n').map((line, index) => renderLine(line, index))}
@@ -180,7 +189,7 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsU
       return <Typography.Text className="text-gray-700">{content}</Typography.Text>;
     } catch (error) {
       console.error('Error in renderContent:', error);
-      return <Typography.Text type="danger">Error rendering content. Please try again.</Typography.Text>;
+      return null;  // Return null instead of error message
     }
   };
 
@@ -219,15 +228,20 @@ const AnalysisResult = ({ type, data, files, fileCount, onFilePreview, onThumbsU
   };
 
   const selectedFiles = Object.keys(files).filter(fileName => files[fileName].isChecked);
-  const hasResults = type === 'conflict' ? !!data : selectedFiles.some(fileName => data[fileName]);
+  const hasResults = type === 'conflict' ? 
+    (!!data && Object.values(data)[0]) : // For conflict, check if we have valid content
+    selectedFiles.some(fileName => data[fileName]); // For other types
+
+  // Only render if we have valid results
+  if (!hasResults || !data) {
+    return null;
+  }
 
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
-      {hasResults && (
-        <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-          <Typography.Title level={4} className="text-gray-800 text-center m-0">{getTitle()}</Typography.Title>
-        </div>
-      )}
+      <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+        <Typography.Title level={4} className="text-gray-800 text-center m-0">{getTitle()}</Typography.Title>
+      </div>
       <div className="flex-grow overflow-auto p-2">
         {type === 'conflict' ? (
           <div className="bg-gray-100 p-3 rounded-md">
