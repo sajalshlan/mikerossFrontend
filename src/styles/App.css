@@ -234,6 +234,222 @@ h2 {
   .chat-message, .draft-content {
     font-size: 14px;
   }
+
+  /* Make analysis section take full width */
+  .flex.flex-col.h-full.bg-white {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 12px !important;
+  }
+
+  /* Ensure grid buttons take full width */
+  .grid.grid-cols-3.gap-4 {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  /* Container adjustments */
+  .ant-layout-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Analysis section container */
+  .flex-1.min-h-0.overflow-auto.p-2 {
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Button container */
+  .flex.gap-4.mb-2.items-start {
+    width: 100% !important;
+  }
+
+  /* Ensure flex-grow takes full width */
+  .flex-grow {
+    width: 100% !important;
+  }
+
+  /* Content container */
+  .mobile-content {
+    height: 100vh !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Analysis section container */
+  .mobile-content .flex.flex-col.h-full.bg-white {
+    height: 100vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* Analysis section content */
+  .mobile-content .flex-grow.overflow-auto {
+    height: calc(100vh - 120px) !important; /* Adjust based on your header height */
+    overflow-y: auto !important;
+  }
+
+  /* Grid layout for buttons */
+  .mobile-content .grid.grid-cols-3 {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  /* Remove unnecessary margins/padding */
+  .mobile-content .p-4 {
+    padding: 12px !important;
+  }
+
+  /* Ensure proper button sizing */
+  .mobile-content button {
+    width: 100% !important;
+  }
+
+  .ant-layout-sider {
+    position: fixed !important;
+    height: 100% !important;
+    right: -100% !important;
+    transition: right 0.3s !important;
+    z-index: 1000 !important;
+  }
+
+  .ant-layout-sider:not(.ant-layout-sider-collapsed) {
+    right: 0 !important;
+  }
+
+  .ant-layout-content {
+    margin-right: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Hide the sider by default in mobile */
+  .ant-layout-sider-collapsed {
+    display: none !important;
+  }
+
+  /* Float button styles */
+  .ant-float-button {
+    z-index: 999 !important;
+  }
+
+  /* Ensure float button is visible over other elements */
+  .ant-float-button-default {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  /* Animation for float button */
+  .ant-float-button:active {
+    transform: scale(0.96);
+  }
+
+  /* Analysis buttons container */
+  .grid.grid-cols-3.gap-4 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Individual analysis buttons */
+  .grid.grid-cols-3.gap-4 button {
+    height: 48px !important;
+    font-size: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Stop analysis button container */
+  .flex-shrink-0 .rounded-full {
+    width: 48px !important;
+    height: 48px !important;
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    z-index: 100 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Stop analysis button icon */
+  .flex-shrink-0 .rounded-full svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  /* Button hover effects */
+  .grid.grid-cols-3.gap-4 button:active {
+    transform: scale(0.98) !important;
+  }
+
+  /* Progress bar container */
+  .mt-4 {
+    margin-top: 16px !important;
+    padding: 0 4px !important;
+  }
+
+  /* Progress bar */
+  .bg-gray-200.rounded-full {
+    height: 6px !important;
+  }
+
+  .bg-blue-600.rounded-full {
+    height: 6px !important;
+  }
+
+  /* Hide the original stop button in mobile */
+  .flex.gap-4.mb-2.items-start .flex-shrink-0 {
+    display: none !important;
+  }
+
+  /* Container for analysis buttons */
+  .grid.grid-cols-3.gap-4 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    position: relative !important;
+    padding-bottom: 60px !important; /* Make space for stop button */
+  }
+
+  /* Mobile-specific stop button */
+  .mobile-stop-button {
+    display: flex !important;
+    width: 100% !important;
+    height: 48px !important;
+    margin-top: 12px !important;
+    border-radius: 12px !important;
+    font-size: 16px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #dc2626 !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2) !important;
+  }
+
+  .mobile-stop-button:disabled {
+    background-color: #d1d5db !important;
+    opacity: 0.7 !important;
+  }
+
+  .mobile-stop-button svg {
+    width: 20px !important;
+    height: 20px !important;
+    margin-right: 8px !important;
+  }
+}
+
+/* Hide mobile stop button in web view */
+@media (min-width: 769px) {
+  .mobile-stop-button {
+    display: none !important;
+  }
 }
 
 .ant-layout-content {
@@ -387,5 +603,34 @@ h2 {
 
 .magic-wand-icon:hover {
   transform: rotate(0deg);
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .legal-document-analyzer {
+    flex-direction: column !important;
+  }
+
+  .ant-layout-content {
+    margin-right: 0 !important;
+    height: 100vh !important;
+    overflow: hidden;
+  }
+
+  .flex-1.min-h-0 {
+    height: 100%;
+  }
+
+  .analysis-section {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .flex-grow.overflow-hidden {
+    flex: 1;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Layout, Splitter, Button } from 'antd';
+import { Layout, Splitter, Button, FloatButton } from 'antd';
 import { Helmet } from 'react-helmet';
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { MenuFoldOutlined, MenuUnfoldOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import FileUploader from './FileUploader';
 import AnalysisSection from './AnalysisSection';
 import FilePreview from './FilePreview';
@@ -393,41 +393,20 @@ const LegalAnalyzer = () => {
       <Layout className="flex-1">
         <Content className="bg-gray-200">
           {uiState.isMobileView ? (
-            <div className="h-full">
-              <Splitter
-                style={{
-                  height: '100%',
-                }}
-              >
-                <Splitter.Panel
-                  defaultSize="50%"
-                  min="30%"
-                  max="70%"
-                  style={{ height: '100%', overflow: 'hidden' }}
-                >
-                  <div className="h-full overflow-auto p-2">
-                    <FilePreview
-                      files={fileState.uploadedFiles}
-                      selectedFile={fileState.previewFile}
-                      onFileSelect={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
-                    />
-                  </div>
-                </Splitter.Panel>
-                <Splitter.Panel style={{ height: '100%', overflow: 'hidden' }}>
-                  <div className="h-full overflow-auto p-2">
-                    <AnalysisSection
-                      files={fileState.uploadedFiles}
-                      analysisState={analysisState.types}
-                      isFileProcessing={isUploading}
-                      onAnalysis={handleAnalysis}
-                      onToggleVisibility={toggleAnalysisVisibility}
-                      onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
-                      onStopAnalysis={handleStopAnalysis}
-                    />
-                  </div>
-                </Splitter.Panel>
-              </Splitter>
-            </div>
+            <Content className="mobile-content">
+              <AnalysisSection
+                files={fileState.uploadedFiles}
+                analysisState={analysisState.types}
+                isFileProcessing={isUploading}
+                onAnalysis={handleAnalysis}
+                onToggleVisibility={toggleAnalysisVisibility}
+                onFileSelection={(fileName) => setFileState(prev => ({ 
+                  ...prev, 
+                  previewFile: fileName 
+                }))}
+                onStopAnalysis={handleStopAnalysis}
+              />
+            </Content>
           ) : (
             <Splitter
               style={{
@@ -470,7 +449,7 @@ const LegalAnalyzer = () => {
           theme="light"
           collapsible
           collapsed={uiState.isSiderCollapsed}
-          onCollapse={setUiState}
+          onCollapse={(collapsed) => setUiState(prev => ({ ...prev, isSiderCollapsed: collapsed }))}
           reverseArrow={true}
           trigger={null}
           collapsedWidth={uiState.isMobileView ? 0 : 55}
@@ -505,19 +484,6 @@ const LegalAnalyzer = () => {
           />
         </Sider>
       </Layout>
-      {uiState.isMobileView && (
-        <Button
-          type="primary"
-          onClick={() => setUiState(prev => ({ ...prev, isSiderCollapsed: !prev.isSiderCollapsed }))}
-          style={{
-            position: 'fixed',
-            top: 16,
-            right: 16,
-            zIndex: 1000,
-          }}
-          icon={uiState.isSiderCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-        />
-      )}
       <MagicEffect 
         extractedTexts={getSelectedFilesExtractedTexts()}
         allExtractedTexts={Object.fromEntries(
@@ -525,6 +491,20 @@ const LegalAnalyzer = () => {
         )}
         isSiderCollapsed={uiState.isSiderCollapsed}
       />
+      {uiState.isMobileView && uiState.isSiderCollapsed && (
+        <FloatButton
+          icon={<FolderOpenOutlined />}
+          type="primary"
+          style={{
+            right: 16,
+            bottom: 64,
+          }}
+          onClick={() => setUiState(prev => ({ 
+            ...prev, 
+            isSiderCollapsed: false 
+          }))}
+        />
+      )}
     </Layout>
   );
 };

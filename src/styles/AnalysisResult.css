@@ -93,3 +93,23 @@
   justify-content: center;
   align-items: center;
 }
+
+@media (max-width: 768px) {
+  .flex.flex-col.h-full {
+    height: auto !important;
+    min-height: 0;
+  }
+
+  .flex-grow.overflow-hidden {
+    overflow: visible;
+  }
+
+  .grid.grid-cols-3 {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .analysis-result {
+    margin-bottom: 0.5rem;
+  }
+}
