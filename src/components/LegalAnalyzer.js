@@ -182,7 +182,7 @@ const LegalAnalyzer = () => {
   };
 
   const handleAnalysis = async (type, selectedTexts) => {
-    // Initialize analysis state with progress tracking
+    // Clear previous results for this analysis type
     setAnalysisState(prev => ({
       ...prev,
       types: {
@@ -194,7 +194,9 @@ const LegalAnalyzer = () => {
             ...acc,
             [fileName]: 0
           }), {}),
-          isPerformed: true
+          isPerformed: true,
+          // Clear previous results
+          result: type === 'conflict' ? '' : {}
         }
       }
     }));
@@ -263,9 +265,11 @@ const LegalAnalyzer = () => {
         results = await Promise.all(analysisPromises);
       }
       
-      // Filter out null results and update state
+      // When updating with new results, only include results for currently selected files
       const newResults = Object.fromEntries(
-        results.filter(([_, result]) => result !== null)
+        results
+          .filter(([fileName, result]) => result !== null && selectedTexts[fileName])
+          .map(([fileName, result]) => [fileName, result])
       );
 
       setAnalysisState(prev => ({
@@ -276,8 +280,7 @@ const LegalAnalyzer = () => {
             ...prev.types[type],
             isLoading: false,
             result: {
-              ...prev.types[type].result,
-              ...newResults
+              ...newResults  // Don't spread prev.types[type].result here
             },
             isVisible: true
           }
@@ -316,11 +319,20 @@ const LegalAnalyzer = () => {
       };
     });
 
+    // Only remove this file's results from the analysis state
     setAnalysisState(prev => {
       const updatedTypes = { ...prev.types };
       Object.keys(updatedTypes).forEach(type => {
-        if (updatedTypes[type].result[fileName]) {
-          delete updatedTypes[type].result[fileName];
+        if (type === 'conflict') {
+          // For conflict, only clear results if this file was part of the analysis
+          if (updatedTypes[type].result && Object.keys(updatedTypes[type].result).includes(fileName)) {
+            updatedTypes[type].result = '';  // Clear conflict results if removed file was part of it
+          }
+        } else {
+          // For other types, just remove this file's result
+          if (updatedTypes[type].result[fileName]) {
+            delete updatedTypes[type].result[fileName];
+          }
         }
       });
       return { ...prev, types: updatedTypes };
@@ -381,25 +393,40 @@ const LegalAnalyzer = () => {
       <Layout className="flex-1">
         <Content className="bg-gray-200">
           {uiState.isMobileView ? (
-            <div className="h-full flex flex-col">
-              <div className="h-1/2 overflow-auto p-2">
-                <FilePreview
-                  files={fileState.uploadedFiles}
-                  selectedFile={fileState.previewFile}
-                  onFileSelect={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
-                />
-              </div>
-              <div className="h-1/2 overflow-auto p-2">
-                <AnalysisSection
-                  files={fileState.uploadedFiles}
-                  analysisState={analysisState.types}
-                  isFileProcessing={isUploading}
-                  onAnalysis={handleAnalysis}
-                  onToggleVisibility={toggleAnalysisVisibility}
-                  onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
-                  onStopAnalysis={handleStopAnalysis}
-                />
-              </div>
+            <div className="h-full">
+              <Splitter
+                style={{
+                  height: '100%',
+                }}
+              >
+                <Splitter.Panel
+                  defaultSize="50%"
+                  min="30%"
+                  max="70%"
+                  style={{ height: '100%', overflow: 'hidden' }}
+                >
+                  <div className="h-full overflow-auto p-2">
+                    <FilePreview
+                      files={fileState.uploadedFiles}
+                      selectedFile={fileState.previewFile}
+                      onFileSelect={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
+                    />
+                  </div>
+                </Splitter.Panel>
+                <Splitter.Panel style={{ height: '100%', overflow: 'hidden' }}>
+                  <div className="h-full overflow-auto p-2">
+                    <AnalysisSection
+                      files={fileState.uploadedFiles}
+                      analysisState={analysisState.types}
+                      isFileProcessing={isUploading}
+                      onAnalysis={handleAnalysis}
+                      onToggleVisibility={toggleAnalysisVisibility}
+                      onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
+                      onStopAnalysis={handleStopAnalysis}
+                    />
+                  </div>
+                </Splitter.Panel>
+              </Splitter>
             </div>
           ) : (
             <Splitter
@@ -453,7 +480,11 @@ const LegalAnalyzer = () => {
             top: 0,
             bottom: 0,
             zIndex: 999,
-            backgroundColor: '#F5F5F5',
+            background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
+            borderTopLeftRadius: '24px',
+            borderBottomLeftRadius: '24px',
+            overflow: 'hidden',
+            boxShadow: '-4px 0 15px rgba(0, 0, 0, 0.05)',
             ...(uiState.isMobileView && {
               position: 'fixed',
               height: '100%',
