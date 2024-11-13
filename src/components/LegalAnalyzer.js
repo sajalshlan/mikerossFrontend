@@ -393,25 +393,40 @@ const LegalAnalyzer = () => {
       <Layout className="flex-1">
         <Content className="bg-gray-200">
           {uiState.isMobileView ? (
-            <div className="h-full flex flex-col">
-              <div className="h-1/2 overflow-auto p-2">
-                <FilePreview
-                  files={fileState.uploadedFiles}
-                  selectedFile={fileState.previewFile}
-                  onFileSelect={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
-                />
-              </div>
-              <div className="h-1/2 overflow-auto p-2">
-                <AnalysisSection
-                  files={fileState.uploadedFiles}
-                  analysisState={analysisState.types}
-                  isFileProcessing={isUploading}
-                  onAnalysis={handleAnalysis}
-                  onToggleVisibility={toggleAnalysisVisibility}
-                  onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
-                  onStopAnalysis={handleStopAnalysis}
-                />
-              </div>
+            <div className="h-full">
+              <Splitter
+                style={{
+                  height: '100%',
+                }}
+              >
+                <Splitter.Panel
+                  defaultSize="50%"
+                  min="30%"
+                  max="70%"
+                  style={{ height: '100%', overflow: 'hidden' }}
+                >
+                  <div className="h-full overflow-auto p-2">
+                    <FilePreview
+                      files={fileState.uploadedFiles}
+                      selectedFile={fileState.previewFile}
+                      onFileSelect={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
+                    />
+                  </div>
+                </Splitter.Panel>
+                <Splitter.Panel style={{ height: '100%', overflow: 'hidden' }}>
+                  <div className="h-full overflow-auto p-2">
+                    <AnalysisSection
+                      files={fileState.uploadedFiles}
+                      analysisState={analysisState.types}
+                      isFileProcessing={isUploading}
+                      onAnalysis={handleAnalysis}
+                      onToggleVisibility={toggleAnalysisVisibility}
+                      onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
+                      onStopAnalysis={handleStopAnalysis}
+                    />
+                  </div>
+                </Splitter.Panel>
+              </Splitter>
             </div>
           ) : (
             <Splitter
