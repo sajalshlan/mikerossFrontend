@@ -483,7 +483,7 @@ const FileUploader = ({
         onClick={() => setCollapsed(!collapsed)}
         style={{ 
           alignSelf: 'flex-start', 
-          margin: '16px 16px 16px 12px',
+          margin: '16px 16px 16px 10px',
           borderRadius: '6px',
           background: '#1677ff',
           boxShadow: '0 2px 4px rgba(22, 119, 255, 0.2)'
