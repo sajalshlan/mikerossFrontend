@@ -26,7 +26,19 @@ const AnalysisSection = ({
 
   
   const isAnalysisComplete = (type, fileNames) => {
-    return fileNames.every(fileName => analysisState[type].result[fileName]);
+    // If no files selected, analysis is not complete
+    if (!fileNames.length) return false;
+    
+    // Check if we have results for all selected files
+    return fileNames.every(fileName => {
+      // For conflict type, check if we have any result and all selected files were part of it
+      if (type === 'conflict') {
+        const resultFiles = Object.keys(analysisState[type].result || {});
+        return resultFiles.length > 0 && fileNames.every(file => resultFiles.includes(file));
+      }
+      // For other types, check if we have a result for this specific file
+      return analysisState[type].result && analysisState[type].result[fileName];
+    });
   };
 
   const hasPartialAnalysis = (type, fileNames) => {
@@ -60,33 +72,14 @@ const AnalysisSection = ({
       return 'bg-blue-600 hover:bg-blue-700 text-white';
     }
 
-    // Special handling for conflict type
-    if (type === 'conflict') {
-      // If we have results and files selection changed
-      if (analysisState[type].result && Object.keys(analysisState[type].result).length > 0) {
-        const resultFiles = Object.keys(analysisState[type].result);
-        const currentSelection = new Set(selectedFileNames);
-        
-        // If selections are different (some files added/removed)
-        if (resultFiles.length !== selectedFileNames.length || 
-            !resultFiles.every(file => currentSelection.has(file))) {
-          return 'bg-yellow-600 hover:bg-yellow-700 text-white';
-        }
-        
-        // If all currently selected files are processed
-        return 'bg-green-600 hover:bg-green-700 text-white';
-      }
-    } else {
-      // For other analysis types, keep existing logic
-      const allProcessed = isAnalysisComplete(type, selectedFileNames);
-      const someProcessed = hasPartialAnalysis(type, selectedFileNames);
+    const allProcessed = isAnalysisComplete(type, selectedFileNames);
+    const someProcessed = hasPartialAnalysis(type, selectedFileNames);
 
-      if (allProcessed && selectedFileNames.length > 0) {
-        return 'bg-green-600 hover:bg-green-700 text-white';
-      }
-      if (someProcessed) {
-        return 'bg-yellow-600 hover:bg-yellow-700 text-white';
-      }
+    if (allProcessed) {
+      return 'bg-green-600 hover:bg-green-700 text-white';
+    }
+    if (someProcessed) {
+      return 'bg-yellow-600 hover:bg-yellow-700 text-white';
     }
 
     return 'bg-gray-300 hover:bg-gray-400 text-gray-800';
