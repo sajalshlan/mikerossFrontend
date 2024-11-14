@@ -507,29 +507,6 @@ h2 {
   border-radius: 16px;
 }
 
-/* Style menu items */
-.ant-menu-item {
-  border-radius: 8px !important;
-  margin: 4px 0 !important;
-}
-
-.ant-menu-item:hover {
-  background-color: rgba(22, 119, 255, 0.06) !important;
-}
-
-.ant-menu-item-selected {
-  background-color: rgba(22, 119, 255, 0.1) !important;
-}
-
-/* Style submenu headers */
-.ant-menu-submenu-title {
-  border-radius: 8px !important;
-}
-
-.ant-menu-submenu-title:hover {
-  background-color: rgba(22, 119, 255, 0.06) !important;
-}
-
 /* Style the upload area */
 .upload-area {
   background: white !important;
@@ -585,10 +562,13 @@ h2 {
 
 .ant-menu-item {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  width: 105% !important;
+  margin: 0 !important;
+  padding-left: 16px !important;
 }
 
 .ant-menu-item:hover {
-  transform: translateX(4px);
+  transform: translateX(-8px);
 }
 
 .float-button-group {
