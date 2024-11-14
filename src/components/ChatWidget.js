@@ -3,6 +3,7 @@ import { Button, Input, Spin, Tooltip } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 import ToggleSwitch from './common/ToggleSwitch';
+import MobileToggleSwitch from './common/MobileToggleSwitch';
 
 const ChatWidget = ({ 
   extractedTexts, 
@@ -173,8 +174,8 @@ const ChatWidget = ({
   };
 
   return (
-    <div className={`fixed inset-0 md:inset-auto md:bottom-12 md:right-16 md:w-96 md:h-[500px] bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 transition-opacity duration-300 ease-in-out ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
-      <header className="bg-blue-600 p-4 text-white flex justify-between items-center rounded-t-2xl">
+    <div className="fixed inset-0 md:inset-auto md:bottom-12 md:right-16 md:w-[400px] md:h-[600px] bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50">
+      <header className="bg-blue-600 p-4 text-white flex justify-between items-center">
         <h4 className="text-lg font-bold m-0">AI Assistant</h4>
         <Button
           type="text"
@@ -183,14 +184,26 @@ const ChatWidget = ({
           className="text-white hover:text-blue-200"
         />
       </header>
-      
-      <ToggleSwitch
-        checked={useSelectedFiles}
-        onChange={() => setUseSelectedFiles(!useSelectedFiles)}
-        label={useSelectedFiles ? "Using selected files" : "Using all files"}
-        tooltipText={useSelectedFiles ? "Click to work with all files" : "Click to work with selected files only"}
-        containerClassName="px-4 py-2 bg-blue-50 border-b border-blue-100"
-      />
+
+      {/* Mobile Toggle Switch */}
+      <div className="block md:hidden">
+        <MobileToggleSwitch
+          checked={useSelectedFiles}
+          onChange={() => setUseSelectedFiles(!useSelectedFiles)}
+          label={useSelectedFiles ? "Using selected files" : "Using all files"}
+        />
+      </div>
+
+      {/* Desktop Toggle Switch */}
+      <div className="hidden md:block">
+        <ToggleSwitch
+          checked={useSelectedFiles}
+          onChange={() => setUseSelectedFiles(!useSelectedFiles)}
+          label={useSelectedFiles ? "Using selected files" : "Using all files"}
+          tooltipText={useSelectedFiles ? "Click to work with all files" : "Click to work with selected files only"}
+          containerClassName="px-4 py-2 bg-blue-50 border-b border-blue-100"
+        />
+      </div>
 
       <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={chatMessagesRef}>
         {chatMessages.map((message, index) => {

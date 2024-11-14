@@ -238,19 +238,45 @@ const AnalysisResult = React.memo(({
   };
 
   const selectedFiles = files ? Object.keys(files).filter(fileName => files[fileName]?.isChecked) : [];
-  const hasResults = type === 'conflict' ? 
-    (!!data && Object.values(data)[0]) : 
-    (!!data && !!files && selectedFiles.some(fileName => data[fileName]));
+
+  // Add this memoized filtered data
+  const filteredData = useMemo(() => {
+    if (!data || !files) return null;
+    
+    // For conflict analysis, only show if all referenced files are selected
+    if (type === 'conflict') {
+      const resultFiles = Object.keys(data);
+      const allFilesSelected = resultFiles.every(file => files[file]?.isChecked);
+      return allFilesSelected ? data : null;
+    }
+    
+    // For other analysis types, filter results to only show selected files
+    return Object.entries(data).reduce((acc, [fileName, result]) => {
+      if (files[fileName]?.isChecked) {
+        acc[fileName] = result;
+      }
+      return acc;
+    }, {});
+  }, [data, files, type]);
+
+  // Update the hasResults check to use filteredData
+  const hasResults = useMemo(() => {
+    if (!filteredData) return false;
+    
+    return type === 'conflict' 
+      ? !!filteredData && Object.values(filteredData)[0]
+      : Object.keys(filteredData).length > 0;
+  }, [filteredData, type]);
 
   const triviaCard = useMemo(() => {
-    if (type === 'placeholder' || !data || isLoading) {
+    if (type === 'placeholder' || !filteredData || isLoading) {
       return <TriviaCard />;
     }
     return null;
-  }, [type, !!data, isLoading]);
+  }, [type, !!filteredData, isLoading]);
 
   // Only render if we have valid results
-  if (type === 'placeholder' || !hasResults || !data || isLoading) {
+  if (type === 'placeholder' || !hasResults || !filteredData || isLoading) {
     console.log('Showing trivia card...');  // Debug log
     return (
       <div className="flex flex-col h-full bg-gray-50">
@@ -274,13 +300,13 @@ const AnalysisResult = React.memo(({
       <div className="flex-grow overflow-auto p-2">
         {type === 'conflict' ? (
           <div className="bg-gray-100 p-3 rounded-md">
-            {renderContent(data)}
+            {renderContent(filteredData)}
           </div>
         ) : (
           selectedFiles.map((fileName, index) => (
-            data[fileName] && (
+            filteredData[fileName] && (
               <React.Fragment key={fileName}>
-                {index > 0 && Object.keys(data).length > 1 && (
+                {index > 0 && Object.keys(filteredData).length > 1 && (
                   <div className="page-break my-12 border-t-8 border-blue-400 relative">
                   </div>
                 )}
@@ -295,7 +321,7 @@ const AnalysisResult = React.memo(({
                     </Typography.Title>
                   </Tooltip>
                   <div className="bg-gray-100 p-3 rounded-md">
-                    {renderContent(data[fileName])}
+                    {renderContent(filteredData[fileName])}
                   </div>
 
                   {feedbackVisible[fileName] && (
@@ -354,7 +380,7 @@ const AnalysisResult = React.memo(({
                     <Button 
                       type="text" 
                       icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => handleCopy(fileName, data[fileName])} 
+                      onClick={() => handleCopy(fileName, filteredData[fileName])} 
                       style={{ color: '#F44336' }} 
                     />
                     </Tooltip>
@@ -370,11 +396,12 @@ const AnalysisResult = React.memo(({
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Only re-render if these specific props change
   return (
     prevProps.type === nextProps.type &&
     prevProps.isLoading === nextProps.isLoading &&
-    prevProps.data === nextProps.data
+    prevProps.data === nextProps.data &&
+    JSON.stringify(Object.keys(prevProps.files).map(k => prevProps.files[k]?.isChecked)) ===
+    JSON.stringify(Object.keys(nextProps.files).map(k => nextProps.files[k]?.isChecked))
   );
 });
 

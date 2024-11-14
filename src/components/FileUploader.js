@@ -348,7 +348,7 @@ const FileUploader = ({
         {
           key: 'fileActions',
           label: (
-            <div className="flex justify-between items-center px-2 py-1 gap1">
+            <div className="flex justify-between items-center px-8 py-1">
               <Tooltip title="Select all uploaded files">
                 <Button
                   size="small"
@@ -369,6 +369,7 @@ const FileUploader = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
+                    marginBottom: '8px',
                     background: Object.keys(files).length > 0 && 
                                Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
                       ? '#1890ff'
@@ -408,6 +409,7 @@ const FileUploader = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
+                    marginBottom: '8px',
                     background: 'rgba(255, 77, 79, 0.05)'
                   }}
                   icon={<DeleteColumnOutlined style={{ fontSize: '14px' }} />}

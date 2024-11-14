@@ -26,7 +26,19 @@ const AnalysisSection = ({
 
   
   const isAnalysisComplete = (type, fileNames) => {
-    return fileNames.every(fileName => analysisState[type].result[fileName]);
+    // If no files selected, analysis is not complete
+    if (!fileNames.length) return false;
+    
+    // Check if we have results for all selected files
+    return fileNames.every(fileName => {
+      // For conflict type, check if we have any result and all selected files were part of it
+      if (type === 'conflict') {
+        const resultFiles = Object.keys(analysisState[type].result || {});
+        return resultFiles.length > 0 && fileNames.every(file => resultFiles.includes(file));
+      }
+      // For other types, check if we have a result for this specific file
+      return analysisState[type].result && analysisState[type].result[fileName];
+    });
   };
 
   const hasPartialAnalysis = (type, fileNames) => {
@@ -60,33 +72,14 @@ const AnalysisSection = ({
       return 'bg-blue-600 hover:bg-blue-700 text-white';
     }
 
-    // Special handling for conflict type
-    if (type === 'conflict') {
-      // If we have results and files selection changed
-      if (analysisState[type].result && Object.keys(analysisState[type].result).length > 0) {
-        const resultFiles = Object.keys(analysisState[type].result);
-        const currentSelection = new Set(selectedFileNames);
-        
-        // If selections are different (some files added/removed)
-        if (resultFiles.length !== selectedFileNames.length || 
-            !resultFiles.every(file => currentSelection.has(file))) {
-          return 'bg-yellow-600 hover:bg-yellow-700 text-white';
-        }
-        
-        // If all currently selected files are processed
-        return 'bg-green-600 hover:bg-green-700 text-white';
-      }
-    } else {
-      // For other analysis types, keep existing logic
-      const allProcessed = isAnalysisComplete(type, selectedFileNames);
-      const someProcessed = hasPartialAnalysis(type, selectedFileNames);
+    const allProcessed = isAnalysisComplete(type, selectedFileNames);
+    const someProcessed = hasPartialAnalysis(type, selectedFileNames);
 
-      if (allProcessed && selectedFileNames.length > 0) {
-        return 'bg-green-600 hover:bg-green-700 text-white';
-      }
-      if (someProcessed) {
-        return 'bg-yellow-600 hover:bg-yellow-700 text-white';
-      }
+    if (allProcessed) {
+      return 'bg-green-600 hover:bg-green-700 text-white';
+    }
+    if (someProcessed) {
+      return 'bg-yellow-600 hover:bg-yellow-700 text-white';
     }
 
     return 'bg-gray-300 hover:bg-gray-400 text-gray-800';
@@ -225,7 +218,12 @@ const AnalysisSection = ({
         <Title level={3} className="text-gray-800 mb-2 font-semibold text-center">Analyze</Title>
         <div className="flex gap-4 mb-2 items-start">
           <div className="flex-grow">
-            <div className="grid grid-cols-3 gap-4">
+            <div className={`
+              grid gap-4
+              md:grid-cols-3 
+              grid-cols-4  /* 4 columns for mobile */
+              ${isUploading ? 'opacity-50' : ''}
+            `}>
               <Tooltip title={hasFiles ? (
                 checkedFilesCount > 0 
                   ? getButtonTooltip(selectedSummaryType === 'Short Summary' ? 'shortSummary' : 'longSummary')
@@ -283,15 +281,20 @@ const AnalysisSection = ({
               <button
                 onClick={onStopAnalysis}
                 disabled={!Object.values(analysisState).some(state => state.isLoading)}
-                className={`mobile-stop-button
-                  ${!Object.values(analysisState).some(state => state.isLoading) ? 'opacity-50 cursor-not-allowed' : ''}
+                className={`
+                  md:hidden  /* Hide in web view */
+                  w-full px-2 py-3 rounded-lg text-sm font-semibold
+                  flex items-center justify-center space-x-1
+                  ${Object.values(analysisState).some(state => state.isLoading) 
+                    ? 'bg-red-600 text-white' 
+                    : 'bg-gray-300 text-gray-800 opacity-50 cursor-not-allowed'}
                 `}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10h6v6H9z" />
                 </svg>
-                <span>Stop Analysis</span>
+                <span className="text-xs">Stop</span>
               </button>
             </div>
           </div>
