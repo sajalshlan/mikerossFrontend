@@ -496,8 +496,8 @@ const LegalAnalyzer = () => {
           icon={<FolderOpenOutlined />}
           type="primary"
           style={{
-            right: 16,
-            bottom: 64,
+            right: 64,
+            bottom: 16,
           }}
           onClick={() => setUiState(prev => ({ 
             ...prev, 

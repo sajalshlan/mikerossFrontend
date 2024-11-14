@@ -3,6 +3,7 @@ import { Button, Input, Spin, Typography, message, Tooltip } from 'antd';
 import { CloseOutlined, SendOutlined, CopyOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 import ToggleSwitch from './common/ToggleSwitch';
+import MobileToggleSwitch from './common/MobileToggleSwitch';
 
 const { Title, Paragraph } = Typography;
 
@@ -228,13 +229,23 @@ const Draft = ({
         />
       </header>
       
-      <ToggleSwitch
-        checked={useSelectedFiles}
-        onChange={() => setUseSelectedFiles(!useSelectedFiles)}
-        label={useSelectedFiles ? "Using selected files" : "Using all files"}
-        tooltipText={useSelectedFiles ? "Click to work with all files" : "Click to work with selected files only"}
-        containerClassName="px-4 py-2 bg-blue-50 border-b border-blue-100"
-      />
+      <div className="block md:hidden">
+        <MobileToggleSwitch
+          checked={useSelectedFiles}
+          onChange={() => setUseSelectedFiles(!useSelectedFiles)}
+          label={useSelectedFiles ? "Using selected files" : "Using all files"}
+        />
+      </div>
+
+      <div className="hidden md:block">
+        <ToggleSwitch
+          checked={useSelectedFiles}
+          onChange={() => setUseSelectedFiles(!useSelectedFiles)}
+          label={useSelectedFiles ? "Using selected files" : "Using all files"}
+          tooltipText={useSelectedFiles ? "Click to work with all files" : "Click to work with selected files only"}
+          containerClassName="px-4 py-2 bg-blue-50 border-b border-blue-100"
+        />
+      </div>
 
       <div className="flex-grow overflow-y-auto p-4 bg-gray-50" ref={draftResultRef}>
         {draftHistory.map((item, index) => {

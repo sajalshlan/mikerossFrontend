@@ -245,9 +245,9 @@ h2 {
 
   /* Ensure grid buttons take full width */
   .grid.grid-cols-3.gap-4 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     width: 100% !important;
-    gap: 8px !important;
+    gap: 4px !important;
   }
 
   /* Container adjustments */
@@ -299,7 +299,7 @@ h2 {
 
   /* Grid layout for buttons */
   .mobile-content .grid.grid-cols-3 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     width: 100% !important;
     gap: 8px !important;
   }
@@ -353,19 +353,17 @@ h2 {
 
   /* Analysis buttons container */
   .grid.grid-cols-3.gap-4 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     gap: 12px !important;
   }
 
   /* Individual analysis buttons */
   .grid.grid-cols-3.gap-4 button {
-    height: 48px !important;
-    font-size: 16px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 12px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    padding: 8px 2px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   /* Stop analysis button container */
@@ -412,7 +410,7 @@ h2 {
 
   /* Container for analysis buttons */
   .grid.grid-cols-3.gap-4 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     gap: 12px !important;
     position: relative !important;
     padding-bottom: 60px !important; /* Make space for stop button */
@@ -423,7 +421,7 @@ h2 {
     display: flex !important;
     width: 100% !important;
     height: 48px !important;
-    margin-top: 12px !important;
+    margin-top: 0 !important;
     border-radius: 12px !important;
     font-size: 16px !important;
     align-items: center !important;
@@ -631,6 +629,65 @@ h2 {
     flex: 1;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Ensure grid buttons maintain horizontal layout */
+.grid.grid-cols-3.gap-4 {
+  grid-template-columns: repeat(4, 1fr) !important;
+  width: 100% !important;
+  gap: 4px !important;
+}
+
+/* Adjust button sizes for mobile */
+.grid.grid-cols-3.gap-4 button {
+  padding: 8px 2px !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Ensure text stays on one line */
+.grid.grid-cols-3.gap-4 button span {
+  font-size: 12px !important;
+  white-space: nowrap !important;
+}
+
+/* Adjust spacing for mobile */
+@media (max-width: 768px) {
+  .flex.gap-4.mb-2.items-start {
+    gap: 8px !important;
+  }
+  
+  .grid.grid-cols-3.gap-4 {
+    gap: 4px !important;
+  }
+}
+
+/* Make button text even smaller on very small screens */
+@media (max-width: 360px) {
+  .grid.grid-cols-3.gap-4 button {
+    font-size: 11px !important;
+  }
+}
+
+/* Add these at the end of your media query section */
+@media (max-width: 768px) {
+  .grid button {
+    @apply text-xs py-2 px-1;
+  }
+  
+  .grid button span {
+    @apply text-xs truncate;
+  }
+  
+  .grid button svg {
+    @apply w-4 h-4;
+  }
+  
+  .grid.gap-4 {
+    @apply gap-1;
   }
 }
 

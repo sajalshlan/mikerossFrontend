@@ -225,7 +225,12 @@ const AnalysisSection = ({
         <Title level={3} className="text-gray-800 mb-2 font-semibold text-center">Analyze</Title>
         <div className="flex gap-4 mb-2 items-start">
           <div className="flex-grow">
-            <div className="grid grid-cols-3 gap-4">
+            <div className={`
+              grid gap-4
+              md:grid-cols-3 
+              grid-cols-4  /* 4 columns for mobile */
+              ${isUploading ? 'opacity-50' : ''}
+            `}>
               <Tooltip title={hasFiles ? (
                 checkedFilesCount > 0 
                   ? getButtonTooltip(selectedSummaryType === 'Short Summary' ? 'shortSummary' : 'longSummary')
@@ -283,15 +288,20 @@ const AnalysisSection = ({
               <button
                 onClick={onStopAnalysis}
                 disabled={!Object.values(analysisState).some(state => state.isLoading)}
-                className={`mobile-stop-button
-                  ${!Object.values(analysisState).some(state => state.isLoading) ? 'opacity-50 cursor-not-allowed' : ''}
+                className={`
+                  md:hidden  /* Hide in web view */
+                  w-full px-2 py-3 rounded-lg text-sm font-semibold
+                  flex items-center justify-center space-x-1
+                  ${Object.values(analysisState).some(state => state.isLoading) 
+                    ? 'bg-red-600 text-white' 
+                    : 'bg-gray-300 text-gray-800 opacity-50 cursor-not-allowed'}
                 `}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10h6v6H9z" />
                 </svg>
-                <span>Stop Analysis</span>
+                <span className="text-xs">Stop</span>
               </button>
             </div>
           </div>
