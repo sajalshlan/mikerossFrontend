@@ -31,6 +31,12 @@ const LegalAnalyzer = () => {
 
   const siderRef = useRef(null);
 
+  const isUploading = useMemo(() => {
+    return Object.values(fileState.uploadedFiles).some(
+      file => file.progress?.status === 'uploading'
+    );
+  }, [fileState.uploadedFiles]);
+
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/x-icon';
@@ -375,12 +381,6 @@ const LegalAnalyzer = () => {
       )
     }));
   };
-
-  const isUploading = useMemo(() => {
-    return Object.values(fileState.uploadedFiles).some(
-      file => file.progress?.status === 'uploading'
-    );
-  }, [fileState.uploadedFiles]);
 
   return (
     <Layout className="h-screen overflow-hidden">

@@ -476,14 +476,14 @@ const FileUploader = ({
   return (
     <div className="file-uploader h-full flex flex-col shadow-lg rounded-l-2xl" style={{
       background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
-      borderLeft: '1px solid rgba(0, 0, 0, 0.06)'
+      borderLeft: '5px solid #1677ff'
     }}>
       <Button
         type="primary"
         onClick={() => setCollapsed(!collapsed)}
         style={{ 
           alignSelf: 'flex-start', 
-          margin: '16px 16px 16px 10px',
+          margin: '16px 16px 16px 8px',
           borderRadius: '6px',
           background: '#1677ff',
           boxShadow: '0 2px 4px rgba(22, 119, 255, 0.2)'

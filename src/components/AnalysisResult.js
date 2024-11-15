@@ -58,6 +58,53 @@ const AnalysisResult = React.memo(({
   const [feedbackVisible, setFeedbackVisible] = useState({});
   const [feedbackText, setFeedbackText] = useState({});
 
+  const selectedFiles = files ? Object.keys(files).filter(fileName => files[fileName]?.isChecked) : [];
+
+  // Add this memoized filtered data
+  const filteredData = useMemo(() => {
+    if (!data || !files) return null;
+    
+    // For conflict analysis, only show if all referenced files are selected
+    if (type === 'conflict') {
+      const resultFiles = Object.keys(data);
+      const allFilesSelected = resultFiles.every(file => files[file]?.isChecked);
+      return allFilesSelected ? data : null;
+    }
+    
+    // For other analysis types, filter results to only show selected files
+    return Object.entries(data).reduce((acc, [fileName, result]) => {
+      if (files[fileName]?.isChecked) {
+        acc[fileName] = result;
+      }
+      return acc;
+    }, {});
+  }, [data, files, type]);
+
+  // Update the hasResults check to use filteredData
+  const hasResults = useMemo(() => {
+    if (!filteredData) return false;
+    
+    return type === 'conflict' 
+      ? !!filteredData && Object.values(filteredData)[0]
+      : Object.keys(filteredData).length > 0;
+  }, [filteredData, type]);
+
+  const triviaCard = useMemo(() => {
+    if (type === 'placeholder' || !filteredData || isLoading) {
+      return <TriviaCard />;
+    }
+    return null;
+  }, [type, !!filteredData, isLoading]);
+
+
+  const titleMap = {
+    shortSummary: 'Short Summary Results',
+    longSummary: 'Long Summary Results',
+    risky: 'Risk Analysis Results',
+    conflict: 'Conflict Check Results',
+  };
+
+
   const handleCopy = (fileName, data) => {
     const rawContent = data;  // Assuming this contains the raw file content
   
@@ -226,54 +273,9 @@ const AnalysisResult = React.memo(({
     }
   };
 
-  const titleMap = {
-    shortSummary: 'Short Summary Results',
-    longSummary: 'Long Summary Results',
-    risky: 'Risk Analysis Results',
-    conflict: 'Conflict Check Results',
-  };
-
   const getTitle = () => {
     return titleMap[type] || 'Analysis Results';
   };
-
-  const selectedFiles = files ? Object.keys(files).filter(fileName => files[fileName]?.isChecked) : [];
-
-  // Add this memoized filtered data
-  const filteredData = useMemo(() => {
-    if (!data || !files) return null;
-    
-    // For conflict analysis, only show if all referenced files are selected
-    if (type === 'conflict') {
-      const resultFiles = Object.keys(data);
-      const allFilesSelected = resultFiles.every(file => files[file]?.isChecked);
-      return allFilesSelected ? data : null;
-    }
-    
-    // For other analysis types, filter results to only show selected files
-    return Object.entries(data).reduce((acc, [fileName, result]) => {
-      if (files[fileName]?.isChecked) {
-        acc[fileName] = result;
-      }
-      return acc;
-    }, {});
-  }, [data, files, type]);
-
-  // Update the hasResults check to use filteredData
-  const hasResults = useMemo(() => {
-    if (!filteredData) return false;
-    
-    return type === 'conflict' 
-      ? !!filteredData && Object.values(filteredData)[0]
-      : Object.keys(filteredData).length > 0;
-  }, [filteredData, type]);
-
-  const triviaCard = useMemo(() => {
-    if (type === 'placeholder' || !filteredData || isLoading) {
-      return <TriviaCard />;
-    }
-    return null;
-  }, [type, !!filteredData, isLoading]);
 
   // Only render if we have valid results
   if (type === 'placeholder' || !hasResults || !filteredData || isLoading) {
