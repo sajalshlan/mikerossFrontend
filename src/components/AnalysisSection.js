@@ -16,19 +16,24 @@ const AnalysisSection = ({
 }) => {
   const analysisTypes = ['shortSummary', 'longSummary', 'risky', 'conflict'];
   const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
+  const [lastUsedSummaryType, setLastUsedSummaryType] = useState(null);
 
   const hasFiles = useMemo(() => Object.keys(files).length > 0, [files]);
-  const checkedFilesCount = useMemo(
-    () => Object.values(files).filter(file => file.isChecked).length,
-    [files]
-  );
   const checkedFiles = useMemo(() => Object.keys(files).filter(fileName => files[fileName].isChecked), [files]);
 
   useEffect(() => {
-    if (!hasFiles || checkedFilesCount === 0) {
+    if (!Object.keys(files).length) {
       setSelectedSummaryType('Summary');
+      setLastUsedSummaryType(null);
+    } else if (checkedFiles.length === 0) {
+      if (selectedSummaryType !== 'Summary') {
+        setLastUsedSummaryType(selectedSummaryType);
+      }
+      setSelectedSummaryType('Summary');
+    } else if (lastUsedSummaryType && selectedSummaryType === 'Summary') {
+      setSelectedSummaryType(lastUsedSummaryType);
     }
-  }, [hasFiles, checkedFilesCount]);
+  }, [hasFiles, checkedFiles, files]);
 
   const summaryMenu = (
     <Menu onClick={({ key }) => {
@@ -57,6 +62,11 @@ const AnalysisSection = ({
   };
 
   const hasPartialAnalysis = (type, fileNames) => {
+    // First check if there are any results at all
+    if (!analysisState[type].result || Object.keys(analysisState[type].result).length === 0) {
+      return false;
+    }
+    // Then check if any of the selected files have results
     return fileNames.some(fileName => analysisState[type].result[fileName]);
   };
 
@@ -72,6 +82,14 @@ const AnalysisSection = ({
 
   const getButtonColor = (type) => {
     const selectedFileNames = checkedFiles;
+    
+    // Convert 'Summary' to the last used type or default to 'shortSummary'
+    const actualType = type === 'Summary' ? 'shortSummary' : 
+      type === 'Short Summary' ? 'shortSummary' : 
+      type === 'Long Summary' ? 'longSummary' : type;
+    
+    const allProcessed = isAnalysisComplete(actualType, selectedFileNames);
+    const someProcessed = hasPartialAnalysis(actualType, selectedFileNames);
 
     // For conflict type, require at least 2 files
     if (type === 'conflict' && selectedFileNames.length < 2) {
@@ -86,9 +104,6 @@ const AnalysisSection = ({
     if (analysisState[type].isLoading) {
       return 'bg-blue-600 hover:bg-blue-700 text-white';
     }
-
-    const allProcessed = isAnalysisComplete(type, selectedFileNames);
-    const someProcessed = hasPartialAnalysis(type, selectedFileNames);
 
     if (allProcessed) {
       return 'bg-green-600 hover:bg-green-700 text-white';
@@ -224,11 +239,11 @@ const AnalysisSection = ({
               ${isUploading ? 'opacity-50' : ''}
             `}>
               <Tooltip title={hasFiles ? (
-                checkedFilesCount > 0 
+                checkedFiles.length > 0 
                   ? getButtonTooltip(selectedSummaryType === 'Short Summary' ? 'shortSummary' : 'longSummary')
                   : "Select files to analyze"
               ) : "Upload files first"}>
-                {hasFiles && checkedFilesCount > 0 ? (
+                {hasFiles && checkedFiles.length > 0 ? (
                   <Dropdown overlay={summaryMenu} trigger={['click']}>
                     <button
                       className={`w-full px-4 py-3 rounded-lg text-md font-semibold transition-all duration-300 ease-in-out
@@ -344,7 +359,7 @@ const AnalysisSection = ({
         </div>
       )}
       <div className="flex-grow overflow-hidden bg-gray-50 rounded-lg">
-        {hasFiles && checkedFilesCount > 0 ? (
+        {hasFiles && checkedFiles.length > 0 ? (
           // Show analysis results if they exist
           analysisTypes.some(type => analysisState[type].isPerformed && analysisState[type].isVisible) ? (
             analysisTypes.map((type) => (
@@ -354,7 +369,6 @@ const AnalysisSection = ({
                   type={type}
                   data={analysisState[type].result || null}
                   files={files || {}}
-                  fileCount={Object.keys(files || {}).length}
                   onFilePreview={onFileSelection}
                   onThumbsUp={handleThumbsUp}
                   onThumbsDown={handleThumbsDown}
