@@ -276,6 +276,13 @@ const FileUploader = ({
     });
   };
 
+  const handleMenuItemClick = ({ key, domEvent }) => {
+    domEvent.stopPropagation();
+    if (collapsed) {
+      setCollapsed(false);
+    }
+  };
+
   const menuItems = [
     {
       key: 'upload',
@@ -474,10 +481,13 @@ const FileUploader = ({
   ];
 
   return (
-    <div className="file-uploader h-full flex flex-col shadow-lg rounded-l-2xl" style={{
-      background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
-      borderLeft: '5px solid #1677ff'
-    }}>
+    <div className="file-uploader h-full flex flex-col shadow-lg rounded-l-2xl" 
+      onClick={() => collapsed && setCollapsed(false)}
+      style={{
+        background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
+        borderLeft: '5px solid #1677ff'
+      }}
+    >
       <Button
         type="primary"
         onClick={() => setCollapsed(!collapsed)}
@@ -497,6 +507,7 @@ const FileUploader = ({
         mode="inline"
         theme="light"
         items={menuItems}
+        onClick={handleMenuItemClick}
         triggerSubMenuAction=""
         className="flex-grow custom-menu"
         style={{ 
