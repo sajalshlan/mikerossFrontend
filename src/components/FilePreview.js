@@ -208,7 +208,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
 
   const renderPlaceholder = () => (
     <div className="h-full w-full">
-      <img src="/law1.jpg" alt="Placeholder" className="w-full h-full object-cover" />
+      <img src="/chess1.jpg" alt="Placeholder" className="w-full h-full object-cover rounded-lg" />
     </div>
   );
 
