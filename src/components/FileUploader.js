@@ -481,6 +481,7 @@ const FileUploader = ({
       <Button
         type="primary"
         onClick={() => setCollapsed(!collapsed)}
+        onMouseEnter={() => setCollapsed(!collapsed)}
         style={{ 
           alignSelf: 'flex-start', 
           margin: '16px 16px 16px 8px',
@@ -496,7 +497,7 @@ const FileUploader = ({
         mode="inline"
         theme="light"
         items={menuItems}
-        triggerSubMenuAction="click"
+        triggerSubMenuAction=""
         className="flex-grow custom-menu"
         style={{ 
           maxHeight: 'calc(100vh - 64px)', 
