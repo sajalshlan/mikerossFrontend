@@ -24,6 +24,21 @@ const AnalysisSection = ({
   );
   const checkedFiles = useMemo(() => Object.keys(files).filter(fileName => files[fileName].isChecked), [files]);
 
+  useEffect(() => {
+    if (!hasFiles || checkedFilesCount === 0) {
+      setSelectedSummaryType('Summary');
+    }
+  }, [hasFiles, checkedFilesCount]);
+
+  const summaryMenu = (
+    <Menu onClick={({ key }) => {
+      setSelectedSummaryType(key === 'shortSummary' ? 'Short Summary' : 'Long Summary');
+      handleAnalysisClick(key);
+    }}>
+      <Menu.Item key="shortSummary">Short Summary</Menu.Item>
+      <Menu.Item key="longSummary">Long Summary</Menu.Item>
+    </Menu>
+  );
   
   const isAnalysisComplete = (type, fileNames) => {
     // If no files selected, analysis is not complete
@@ -171,25 +186,9 @@ const AnalysisSection = ({
     });
   };
 
-  const summaryMenu = (
-    <Menu onClick={({ key }) => {
-      setSelectedSummaryType(key === 'shortSummary' ? 'Short Summary' : 'Long Summary');
-      handleAnalysisClick(key);
-    }}>
-      <Menu.Item key="shortSummary">Short Summary</Menu.Item>
-      <Menu.Item key="longSummary">Long Summary</Menu.Item>
-    </Menu>
-  );
-
   const isSummaryLoading = () => {
     return analysisState.shortSummary.isLoading || analysisState.longSummary.isLoading;
   };
-
-  useEffect(() => {
-    if (!hasFiles || checkedFilesCount === 0) {
-      setSelectedSummaryType('Summary');
-    }
-  }, [hasFiles, checkedFilesCount]);
 
   const calculateProgress = (type, fileNames, analysisState) => {
     if (type === 'conflict') {

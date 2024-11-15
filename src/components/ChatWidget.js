@@ -175,13 +175,15 @@ const ChatWidget = ({
 
   return (
     <div className="fixed inset-0 md:inset-auto md:bottom-12 md:right-16 md:w-[400px] md:h-[600px] bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50">
-      <header className="bg-blue-600 p-4 text-white flex justify-between items-center">
+      <header className="p-4 text-white flex justify-between items-center" style={{
+        background: 'linear-gradient(to bottom, #1677ff, #1677ff)'
+      }}>
         <h4 className="text-lg font-bold m-0">AI Assistant</h4>
         <Button
           type="text"
           icon={<CloseOutlined />}
           onClick={onClose}
-          className="text-white hover:text-blue-200"
+          className="text-white hover:text-blue-200 "
         />
       </header>
 
