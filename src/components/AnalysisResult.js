@@ -47,13 +47,12 @@ const AnalysisResult = React.memo(({
   type, 
   data, 
   files, 
-  fileCount, 
   onFilePreview, 
   onThumbsUp, 
   onThumbsDown,
   isLoading
 }) => {
-  console.log('AnalysisResult render:', { type, data, files, fileCount });
+  // console.log('AnalysisResult render:', { type, data, files, fileCount });
 
   const [feedbackVisible, setFeedbackVisible] = useState({});
   const [feedbackText, setFeedbackText] = useState({});

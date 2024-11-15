@@ -276,13 +276,6 @@ const FileUploader = ({
     });
   };
 
-  const handleMenuItemClick = ({ key, domEvent }) => {
-    domEvent.stopPropagation();
-    if (collapsed) {
-      setCollapsed(false);
-    }
-  };
-
   const menuItems = [
     {
       key: 'upload',
@@ -507,7 +500,6 @@ const FileUploader = ({
         mode="inline"
         theme="light"
         items={menuItems}
-        onClick={handleMenuItemClick}
         triggerSubMenuAction=""
         className="flex-grow custom-menu"
         style={{ 

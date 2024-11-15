@@ -188,7 +188,6 @@ const LegalAnalyzer = () => {
   };
 
   const handleAnalysis = async (type, selectedTexts) => {
-    // Clear previous results for this analysis type
     setAnalysisState(prev => ({
       ...prev,
       types: {
@@ -201,8 +200,10 @@ const LegalAnalyzer = () => {
             [fileName]: 0
           }), {}),
           isPerformed: true,
-          // Clear previous results
-          result: type === 'conflict' ? '' : {}
+          // Preserve existing results
+          result: type === 'conflict' ? 
+            '' : 
+            { ...prev.types[type].result }
         }
       }
     }));
@@ -285,9 +286,12 @@ const LegalAnalyzer = () => {
           [type]: {
             ...prev.types[type],
             isLoading: false,
-            result: {
-              ...newResults  // Don't spread prev.types[type].result here
-            },
+            result: type === 'conflict' ? 
+              newResults : // For conflict, replace results
+              {
+                ...prev.types[type].result,  // Preserve existing results
+                ...newResults                 // Add new results
+              },
             isVisible: true
           }
         }
