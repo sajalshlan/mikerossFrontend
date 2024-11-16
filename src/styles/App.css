@@ -567,8 +567,13 @@ h2 {
   padding-left: 16px !important;
 }
 
-.ant-menu-item:hover {
-  transform: translateX(-8px);
+.ant-menu-item:nth-child(n+2) {
+  transition: all 0.3s ease;
+}
+
+.ant-menu-item:nth-child(n+2):hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(24, 144, 255, 0.15);  /* Using Ant Design's blue */
 }
 
 .float-button-group {
@@ -670,4 +675,6 @@ h2 {
     @apply gap-1;
   }
 }
+
+
 

@@ -423,7 +423,7 @@ const FileUploader = ({
         ...Object.entries(files).map(([fileName, file]) => ({
           key: fileName,
           label: (
-            <div className={`flex flex-col w-full ${uploaderState.checkedFiles[fileName] ? 'bg-blue-100 rounded-md p-2' : ''}`}>
+            <div className={`flex flex-col w-full ${uploaderState.checkedFiles[fileName] ? 'bg-blue-100 rounded-md p-2 mb-1' : 'py-2'}`}>
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center space-x-2 flex-grow min-w-0">
                   <Checkbox
@@ -508,6 +508,8 @@ const FileUploader = ({
           background: 'transparent',
           padding: '4px 12px',
           borderTop: '1px solid rgba(0, 0, 0, 0.06)',
+          padding: '0 14px 10px 2px',
+          marginBottom: '5px',
         }}
       />
     </div>
