@@ -157,7 +157,6 @@ const AnalysisSection = ({
     if (type === 'conflict') {
       const resultFiles = Object.keys(analysisState[type].result || {});
       const currentSelection = new Set(selectedFileNames);
-      const previousSelection = new Set(resultFiles);
       
       // If selections are exactly the same (same files, same count)
       if (resultFiles.length === selectedFileNames.length && 
@@ -207,7 +206,7 @@ const AnalysisSection = ({
 
   const calculateProgress = (type, fileNames, analysisState) => {
     if (type === 'conflict') {
-      return analysisState[type].isLoading ? analysisState[type].progress || 50 : 0;
+      return analysisState[type].isLoading ? analysisState[type].progress || 20 : 0;
     }
     
     if (!fileNames.length) return 0;
@@ -323,9 +322,8 @@ const AnalysisSection = ({
                   ${!Object.values(analysisState).some(state => state.isLoading) ? 'opacity-50 cursor-not-allowed' : 'shadow-md hover:shadow-lg'}
                 `}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10h6v6H9z" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
                 </svg>
               </button>
             </Tooltip>
