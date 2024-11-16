@@ -508,7 +508,6 @@ const FileUploader = ({
           background: 'transparent',
           padding: '4px 12px',
           borderTop: '1px solid rgba(0, 0, 0, 0.06)',
-          padding: '0 14px 10px 2px',
           marginBottom: '5px',
         }}
       />
