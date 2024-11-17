@@ -65,7 +65,8 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        // Don't redirect to login page if we're already on the login endpoint
+        if (error.response?.status === 401 && !error.config.url.includes('/token/')) {
             clearTokens();
             window.location.href = '/login';
         }

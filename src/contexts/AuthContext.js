@@ -30,22 +30,19 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (username, password) => {
     try {
-      // First get the tokens
       const response = await api.post('/token/', {
-        username: email,
+        username,
         password
       });
 
       const data = response.data;
       storeTokens(data);
       
-      // Fetch user profile with correct endpoint
       const userResponse = await api.get('/profile/');
       console.log('[Auth] 👤 User Profile Response:', userResponse.data);
       
-      // Store user data including is_root and organization
       storeUserData(userResponse.data);
       
       const userData = {
@@ -58,13 +55,13 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('[Auth] ❌ Login error:', error);
       let errorMessage = 'Invalid credentials';
-      if (error.response) {
-        if (error.response.status === 401) {
-          errorMessage = 'Invalid username or password';
-        } else {
-          errorMessage = error.response.data?.detail || 'Login failed';
-        }
+      
+      if (error.response?.status === 401) {
+        errorMessage = 'Invalid username or password';
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
       }
+      
       return { success: false, error: errorMessage };
     }
   };

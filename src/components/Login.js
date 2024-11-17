@@ -15,13 +15,13 @@ const Login = () => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const result = await login(values.email, values.password);
+      const result = await login(values.username, values.password);
       if (result.success) {
         message.success('Login successful!');
         navigate('/');
       } else {
         message.error({
-          content: result.error || 'Invalid credentials',
+          content: result.error,
           duration: 3,
           style: {
             marginTop: '20vh',
@@ -53,12 +53,12 @@ const Login = () => {
           className="space-y-4"
         >
           <Form.Item
-            name="email"
-            rules={[{ required: true, message: 'Please input your email!' }]}
+            name="username"
+            rules={[{ required: true, message: 'Please input your username!' }]}
           >
             <Input 
               prefix={<UserOutlined className="text-gray-400" />}
-              placeholder="Email"
+              placeholder="Username"
               size="large"
               className="rounded-md"
             />
