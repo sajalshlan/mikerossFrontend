@@ -100,11 +100,21 @@ const ChatWidget = ({
         console.log(`[ChatWidget] 📄 Chat history: ${chatHistory}`);
         console.log(`[ChatWidget] 📄 Current query: ${newUserMessage.content}`);
         
-        // Send both chat history and current query
-        const result = await performAnalysis('ask', 
+        // Get custom prompt from localStorage
+        const savedPrompts = localStorage.getItem('customPrompts');
+        const customPrompts = savedPrompts ? JSON.parse(savedPrompts) : {};
+        const customPrompt = customPrompts['ask'] || null;
+
+        // Modified performAnalysis call with all required parameters
+        const result = await performAnalysis(
+          'ask', 
           `${indexedTexts}\n\n` +
           `Previous Conversation (last ${recentMessages.length} messages):\n${chatHistory}\n\n` +
-          `Current Query: ${newUserMessage.content}`, fileName
+          `Current Query: ${newUserMessage.content}`,
+          fileName,
+          null,  // onProgress parameter
+          null,  // signal parameter
+          customPrompt
         );
         
         if (result) {

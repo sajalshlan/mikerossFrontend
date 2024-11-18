@@ -215,6 +215,11 @@ const LegalAnalyzer = () => {
         customPrompt = customPrompts[type] || null;
       }
 
+      // Save this prompt as the last used prompt for this type
+      const lastUsedPrompts = JSON.parse(localStorage.getItem('lastUsedPrompts') || '{}');
+      lastUsedPrompts[type] = customPrompt;
+      localStorage.setItem('lastUsedPrompts', JSON.stringify(lastUsedPrompts));
+
       const controller = new AbortController();
       window.currentAnalysisControllers[type] = controller;
 

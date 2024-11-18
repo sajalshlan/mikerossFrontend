@@ -14,17 +14,18 @@ const Draft = ({
   setDraftQuery, 
   draftResult, 
   setDraftResult, 
+  draftHistory, 
+  setDraftHistory, 
   useSelectedFiles, 
   setUseSelectedFiles, 
   isClosing,
-  isWaitingForResponse,  // New prop
-  setIsWaitingForResponse  // New prop
+  isWaitingForResponse,
+  setIsWaitingForResponse
 }) => {
   const draftResultRef = useRef(null);
   const textAreaRef = useRef(null);
   const previousTextsLengthRef = useRef(Object.keys(extractedTexts).length);
   const lastDocChangeRef = useRef(0);
-  const [draftHistory, setDraftHistory] = useState([]);
   const latestMessageRef = useRef(null);
 
   // Initial tip message
@@ -104,12 +105,22 @@ const Draft = ({
         console.log(`[Draft] 📄 Draft history: ${recentHistory.map(item => `${item.type}: ${item.content}`).join('\n\n')}`);
         console.log(`[Draft] 📄 Current query: ${draftQuery}`);
 
-        const result = await performAnalysis('draft', 
+        // Get custom prompt from localStorage
+        const savedPrompts = localStorage.getItem('customPrompts');
+        const customPrompts = savedPrompts ? JSON.parse(savedPrompts) : {};
+        const customPrompt = customPrompts['draft'] || null;
+
+        const result = await performAnalysis(
+          'draft', 
           `${indexedTexts}\n\n` +
           `Previous Drafts (last ${recentHistory.length} items):\n${recentHistory
             .map(item => `${item.type}: ${item.content}`)
             .join('\n\n')}\n\n` +
-          `Current Query: ${draftQuery}`, fileName
+          `Current Query: ${draftQuery}`,
+          fileName,
+          null,  // Add null for onProgress
+          null,  // Add null for signal
+          customPrompt
         );
         
         if (result) {

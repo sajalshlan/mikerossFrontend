@@ -195,13 +195,11 @@ const AnalysisResult = React.memo(({
 
   const renderContent = (content) => {
     try {
-      // Early return if content is null, undefined, or empty
       if (!content) {
         return null;
       }
 
       if (type === 'conflict') {
-        // For conflict analysis, check if we have valid content
         const conflictResult = Object.values(content)[0];
         if (!conflictResult) {
           return null;
@@ -212,6 +210,17 @@ const AnalysisResult = React.memo(({
           </div>
         );
       } else if (type === 'risky') {
+        const savedPrompts = localStorage.getItem('customPrompts');
+        const customPrompts = savedPrompts ? JSON.parse(savedPrompts) : {};
+        const hasCustomPrompt = customPrompts['risky'] && customPrompts['risky'].trim() !== '';
+
+        if (hasCustomPrompt) {
+          return (
+            <Typography.Paragraph className="text-gray-700">
+              {content.split('\n').map((line, index) => renderLine(line, index))}
+            </Typography.Paragraph>
+          );
+        }
         return renderRiskAnalysis(content);
       } else if (typeof content === 'string') {
         return (

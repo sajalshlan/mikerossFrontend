@@ -181,8 +181,52 @@ const AnalysisSection = ({
       return;
     }
 
-    const customPrompt = customPrompts[type] || null;
-    onAnalysis(type, selectedTexts, customPrompt);
+    // Get current custom prompt
+    const currentCustomPrompt = customPrompts[type] || '';
+    
+    // Get the last used prompt for this analysis type from localStorage
+    const savedPrompts = localStorage.getItem('lastUsedPrompts');
+    const lastUsedPrompts = savedPrompts ? JSON.parse(savedPrompts) : {};
+    const lastUsedPrompt = lastUsedPrompts[type] || '';
+
+    // Check if we have any unprocessed files
+    const hasUnprocessedFiles = Object.keys(selectedTexts).some(fileName => 
+      !analysisState[type].result || !analysisState[type].result[fileName]
+    );
+
+    // If analysis is complete and no new files/prompts, just toggle visibility
+    if (!hasUnprocessedFiles && currentCustomPrompt === lastUsedPrompt) {
+      if (!analysisState[type].isVisible) {
+        // If this analysis is not visible, close others and show this one
+        analysisTypes.forEach((otherType) => {
+          if (otherType !== type && analysisState[otherType].isVisible) {
+            onToggleVisibility(otherType);
+          }
+        });
+        onToggleVisibility(type);
+      } else {
+        // If this analysis is already visible, just toggle it off
+        onToggleVisibility(type);
+      }
+      message.info('Using existing analysis.');
+      return;
+    }
+
+    // Close other visible analyses before starting new one
+    analysisTypes.forEach((otherType) => {
+      if (analysisState[otherType].isVisible) {
+        onToggleVisibility(otherType);
+      }
+    });
+
+    // Save current prompt as last used
+    localStorage.setItem('lastUsedPrompts', JSON.stringify({
+      ...lastUsedPrompts,
+      [type]: currentCustomPrompt
+    }));
+
+    // Proceed with analysis
+    onAnalysis(type, selectedTexts, currentCustomPrompt);
   };
 
   const isSummaryLoading = () => {

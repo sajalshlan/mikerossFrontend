@@ -128,7 +128,7 @@ const uploadFile = async (file, onProgress) => {
 };
 
 const performAnalysis = async (type, text, fileName, onProgress, signal, customPrompt = null) => {
-  console.log(`[API] 🚀 Starting ${type} analysis for ${fileName}...`);
+  console.log(`[API] 🔥 API Call made for ${type} analysis on ${fileName}`);
   try {
     onProgress && onProgress(fileName, 0);
 
