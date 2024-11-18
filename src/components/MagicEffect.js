@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FloatButton, Tooltip } from 'antd';
-import { MessageOutlined, FileTextOutlined, CloseOutlined } from '@ant-design/icons';
+import { FloatButton, Tooltip, Button } from 'antd';
+import { MessageOutlined, FileTextOutlined, CloseOutlined, SettingOutlined } from '@ant-design/icons';
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
+import PromptPanel from './PromptPanel';
 
 const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) => {
   const [isChatVisible, setIsChatVisible] = useState(false);
@@ -18,6 +19,7 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
   const [isFloatGroupOpen, setIsFloatGroupOpen] = useState(false);
   const [isWaitingForChatResponse, setIsWaitingForChatResponse] = useState(false);
   const [isWaitingForDraftResponse, setIsWaitingForDraftResponse] = useState(false);
+  const [isPromptPanelVisible, setIsPromptPanelVisible] = useState(false);
 
   const floatButtonRef = useRef(null);
 
@@ -92,6 +94,26 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
 
   return (
     <>
+      <Button
+        type="primary"
+        icon={<SettingOutlined />}
+        onClick={() => setIsPromptPanelVisible(true)}
+        style={{
+          position: 'fixed',
+          right: 80,
+          bottom: 24,
+          zIndex: 1000,
+          display: !isSiderCollapsed ? 'none' : 'flex'
+        }}
+      >
+        Prompt Panel
+      </Button>
+      
+      <PromptPanel 
+        visible={isPromptPanelVisible}
+        onClose={() => setIsPromptPanelVisible(false)}
+      />
+      
       <div 
         ref={floatButtonRef}
         style={{ 

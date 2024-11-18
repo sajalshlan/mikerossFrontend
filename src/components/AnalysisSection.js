@@ -17,6 +17,16 @@ const AnalysisSection = ({
   const analysisTypes = ['shortSummary', 'longSummary', 'risky', 'conflict'];
   const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
   const [lastUsedSummaryType, setLastUsedSummaryType] = useState(null);
+  const [customPrompts, setCustomPrompts] = useState(() => {
+    const saved = localStorage.getItem('customPrompts');
+    return saved ? JSON.parse(saved) : {
+      shortSummary: '',
+      longSummary: '',
+      risky: '',
+      ask: '',
+      draft: ''
+    };
+  });
 
   const hasFiles = useMemo(() => Object.keys(files).length > 0, [files]);
   const checkedFiles = useMemo(() => Object.keys(files).filter(fileName => files[fileName].isChecked), [files]);
@@ -34,6 +44,27 @@ const AnalysisSection = ({
       setSelectedSummaryType(lastUsedSummaryType);
     }
   }, [hasFiles, checkedFiles, files]);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('customPrompts');
+      if (saved) {
+        setCustomPrompts(JSON.parse(saved));
+      }
+    };
+
+    // Listen for both storage and custom event
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('promptsUpdated', handleStorageChange);
+    
+    // Check for changes when component mounts
+    handleStorageChange();
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('promptsUpdated', handleStorageChange);
+    };
+  }, []);
 
   const summaryMenu = (
     <Menu onClick={({ key }) => {
@@ -138,66 +169,20 @@ const AnalysisSection = ({
   };
 
   const handleAnalysisClick = (type) => {
-    const selectedFileNames = checkedFiles;
-
-    if (type === 'conflict' && selectedFileNames.length < 2) {
-      if (analysisState[type].isVisible) {
-        toggleVisibility(type);
-      }
-      message.warning("Please select at least two files for conflict analysis.");
-      return;
-    }
-    
-    if (selectedFileNames.length === 0) {
-      message.warning("Please select at least one file for analysis.");
-      return;
-    }
-
-    // For conflict analysis, check if we need to reprocess
-    if (type === 'conflict') {
-      const resultFiles = Object.keys(analysisState[type].result || {});
-      const currentSelection = new Set(selectedFileNames);
-      
-      // If selections are exactly the same (same files, same count)
-      if (resultFiles.length === selectedFileNames.length && 
-          resultFiles.every(file => currentSelection.has(file))) {
-        // Just toggle visibility, no need to reprocess
-        toggleVisibility(type);
-        return;
-      }
-
-      // Otherwise, process all selected files
-      const selectedTexts = selectedFileNames.reduce((acc, fileName) => {
-        acc[fileName] = files[fileName].extractedText;
-        return acc;
-      }, {});
-      onAnalysis(type, selectedTexts);
-    } else {
-      // Existing logic for other analysis types
-      const unprocessedFiles = selectedFileNames.filter(
-        fileName => !analysisState[type].result[fileName]
-      );
-
-      if (unprocessedFiles.length === 0) {
-        // All files are processed, just toggle visibility
-        toggleVisibility(type);
-        return; // Add return here to prevent closing all results
-      } else {
-        // Some files need processing
-        const selectedTexts = unprocessedFiles.reduce((acc, fileName) => {
-          acc[fileName] = files[fileName].extractedText;
-          return acc;
-        }, {});
-        onAnalysis(type, selectedTexts);
-      }
-    }
-
-    // Close all analysis results
-    analysisTypes.forEach((type) => {
-      if (analysisState[type].isVisible) {
-        onToggleVisibility(type);
+    const selectedTexts = {};
+    Object.entries(files).forEach(([fileName, file]) => {
+      if (file.isChecked) {
+        selectedTexts[fileName] = file.extractedText;
       }
     });
+
+    if (Object.keys(selectedTexts).length === 0) {
+      message.warning('Please select at least one file to analyze');
+      return;
+    }
+
+    const customPrompt = customPrompts[type] || null;
+    onAnalysis(type, selectedTexts, customPrompt);
   };
 
   const isSummaryLoading = () => {

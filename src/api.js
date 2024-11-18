@@ -127,7 +127,7 @@ const uploadFile = async (file, onProgress) => {
     }
 };
 
-const performAnalysis = async (type, text, fileName, onProgress, signal) => {
+const performAnalysis = async (type, text, fileName, onProgress, signal, customPrompt = null) => {
   console.log(`[API] 🚀 Starting ${type} analysis for ${fileName}...`);
   try {
     onProgress && onProgress(fileName, 0);
@@ -135,7 +135,8 @@ const performAnalysis = async (type, text, fileName, onProgress, signal) => {
     const requestBody = {
       analysis_type: type,
       text: text,
-      include_history: type === 'ask'
+      include_history: type === 'ask',
+      custom_prompt: customPrompt
     };
 
     const response = await api.post('/perform_analysis/', requestBody, {

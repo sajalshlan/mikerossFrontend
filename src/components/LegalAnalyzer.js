@@ -8,6 +8,7 @@ import FilePreview from './FilePreview';
 import { performAnalysis, uploadFile, performConflictCheck } from '../api';
 import '../styles/App.css';
 import MagicEffect from './MagicEffect';
+import PromptPanel from './PromptPanel';
 
 const { Sider, Content } = Layout;
 
@@ -28,6 +29,7 @@ const LegalAnalyzer = () => {
     isSiderCollapsed: false,
     isMobileView: window.innerWidth <= 768
   });
+  const [promptPanelVisible, setPromptPanelVisible] = useState(false);
 
   const siderRef = useRef(null);
 
@@ -187,7 +189,7 @@ const LegalAnalyzer = () => {
     }
   };
 
-  const handleAnalysis = async (type, selectedTexts) => {
+  const handleAnalysis = async (type, selectedTexts, customPrompt = null) => {
     setAnalysisState(prev => ({
       ...prev,
       types: {
@@ -200,16 +202,19 @@ const LegalAnalyzer = () => {
             [fileName]: 0
           }), {}),
           isPerformed: true,
-          // Preserve existing results
-          result: type === 'conflict' ? 
-            '' : 
-            { ...prev.types[type].result }
+          result: type === 'conflict' ? '' : { ...prev.types[type].result }
         }
       }
     }));
 
     try {
-      // Create a single controller for all requests
+      // Get custom prompts from localStorage if no customPrompt was passed
+      if (!customPrompt) {
+        const savedPrompts = localStorage.getItem('customPrompts');
+        const customPrompts = savedPrompts ? JSON.parse(savedPrompts) : {};
+        customPrompt = customPrompts[type] || null;
+      }
+
       const controller = new AbortController();
       window.currentAnalysisControllers[type] = controller;
 
@@ -262,7 +267,8 @@ const LegalAnalyzer = () => {
                   }
                 }));
               },
-              controller.signal
+              controller.signal,
+              customPrompt
             );
             return [fileName, result];
           }
@@ -385,6 +391,8 @@ const LegalAnalyzer = () => {
       )
     }));
   };
+
+  const isAnyAnalysisInProgress = Object.values(analysisState.types).some(state => state.isLoading);
 
   return (
     <Layout className="h-screen overflow-hidden">
@@ -509,6 +517,11 @@ const LegalAnalyzer = () => {
           }))}
         />
       )}
+      <PromptPanel 
+        visible={promptPanelVisible} 
+        onClose={() => setPromptPanelVisible(false)}
+        isAnalysisInProgress={isAnyAnalysisInProgress}
+      />
     </Layout>
   );
 };
