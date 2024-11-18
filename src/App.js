@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import LegalAnalyzer from './components/LegalAnalyzer';
+import Logout from './components/Logout';
 
 function App() {
     return (
@@ -11,6 +12,7 @@ function App() {
             <BrowserRouter>
                 <Routes>
                     <Route path="/login" element={<Login />} />
+                    <Route path="/logout" element={<Logout />} />
                     <Route
                         path="/"
                         element={
