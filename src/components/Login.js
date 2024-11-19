@@ -15,9 +15,7 @@ const Login = () => {
   const navigate = useNavigate();
   const tokens = getTokens();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [hasReadTerms, setHasReadTerms] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const termsContentRef = useRef(null);
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -26,16 +24,8 @@ const Login = () => {
     }
   }, [user, navigate]);
 
-  const handleScroll = (e) => {
-    const element = e.target;
-    if (element.scrollHeight - element.scrollTop === element.clientHeight) {
-      setHasReadTerms(true);
-    }
-  };
-
   const showModal = () => {
     setIsModalOpen(true);
-    setHasReadTerms(false);
   };
 
   const handleOk = () => {
@@ -228,15 +218,12 @@ const Login = () => {
         okText="Accept"
         cancelText="Decline"
         okButtonProps={{ 
-          disabled: !hasReadTerms,
           className: 'bg-[#1677ff] hover:bg-[#4096ff]'
         }}
         className="terms-modal"
         width={700}
       >
         <div 
-          ref={termsContentRef}
-          onScroll={handleScroll}
           style={{ 
             maxHeight: '400px', 
             overflowY: 'auto',
@@ -261,11 +248,6 @@ const Login = () => {
             </p>
           ))}
         </div>
-        {!hasReadTerms && (
-          <div className="mt-4 text-red-500 text-sm">
-            Please scroll to the bottom to read the entire terms and conditions
-          </div>
-        )}
       </Modal>
     </div>
   );
