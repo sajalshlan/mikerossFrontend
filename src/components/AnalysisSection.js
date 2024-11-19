@@ -181,21 +181,28 @@ const AnalysisSection = ({
       return;
     }
 
-    // Get current custom prompt
+    // Get current custom prompt and AI model
     const currentCustomPrompt = customPrompts[type] || '';
+    const currentAiModel = localStorage.getItem('aiModel') || 'gemini';
     
-    // Get the last used prompt for this analysis type from localStorage
+    // Get the last used prompt and AI model for this analysis type from localStorage
     const savedPrompts = localStorage.getItem('lastUsedPrompts');
     const lastUsedPrompts = savedPrompts ? JSON.parse(savedPrompts) : {};
     const lastUsedPrompt = lastUsedPrompts[type] || '';
+
+    const savedAnalysisModels = localStorage.getItem('lastUsedModels');
+    const lastUsedModels = savedAnalysisModels ? JSON.parse(savedAnalysisModels) : {};
+    const lastUsedModel = lastUsedModels[type] || 'gemini';
 
     // Check if we have any unprocessed files
     const hasUnprocessedFiles = Object.keys(selectedTexts).some(fileName => 
       !analysisState[type].result || !analysisState[type].result[fileName]
     );
 
-    // If analysis is complete and no new files/prompts, just toggle visibility
-    if (!hasUnprocessedFiles && currentCustomPrompt === lastUsedPrompt) {
+    // If analysis is complete and no new files/prompts/model, just toggle visibility
+    if (!hasUnprocessedFiles && 
+        currentCustomPrompt === lastUsedPrompt && 
+        currentAiModel === lastUsedModel) {
       if (!analysisState[type].isVisible) {
         // If this analysis is not visible, close others and show this one
         analysisTypes.forEach((otherType) => {
@@ -219,10 +226,15 @@ const AnalysisSection = ({
       }
     });
 
-    // Save current prompt as last used
+    // Save current prompt and model as last used
     localStorage.setItem('lastUsedPrompts', JSON.stringify({
       ...lastUsedPrompts,
       [type]: currentCustomPrompt
+    }));
+
+    localStorage.setItem('lastUsedModels', JSON.stringify({
+      ...lastUsedModels,
+      [type]: currentAiModel
     }));
 
     // Proceed with analysis

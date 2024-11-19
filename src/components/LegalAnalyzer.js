@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Layout, Splitter, Button, FloatButton } from 'antd';
 import { Helmet } from 'react-helmet';
-import { MenuFoldOutlined, MenuUnfoldOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { MenuFoldOutlined, MenuUnfoldOutlined, FolderOpenOutlined, SettingOutlined } from '@ant-design/icons';
 import FileUploader from './FileUploader';
 import AnalysisSection from './AnalysisSection';
 import FilePreview from './FilePreview';
@@ -190,6 +190,9 @@ const LegalAnalyzer = () => {
   };
 
   const handleAnalysis = async (type, selectedTexts, customPrompt = null) => {
+    // Get model type from localStorage, defaulting to 'gemini' if not set
+    const useGemini = localStorage.getItem('aiModel') !== 'claude';
+
     setAnalysisState(prev => ({
       ...prev,
       types: {
@@ -273,7 +276,8 @@ const LegalAnalyzer = () => {
                 }));
               },
               controller.signal,
-              customPrompt
+              customPrompt,
+              useGemini  // Pass the model type from localStorage
             );
             return [fileName, result];
           }
@@ -508,6 +512,15 @@ const LegalAnalyzer = () => {
         )}
         isSiderCollapsed={uiState.isSiderCollapsed}
       />
+      {/* <FloatButton
+        icon={<SettingOutlined />}
+        type="primary"
+        style={{
+          right: 24,
+          bottom: 16,
+        }}
+        onClick={() => setPromptPanelVisible(true)}
+      /> */}
       {uiState.isMobileView && uiState.isSiderCollapsed && (
         <FloatButton
           icon={<FolderOpenOutlined />}
@@ -522,6 +535,7 @@ const LegalAnalyzer = () => {
           }))}
         />
       )}
+      
       <PromptPanel 
         visible={promptPanelVisible} 
         onClose={() => setPromptPanelVisible(false)}

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Tabs, Input, Button, message } from 'antd';
+import { Modal, Tabs, Input, Button, message, Switch } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
 
-const PromptPanel = ({ visible, onClose, isAnalysisInProgress }) => {
+const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) => {
   const [prompts, setPrompts] = useState({
     shortSummary: '',
     longSummary: '',
@@ -62,14 +62,42 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress }) => {
     message.info(`${type} prompt reset to default`);
   };
 
+  const [modelType, setModelType] = useState('gemini'); // 'claude' or 'gemini'
+
+  useEffect(() => {
+    // Load saved model preference from localStorage, default to 'gemini'
+    const savedModel = localStorage.getItem('aiModel') || 'gemini';
+    setModelType(savedModel);
+  }, []);
+
+  // Update the Switch onChange handler
+  const handleModelChange = (checked) => {
+    const newModel = checked ? 'claude' : 'gemini';
+    setModelType(newModel);
+    localStorage.setItem('aiModel', newModel);
+  };
+
   return (
     <Modal
-      title="Prompt Panel"
+      title={
+        <div className="flex justify-between items-center">
+          <span>Prompt Panel</span>
+          <div className="flex items-center space-x-4 mr-8">
+            <span>Gemini</span>
+            <Switch
+              checked={modelType === 'claude'}
+              onChange={handleModelChange}
+              className="bg-gray-300"
+            />
+            <span>Claude</span>
+          </div>
+        </div>
+      }
       open={visible}
       onCancel={onClose}
       width={1200}
       footer={null}
-      style={{ top: 20 }}
+      style={{ top: 30 }}
     >
       <Tabs defaultActiveKey="shortSummary">
         {Object.keys(prompts).map(type => (
