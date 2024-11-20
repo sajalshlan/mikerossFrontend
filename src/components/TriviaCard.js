@@ -18,17 +18,15 @@ const triviaData = [
   { title: "Funny Statute", fact: "In Rhode Island, it's illegal to challenge someone to a duel or accept a dueling challenge. Probably for the best!" },
   { title: "Legal Oddity", fact: "In Seattle, it's illegal to carry a concealed weapon over 6 feet in length. The shorter ones are fine, apparently." },
 
-  // Cornelia Sorabji Facts
-  { title: "Pioneer", fact: "Cornelia Sorabji was India's first female lawyer and the first woman to graduate from Bombay University." },
-  { title: "Breaking Barriers", fact: "In 1892, Sorabji became the first woman to study law at Oxford University, though she couldn't formally graduate until 1922." },
-  { title: "Legal Champion", fact: "Sorabji fought for the rights of purdahnashins - women forbidden by custom from communicating with the outside male world." },
-  { title: "Did You Know?", fact: "Cornelia Sorabji wrote several books including 'India Calling' and 'India Recalled', documenting her unique experiences." },
-  { title: "Social Reform", fact: "Despite facing discrimination, Sorabji helped over 600 women and orphans fight legal battles free of charge between 1904 and 1923." },
-  { title: "Historical Note", fact: "Sorabji was the first woman to practice law in both India and Britain, opening doors for future generations." },
-  { title: "Legal Legacy", fact: "The Cornelia Sorabji Scholarship at Oxford University continues to support Indian women studying law." },
-  { title: "Family History", fact: "Cornelia's father, Reverend Sorabji Karsedji, was a key figure in convincing Bombay University to admit women." },
-  { title: "Inspiration", fact: "Florence Nightingale helped fund Cornelia Sorabji's education at Oxford after learning about her aspirations." },
-  { title: "Achievement", fact: "In 1904, Sorabji became the first woman to be appointed as a legal advisor to the Court of Wards in Bengal." }
+  // Additional Law Facts
+  { title: "Historical Law", fact: "The Code of Hammurabi, from around 1750 BC, is one of the earliest known written legal codes." },
+  { title: "Legal Custom", fact: "The tradition of judges wearing black robes comes from the mourning clothes worn after Queen Mary II's death in 1694." },
+  { title: "Strange Law", fact: "In Britain, it's illegal to handle salmon in suspicious circumstances, according to the Salmon Act of 1986." },
+  { title: "Legal Curiosity", fact: "In Switzerland, it's illegal to own just one guinea pig because they are prone to loneliness." },
+  { title: "Modern Law", fact: "The longest court case in history lasted 681 years, between the Spanish Church and a local council over property rights." },
+  { title: "Legal Tradition", fact: "The practice of saying 'God save the King/Queen' in courts originated in medieval England to show the source of judicial power." },
+  { title: "Unusual Law", fact: "In France, it's illegal to name a pig 'Napoleon' due to a law protecting the dignity of the former emperor." },
+  { title: "Court Custom", fact: "The US Supreme Court maintains a strict 'no cameras' policy in the courtroom, allowing only pencil sketches." },
 ];
 
 const TriviaCard = React.memo(() => {
@@ -36,14 +34,16 @@ const TriviaCard = React.memo(() => {
 
   return (
     <Card 
-      className="bg-blue-50 border border-blue-100 shadow-sm hover:shadow-md transition-shadow duration-300"
+      className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
       style={{ 
         width: '100%',
         maxWidth: '800px',
         height: '400px',
         margin: '0 auto',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden'
       }}
       bodyStyle={{
         flex: 1,
@@ -51,16 +51,35 @@ const TriviaCard = React.memo(() => {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '3rem'
+        padding: '4rem',
+        position: 'relative',
+        zIndex: 1
       }}
     >
       <div className="flex flex-col items-center justify-center space-y-8 w-full">
-        <Title level={3} className="text-blue-600 text-center m-0">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500" />
+        <Title 
+          level={3} 
+          className="text-blue-700 text-center m-0 font-bold tracking-wide"
+          style={{ 
+            fontSize: '2rem',
+            textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+          }}
+        >
           {randomTrivia.title}
         </Title>
-        <Text className="text-gray-700 text-xl text-center max-w-2xl">
+        <Text 
+          className="text-gray-700 text-center max-w-2xl leading-relaxed"
+          style={{ 
+            fontSize: '1.25rem',
+            lineHeight: '1.8',
+            fontWeight: '400',
+            letterSpacing: '0.2px'
+          }}
+        >
           {randomTrivia.fact}
         </Text>
+        <div className="absolute bottom-0 right-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-400" />
       </div>
     </Card>
   );
