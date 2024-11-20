@@ -98,6 +98,7 @@ const FileUploader = ({
     }
   };
 
+  /* Temporarily disabled cloud storage handlers
   const handleGoogleDriveClick = async () => {
     try {
       if (!uploaderState.isGoogleDriveReady) {
@@ -162,7 +163,6 @@ const FileUploader = ({
           try {
             let blob;
             if (file.mimeType === 'application/vnd.google-apps.document') {
-              // For Google Docs, export as DOCX and create a proper File object
               blob = await googleDriveService.exportGoogleDoc(file.id);
               const fileName = `${file.name}.docx`;
               return new File([blob], fileName, { 
@@ -170,7 +170,6 @@ const FileUploader = ({
                 lastModified: new Date().getTime()
               });
             } else {
-              // For regular files, use the existing method
               blob = await googleDriveService.loadDriveFiles(file);
               return new File([blob], file.name, { 
                 type: file.mimeType,
@@ -217,18 +216,6 @@ const FileUploader = ({
     if (!files || !files.value || files.value.length === 0) return;
     
     try {
-      // const supportedTypes = [
-      //   'application/pdf',
-      //   'application/msword',
-      //   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      //   'text/plain',
-      //   'image/jpeg',
-      //   'image/png',
-      //   'application/vnd.ms-excel',
-      //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      //   'text/csv'
-      // ];
-
       const filePromises = files.value.map(async (file) => {
         try {
           const fileData = await oneDriveService.loadDriveFiles({
@@ -257,6 +244,7 @@ const FileUploader = ({
     } finally {
     }
   };
+  */
 
   const handleSelectAll = () => {
     const allSelected = Object.keys(files).every(fileName => 
@@ -323,6 +311,7 @@ const FileUploader = ({
                   </div>
                 </Upload>
                 
+                {/* Temporarily hidden cloud storage options
                 <div className="flex justify-center space-x-3 pt-2 border-t border-gray-200">
                   <Tooltip title={isUploading ? "Please wait for current upload to finish" : "Import from Google Drive"}>
                     <Button 
@@ -354,6 +343,7 @@ const FileUploader = ({
                     />
                   </Tooltip>
                 </div>
+                */}
               </div>
             </div>
           ),
