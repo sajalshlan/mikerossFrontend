@@ -389,7 +389,7 @@ const LegalAnalyzer = () => {
   return (
     <Layout className="h-screen overflow-hidden">
       <Helmet>
-        <title>Legal Assistant</title>
+        <title>Cornelia</title>
         <meta property="og:title" content="Your super intelligent legal assistant" />
         <meta property="og:description" content="AI-powered legal document analysis tool" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
