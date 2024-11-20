@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Form, Input, Button, Card, message, Modal, Checkbox } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { getTokens, isTokenExpired } from '../services/auth';
+import api from '../api'; // Assuming you have an API setup for making requests
 import '../styles/animations.css';
 
 const Login = () => {
@@ -48,6 +48,9 @@ const Login = () => {
     try {
       const result = await login(values.username, values.password);
       if (result.success) {
+        // Update the backend with terms acceptance
+        await api.patch('/accept_terms/', { accepted_terms: true });
+
         message.success({
           content: (
             <div className="text-center py-1">
