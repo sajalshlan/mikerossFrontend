@@ -200,3 +200,5 @@ const performConflictCheck = async (texts, onProgress) => {
 // Export the api instance along with the other functions
 export default api;
 export { performAnalysis, performConflictCheck, uploadFile };
+
+
