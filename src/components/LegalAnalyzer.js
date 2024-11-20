@@ -8,6 +8,10 @@ import FilePreview from './FilePreview';
 import { performAnalysis, uploadFile, performConflictCheck } from '../api';
 import '../styles/App.css';
 import MagicEffect from './MagicEffect';
+import { useAuth } from '../contexts/AuthContext';
+import { message } from 'antd';
+import  api  from '../api';
+import TermsAndConditions from './TermsAndConditions';
 
 const { Sider, Content } = Layout;
 
@@ -28,6 +32,8 @@ const LegalAnalyzer = () => {
     isSiderCollapsed: false,
     isMobileView: window.innerWidth <= 768
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { logout } = useAuth();
 
   const siderRef = useRef(null);
 
@@ -68,6 +74,37 @@ const LegalAnalyzer = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const checkTerms = async () => {
+      try {
+        const response = await api.get('/accept_terms/');
+        if (!response.data.accepted_terms) {
+          setIsModalOpen(true);
+        }
+      } catch (error) {
+        console.error('Error checking terms:', error);
+      }
+    };
+    checkTerms();
+  }, []);
+
+  const handleAcceptTerms = async () => {
+    try {
+      await api.patch('/accept_terms/', { accepted_terms: true });
+      setIsModalOpen(false);
+      message.success('Terms accepted successfully');
+    } catch (error) {
+      console.error('Error accepting terms:', error);
+      message.error('Failed to accept terms. Please try again.');
+    }
+  };
+
+  const handleDeclineTerms = () => {
+    setIsModalOpen(false);
+    logout();
+    message.info('You must accept the terms to continue');
+  };
 
   const handleCheckedFilesChange = (newCheckedFiles) => {
     setFileState(prev => ({
@@ -389,7 +426,7 @@ const LegalAnalyzer = () => {
   return (
     <Layout className="h-screen overflow-hidden">
       <Helmet>
-        <title>Legal Assistant</title>
+        <title>Cornelia</title>
         <meta property="og:title" content="Your super intelligent legal assistant" />
         <meta property="og:description" content="AI-powered legal document analysis tool" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -509,6 +546,11 @@ const LegalAnalyzer = () => {
           }))}
         />
       )}
+      <TermsAndConditions 
+        isOpen={isModalOpen}
+        onAccept={handleAcceptTerms}
+        onDecline={handleDeclineTerms}
+      />
     </Layout>
   );
 };
