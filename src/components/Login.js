@@ -31,6 +31,7 @@ const Login = () => {
   const handleOk = () => {
     setIsModalOpen(false);
     setAcceptedTerms(true);
+    form.setFieldValue('terms', true);
   };
 
   const handleCancel = () => {
@@ -175,19 +176,24 @@ const Login = () => {
                   },
                 ]}
               >
-                <Checkbox 
-                  checked={acceptedTerms}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      showModal();
-                    } else {
-                      setAcceptedTerms(false);
-                    }
-                  }}
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                  I accept the terms and conditions
-                </Checkbox>
+                <div className="flex items-center gap-1">
+                  <Checkbox 
+                    checked={acceptedTerms}
+                    onChange={(e) => {
+                      setAcceptedTerms(e.target.checked);
+                      form.setFieldValue('terms', e.target.checked);
+                    }}
+                    className="text-gray-600"
+                  >
+                    I accept the
+                  </Checkbox>
+                  <button 
+                    type="button" 
+                    onClick={showModal}
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                  >terms and conditions
+                  </button>
+                </div>
               </Form.Item>
             </motion.div>
 
