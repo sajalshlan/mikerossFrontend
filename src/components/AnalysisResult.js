@@ -104,37 +104,50 @@ const AnalysisResult = React.memo(({
   };
 
 
-  const handleCopy = (fileName, data) => {
-    const rawContent = data;  // Assuming this contains the raw file content
-  
-    // Function to format the text
-    const formatContent = (text) => {
-      return text
-        .replace(/\*/g, '')                       // Remove all asterisks
-        .replace(/^\s+|\s+$/gm, '')               // Trim spaces at the beginning and end of each line
-        .replace(/(?<=:)\s*\n/g, '\n\n')          // Add extra spacing after colons for section clarity
-        .replace(/^(Legal Risks:|Financial Risks:|Business Risks:)/gm, '\n$1\n') // Add spacing to main headers
-        .replace(/(\n\s*\*\s)/g, '\n\n* ')        // Add blank line before each bullet point
-        .replace(/(?<!\n)(?<=^|\n)(\d+\.\s)/g, '\n\n$1') // Place numbered sections (e.g., 1., 2.) on new lines
-        .replace(/\n/g, '\n\n')                   // Add blank line after each newline
-        .replace(/\n\n\n/g, '\n\n');              // Avoid triple newlines by reducing to double
-    };
+  const handleCopy = (fileName, content) => {
+    // Create a selection range from the rendered content
+    const selection = window.getSelection();
+    const range = document.createRange();
     
-    const formattedContent = formatContent(rawContent); 
-  
-      const textArea = document.createElement("textarea");
-      textArea.value = formattedContent;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        const successful = document.execCommand('copy');
+    // Create a temporary container with the rendered content
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = content
+      .split('\n')
+      .map(line => {
+        // Handle bold text formatting (similar to renderContent)
+        const parts = line.split(/(\*\*.*?\*\*)/g);
+        return parts
+          .map(part => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return `<strong>${part.slice(2, -2)}</strong>`;
+            }
+            return part;
+          })
+          .join('');
+      })
+      .join('<br>');
+    
+    // Temporarily append to document, select, and copy
+    tempContainer.style.position = 'fixed';
+    tempContainer.style.left = '-9999px';
+    document.body.appendChild(tempContainer);
+    
+    try {
+      range.selectNodeContents(tempContainer);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+      const successful = document.execCommand('copy');
+      if (successful) {
         message.success(`Content copied for file: ${fileName}`);
-        console.log(successful ? `Content copied for file: ${fileName}` : 'Fallback: Failed to copy content.');
-      } catch (err) {
-        console.error('Fallback: Failed to copy content. Error:', err);
-      } finally {
-        document.body.removeChild(textArea);
       }
+    } catch (err) {
+      console.error('Failed to copy content:', err);
+      message.error('Failed to copy content');
+    } finally {
+      selection.removeAllRanges();
+      document.body.removeChild(tempContainer);
+    }
   };
 
   // Toggles feedback visibility per file
@@ -300,8 +313,84 @@ const AnalysisResult = React.memo(({
       </div>
       <div className="flex-grow overflow-auto p-2">
         {type === 'conflict' ? (
-          <div className="bg-gray-100 p-3 rounded-md">
-            {renderContent(filteredData)}
+          <div className="first:mt-2 last:mb-0">
+            <Typography.Title 
+              level={4} 
+              className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2"
+            >
+              Conflict Analysis
+            </Typography.Title>
+
+            <div className="bg-white border border-blue-100 text-gray-800 p-4 rounded-2xl shadow-sm">
+              <div className="break-words text-sm leading-relaxed">
+                {renderContent(filteredData)}
+              </div>
+
+              <div className="flex justify-end mt-2 space-x-2">
+                <Tooltip title="I like this analysis">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/like.png" alt="Thumbs Up" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => onThumbsUp('conflict')} 
+                    style={{ color: '#4CAF50' }} 
+                  />
+                </Tooltip>
+
+                <Tooltip title="I don't like this analysis">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/dislike.png" alt="Thumbs Down" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => onThumbsDown('conflict')} 
+                    style={{ color: '#F44336' }} 
+                  />
+                </Tooltip>
+
+                <Tooltip title="Give Feedback">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/review.png" alt="Feedback" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => toggleFeedback('conflict')} 
+                    style={{ color: '#4CAF50' }} 
+                  />
+                </Tooltip>
+
+                <Tooltip title="Copy">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => handleCopy('Conflict Analysis', Object.values(filteredData)[0])} 
+                    style={{ color: '#F44336' }} 
+                  />
+                </Tooltip>
+              </div>
+            </div>
+
+            {feedbackVisible['conflict'] && (
+              <div className="mt-2">
+                <Input.TextArea
+                  value={feedbackText['conflict'] || ''}
+                  onChange={(e) => setFeedbackText((prev) => ({ 
+                    ...prev, 
+                    ['conflict']: e.target.value 
+                  }))}
+                  rows={4}
+                  placeholder="Enter your feedback here"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleFeedbackSubmit('conflict');
+                    }
+                  }}
+                />
+                <Button 
+                  type="primary" 
+                  onClick={() => handleFeedbackSubmit('conflict')}
+                  style={{ marginTop: "5px" }}
+                >
+                  Submit Feedback
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           selectedFiles.map((fileName, index) => (
