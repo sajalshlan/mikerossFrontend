@@ -104,37 +104,50 @@ const AnalysisResult = React.memo(({
   };
 
 
-  const handleCopy = (fileName, data) => {
-    const rawContent = data;  // Assuming this contains the raw file content
-  
-    // Function to format the text
-    const formatContent = (text) => {
-      return text
-        .replace(/\*/g, '')                       // Remove all asterisks
-        .replace(/^\s+|\s+$/gm, '')               // Trim spaces at the beginning and end of each line
-        .replace(/(?<=:)\s*\n/g, '\n\n')          // Add extra spacing after colons for section clarity
-        .replace(/^(Legal Risks:|Financial Risks:|Business Risks:)/gm, '\n$1\n') // Add spacing to main headers
-        .replace(/(\n\s*\*\s)/g, '\n\n* ')        // Add blank line before each bullet point
-        .replace(/(?<!\n)(?<=^|\n)(\d+\.\s)/g, '\n\n$1') // Place numbered sections (e.g., 1., 2.) on new lines
-        .replace(/\n/g, '\n\n')                   // Add blank line after each newline
-        .replace(/\n\n\n/g, '\n\n');              // Avoid triple newlines by reducing to double
-    };
+  const handleCopy = (fileName, content) => {
+    // Create a selection range from the rendered content
+    const selection = window.getSelection();
+    const range = document.createRange();
     
-    const formattedContent = formatContent(rawContent); 
-  
-      const textArea = document.createElement("textarea");
-      textArea.value = formattedContent;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        const successful = document.execCommand('copy');
+    // Create a temporary container with the rendered content
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = content
+      .split('\n')
+      .map(line => {
+        // Handle bold text formatting (similar to renderContent)
+        const parts = line.split(/(\*\*.*?\*\*)/g);
+        return parts
+          .map(part => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return `<strong>${part.slice(2, -2)}</strong>`;
+            }
+            return part;
+          })
+          .join('');
+      })
+      .join('<br>');
+    
+    // Temporarily append to document, select, and copy
+    tempContainer.style.position = 'fixed';
+    tempContainer.style.left = '-9999px';
+    document.body.appendChild(tempContainer);
+    
+    try {
+      range.selectNodeContents(tempContainer);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+      const successful = document.execCommand('copy');
+      if (successful) {
         message.success(`Content copied for file: ${fileName}`);
-        console.log(successful ? `Content copied for file: ${fileName}` : 'Fallback: Failed to copy content.');
-      } catch (err) {
-        console.error('Fallback: Failed to copy content. Error:', err);
-      } finally {
-        document.body.removeChild(textArea);
       }
+    } catch (err) {
+      console.error('Failed to copy content:', err);
+      message.error('Failed to copy content');
+    } finally {
+      selection.removeAllRanges();
+      document.body.removeChild(tempContainer);
+    }
   };
 
   // Toggles feedback visibility per file
