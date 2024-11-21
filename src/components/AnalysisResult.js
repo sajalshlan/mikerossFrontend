@@ -313,8 +313,84 @@ const AnalysisResult = React.memo(({
       </div>
       <div className="flex-grow overflow-auto p-2">
         {type === 'conflict' ? (
-          <div className="bg-gray-100 p-3 rounded-md">
-            {renderContent(filteredData)}
+          <div className="first:mt-2 last:mb-0">
+            <Typography.Title 
+              level={4} 
+              className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2"
+            >
+              Conflict Analysis
+            </Typography.Title>
+
+            <div className="bg-white border border-blue-100 text-gray-800 p-4 rounded-2xl shadow-sm">
+              <div className="break-words text-sm leading-relaxed">
+                {renderContent(filteredData)}
+              </div>
+
+              <div className="flex justify-end mt-2 space-x-2">
+                <Tooltip title="I like this analysis">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/like.png" alt="Thumbs Up" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => onThumbsUp('conflict')} 
+                    style={{ color: '#4CAF50' }} 
+                  />
+                </Tooltip>
+
+                <Tooltip title="I don't like this analysis">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/dislike.png" alt="Thumbs Down" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => onThumbsDown('conflict')} 
+                    style={{ color: '#F44336' }} 
+                  />
+                </Tooltip>
+
+                <Tooltip title="Give Feedback">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/review.png" alt="Feedback" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => toggleFeedback('conflict')} 
+                    style={{ color: '#4CAF50' }} 
+                  />
+                </Tooltip>
+
+                <Tooltip title="Copy">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => handleCopy('Conflict Analysis', Object.values(filteredData)[0])} 
+                    style={{ color: '#F44336' }} 
+                  />
+                </Tooltip>
+              </div>
+            </div>
+
+            {feedbackVisible['conflict'] && (
+              <div className="mt-2">
+                <Input.TextArea
+                  value={feedbackText['conflict'] || ''}
+                  onChange={(e) => setFeedbackText((prev) => ({ 
+                    ...prev, 
+                    ['conflict']: e.target.value 
+                  }))}
+                  rows={4}
+                  placeholder="Enter your feedback here"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleFeedbackSubmit('conflict');
+                    }
+                  }}
+                />
+                <Button 
+                  type="primary" 
+                  onClick={() => handleFeedbackSubmit('conflict')}
+                  style={{ marginTop: "5px" }}
+                >
+                  Submit Feedback
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           selectedFiles.map((fileName, index) => (
