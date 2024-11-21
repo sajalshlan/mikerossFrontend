@@ -105,31 +105,39 @@ const AnalysisResult = React.memo(({
 
 
   const handleCopy = (fileName, content) => {
-    // Create a selection range from the rendered content
     const selection = window.getSelection();
     const range = document.createRange();
     
-    // Create a temporary container with the rendered content
+    // Create a temporary container with clean styling
     const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = `
+      position: fixed;
+      left: -9999px;
+      color: black !important;
+      background: white !important;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      white-space: pre-wrap;
+    `;
+    
+    // Clean and format the content with explicit black text
     tempContainer.innerHTML = content
       .split('\n')
       .map(line => {
-        // Handle bold text formatting (similar to renderContent)
         const parts = line.split(/(\*\*.*?\*\*)/g);
         return parts
           .map(part => {
             if (part.startsWith('**') && part.endsWith('**')) {
-              return `<strong>${part.slice(2, -2)}</strong>`;
+              // Force black color for bold text
+              return `<strong style="font-weight: bold; color: black !important; background: none;">${part.slice(2, -2)}</strong>`;
             }
-            return part;
+            // Force black color for regular text
+            return `<span style="color: black !important;">${part}</span>`;
           })
           .join('');
       })
       .join('<br>');
     
-    // Temporarily append to document, select, and copy
-    tempContainer.style.position = 'fixed';
-    tempContainer.style.left = '-9999px';
     document.body.appendChild(tempContainer);
     
     try {
