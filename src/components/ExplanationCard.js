@@ -90,13 +90,20 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
             <div className="flex items-center gap-1">
               <button 
                 onClick={onRegenerate}
-                className="p-1.5 hover:bg-blue-50 rounded-md transition-colors group"
+                disabled={isLoading}
+                className={`p-1.5 rounded-md transition-colors group
+                  ${isLoading ? 'cursor-not-allowed opacity-50' : 'hover:bg-blue-50'}`}
               >
-                <ReloadOutlined className="text-gray-400 group-hover:text-blue-500 transition-colors" />
+                <ReloadOutlined 
+                  className={`text-gray-400 group-hover:text-blue-500 transition-colors
+                    ${isLoading ? 'animate-spin' : ''}`}  // Add spinning animation when loading
+                />
               </button>
               <button 
                 onClick={onClose}
-                className="p-1.5 hover:bg-red-50 rounded-md transition-colors group"
+                disabled={isLoading}
+                className={`p-1.5 rounded-md transition-colors group
+                  ${isLoading ? 'cursor-not-allowed opacity-50' : 'hover:bg-red-50'}`}
               >
                 <CloseOutlined className="text-gray-400 group-hover:text-red-500 transition-colors" />
               </button>

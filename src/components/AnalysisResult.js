@@ -357,6 +357,30 @@ const AnalysisResult = React.memo(({
     );
   }
 
+  // First, create a function to handle the API call
+  const generateExplanation = (selectedText, contextText, position) => {
+    setIsExplaining(true);
+    
+    return api.post('/explain_text/', {
+      selectedText: selectedText,
+      contextText: contextText
+    })
+    .then(response => {
+      console.log('API Response:', response.data);
+      setExplanationData(prev => ({
+        ...prev,
+        explanation: response.data
+      }));
+    })
+    .catch(error => {
+      message.error('Failed to generate explanation');
+      console.error('Explanation error:', error);
+    })
+    .finally(() => {
+      setIsExplaining(false);
+    });
+  };
+
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
       <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -452,17 +476,22 @@ const AnalysisResult = React.memo(({
                   </div>
                 )}
                 <div className="first:mt-2 last:mb-0">
-                  <Tooltip title="Click to preview file">
-                    <Typography.Title 
-                      level={4} 
-                      className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2 cursor-pointer hover:text-blue-600"
-                      onClick={() => onFilePreview(fileName)}
-                    >
-                      {fileName}
-                    </Typography.Title>
-                  </Tooltip>
-                  <div className="bg-gray-100 p-3 rounded-md select-text selection:bg-blue-200 selection:text-inherit hover:bg-gray-50 transition-colors duration-200">
-                    {renderContent(filteredData[fileName])}
+                  <div 
+                    className="file-analysis-container"
+                    data-filename={fileName}
+                  >
+                    <Tooltip title="Click to preview file">
+                      <Typography.Title 
+                        level={4} 
+                        className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2 cursor-pointer hover:text-blue-600"
+                        onClick={() => onFilePreview(fileName)}
+                      >
+                        {fileName}
+                      </Typography.Title>
+                    </Tooltip>
+                    <div className="bg-gray-100 p-3 rounded-md select-text selection:bg-blue-200 selection:text-inherit hover:bg-gray-50 transition-colors duration-200">
+                      {renderContent(filteredData[fileName])}
+                    </div>
                   </div>
 
                   {feedbackVisible[fileName] && (
@@ -543,9 +572,22 @@ const AnalysisResult = React.memo(({
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
             
-            // Store the selected text before clearing
-            const textToExplain = selectedText;
-            const contextText = filteredData[Object.keys(filteredData)[0]];
+            // Find the container element that holds the file's analysis result
+            const container = range.startContainer.parentElement?.closest('.file-analysis-container');
+            let contextText = '';
+            let fileName = '';
+            
+            if (container) {
+              fileName = container.getAttribute('data-filename');
+              contextText = filteredData[fileName];
+              console.log('Selected from file:', fileName);
+              console.log('Selected text:', selectedText);
+              console.log('Context text from container:', contextText);
+            } else {
+              // Fallback if container not found
+              contextText = filteredData[Object.keys(filteredData)[0]];
+              console.log('Container not found, using fallback context');
+            }
             
             // Clear selection and hide QuickActions immediately
             window.getSelection().removeAllRanges();
@@ -554,7 +596,8 @@ const AnalysisResult = React.memo(({
             
             // Set loading state and make API call
             setExplanationData({
-              text: textToExplain,
+              text: selectedText,
+              contextText: contextText,  // Store the context
               explanation: "",
               position: {
                 x: rect.left,
@@ -564,24 +607,14 @@ const AnalysisResult = React.memo(({
             setIsExplaining(true);
             
             // Make API call
-            api.post('/explain_text/', {
-              selectedText: textToExplain,
-              contextText: contextText
-            })
-            .then(response => {
-              console.log(response.data);
-              setExplanationData(prev => ({
-                ...prev,
-                explanation: response.data
-              }));
-            })
-            .catch(error => {
-              message.error('Failed to generate explanation');
-              console.error('Explanation error:', error);
-            })
-            .finally(() => {
-              setIsExplaining(false);
-            });
+            generateExplanation(
+              selectedText,
+              contextText,
+              {
+                x: rect.left,
+                y: rect.top
+              }
+            );
           }}
           onEnhance={() => {
             // Handle enhance action
@@ -599,11 +632,12 @@ const AnalysisResult = React.memo(({
           onClose={() => setExplanationData(null)}
           isLoading={isExplaining}
           onRegenerate={() => {
-            setIsExplaining(true);
-            // Simulate regeneration
-            setTimeout(() => {
-              setIsExplaining(false);
-            }, 1500);
+            // Regenerate using the stored text and context
+            generateExplanation(
+              explanationData.text,
+              explanationData.contextText,
+              explanationData.position
+            );
           }}
         />
       )}
