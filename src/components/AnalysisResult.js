@@ -577,6 +577,13 @@ const AnalysisResult = React.memo(({
           position={explanationData.position}
           onClose={() => setExplanationData(null)}
           isLoading={isExplaining}
+          onRegenerate={() => {
+            setIsExplaining(true);
+            // Simulate regeneration
+            setTimeout(() => {
+              setIsExplaining(false);
+            }, 1500);
+          }}
         />
       )}
     </div>
