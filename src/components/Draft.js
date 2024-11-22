@@ -178,53 +178,54 @@ const Draft = ({
   };
   
   const handleCopy = (content) => {
-    console.log('Copying content:', content);
-    // Function to format the text
-    const formatContent = (text) => {
-      let count = 0;
-      return text
-      // Remove all asterisks
-      .replace(/\*\*/g, '')
-  
-      // Add newline after all-caps text sections
-      .replace(/([A-Z][A-Z\s]+[A-Z])(?:\s*\n|$)/g, '$1\n')
-  
-      // Add newlines before numbered sections (with positive lookbehind)
-      .replace(/(?<=[^\n])(\d+\.\s+)/g, '\n\n$1')
-      
-      // Add newlines before decimal-style numbers (like .2., .3.)
-      .replace(/(?<=[^\n])(\.\d+\.)/g, '\n\n$1')
-  
-      // Remove leading/trailing spaces from each line
-      .replace(/^\s+|\s+$/gm, '')
-  
-      // Ensure one space after colon (but not more)
-      .replace(/:\s*/g, ': ')
-  
-      // Convert all multiple newlines to single newlines
-      .replace(/\n{2,}/g, '\n')
-  
-      // Remove any trailing whitespace at the end of the document
-      .replace(/\s+$/, '')
-  
-      // Clean up any remaining multiple spaces
-      .replace(/\s{2,}/g, ' ');
-  };
-
-    const formattedContent = formatContent(content);
-
-    const textArea = document.createElement("textarea");
-    textArea.value = formattedContent;
-    document.body.appendChild(textArea);
-    textArea.select();
+    const selection = window.getSelection();
+    const range = document.createRange();
+    
+    // Create a temporary container with clean styling
+    const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = `
+      position: fixed;
+      left: -9999px;
+      color: black !important;
+      background: white !important;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      white-space: pre-wrap;
+    `;
+    
+    // Clean and format the content with explicit black text
+    tempContainer.innerHTML = content
+      .split('\n')
+      .map(line => {
+        const parts = line.split(/(\*\*.*?\*\*)/g);
+        return parts
+          .map(part => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return `<strong style="font-weight: bold; color: black !important; background: none;">${part.slice(2, -2)}</strong>`;
+            }
+            return `<span style="color: black !important;">${part}</span>`;
+          })
+          .join('');
+      })
+      .join('<br>');
+    
+    document.body.appendChild(tempContainer);
+    
     try {
+      range.selectNodeContents(tempContainer);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
       const successful = document.execCommand('copy');
-      message.success('Content copied to clipboard');
-      console.log(successful ? 'Content copied successfully' : 'Failed to copy content');
+      if (successful) {
+        message.success('Content copied to clipboard');
+      }
     } catch (err) {
-      console.error('Failed to copy content. Error:', err);
+      console.error('Failed to copy content:', err);
+      message.error('Failed to copy content');
     } finally {
-      document.body.removeChild(textArea);
+      selection.removeAllRanges();
+      document.body.removeChild(tempContainer);
     }
   };
 
@@ -305,25 +306,27 @@ const Draft = ({
                     ? 'bg-blue-500 text-white' 
                     : 'bg-white border border-blue-100 text-gray-800'
                 }`}>
-                  <div className="flex justify-between items-start">
-                    <div className="break-words text-sm leading-relaxed flex-grow">
+                  <div className="flex flex-col">
+                    <div className="break-words text-sm leading-relaxed">
                       {item.type === 'result' ? renderDraftContent(item.content) : item.content}
                     </div>
-                    {item.type === 'result' && (
-                      <Tooltip title="Copy">
-                        <Button
-                          type="text"
-                          icon={<CopyOutlined />}
-                          onClick={() => handleCopy(item.content)}
-                          className="ml-2 text-gray-500 hover:text-blue-600"
-                        />
-                      </Tooltip>
-                    )}
-                  </div>
-                  <div className={`text-xs mt-2 ${
-                    item.type === 'query' ? 'text-right text-blue-200' : 'text-left text-gray-500'
-                  }`}>
-                    {item.timestamp}
+                    <div className="flex justify-between items-center mt-2">
+                      <div className={`text-xs ${
+                        item.type === 'query' ? 'text-blue-200' : 'text-gray-500'
+                      }`}>
+                        {item.timestamp}
+                      </div>
+                      {item.type === 'result' && (
+                        <Tooltip title="Copy">
+                          <Button
+                            type="text"
+                            icon={<CopyOutlined />}
+                            onClick={() => handleCopy(item.content)}
+                            className="text-gray-500 hover:text-blue-600"
+                          />
+                        </Tooltip>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
