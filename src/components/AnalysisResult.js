@@ -4,6 +4,7 @@ import '../styles/AnalysisResult.css';
 import TriviaCard from './TriviaCard';
 import QuickActions from './QuickActions';
 import ExplanationCard from './ExplanationCard';
+import api from '../api';
 
 const wrapReferences = (text) => {
   const clauseRegex = /\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/gi;
@@ -537,14 +538,24 @@ const AnalysisResult = React.memo(({
         <QuickActions
           position={quickActionPosition}
           onExplain={() => {
-            // Calculate position for explanation card
+            // Get position before clearing selection
             const selection = window.getSelection();
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
             
+            // Store the selected text before clearing
+            const textToExplain = selectedText;
+            const contextText = filteredData[Object.keys(filteredData)[0]];
+            
+            // Clear selection and hide QuickActions immediately
+            window.getSelection().removeAllRanges();
+            setQuickActionPosition(null);
+            setSelectedText('');
+            
+            // Set loading state and make API call
             setExplanationData({
-              text: selectedText,
-              explanation: "This clause outlines the key terms and conditions regarding the payment schedule and obligations between the parties. It specifies the timing, method, and conditions under which payments must be made, as well as any penalties or consequences for late payments.",
+              text: textToExplain,
+              explanation: "",
               position: {
                 x: rect.left,
                 y: rect.top
@@ -552,15 +563,25 @@ const AnalysisResult = React.memo(({
             });
             setIsExplaining(true);
             
-            // Simulate API call delay
-            setTimeout(() => {
+            // Make API call
+            api.post('/explain_text/', {
+              selectedText: textToExplain,
+              contextText: contextText
+            })
+            .then(response => {
+              console.log(response.data);
+              setExplanationData(prev => ({
+                ...prev,
+                explanation: response.data
+              }));
+            })
+            .catch(error => {
+              message.error('Failed to generate explanation');
+              console.error('Explanation error:', error);
+            })
+            .finally(() => {
               setIsExplaining(false);
-            }, 1500);
-
-            // Clear selection and quick actions
-            window.getSelection().removeAllRanges();
-            setQuickActionPosition(null);
-            setSelectedText('');
+            });
           }}
           onEnhance={() => {
             // Handle enhance action

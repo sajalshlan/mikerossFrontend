@@ -5,7 +5,7 @@ import { BulbOutlined, ThunderboltOutlined } from '@ant-design/icons';
 const QuickActions = ({ position, onExplain, onEnhance }) => {
   return (
     <div 
-      className="fixed z-50 bg-white/95 backdrop-blur-sm shadow-xl rounded-lg border border-gray-100 p-3 quick-actions transform -translate-y-full -translate-x-1/2 transition-all duration-200 ease-out"
+      className="fixed z-50 bg-white/95 backdrop-blur-sm shadow-xl rounded-lg border border-gray-100 p-1.5 quick-actions transform -translate-y-full -translate-x-1/2 transition-all duration-200 ease-out"
       style={{
         left: position.x,
         top: position.y - 10,
