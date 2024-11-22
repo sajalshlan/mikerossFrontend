@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Typography, List, Tooltip, Collapse, Button, Input, message } from 'antd';
 import '../styles/AnalysisResult.css';
 import TriviaCard from './TriviaCard';
+import QuickActions from './QuickActions';
 
 const wrapReferences = (text) => {
   const clauseRegex = /\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/gi;
@@ -56,6 +57,8 @@ const AnalysisResult = React.memo(({
 
   const [feedbackVisible, setFeedbackVisible] = useState({});
   const [feedbackText, setFeedbackText] = useState({});
+  const [selectedText, setSelectedText] = useState('');
+  const [quickActionPosition, setQuickActionPosition] = useState(null);
 
   const selectedFiles = files ? Object.keys(files).filter(fileName => files[fileName]?.isChecked) : [];
 
@@ -297,6 +300,42 @@ const AnalysisResult = React.memo(({
     return titleMap[type] || 'Analysis Results';
   };
 
+  // Add this new handler
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    const text = selection.toString().trim();
+    
+    if (text) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      setSelectedText(text);
+      setQuickActionPosition({
+        x: rect.left + (rect.width / 2),
+        y: rect.top
+      });
+    } else {
+      setQuickActionPosition(null);
+    }
+  };
+
+  // Add useEffect for handling clicks outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.quick-actions')) {
+        setQuickActionPosition(null);
+      }
+    };
+
+    document.addEventListener('mouseup', handleTextSelection);
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mouseup', handleTextSelection);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Only render if we have valid results
   if (type === 'placeholder' || !hasResults || !filteredData || isLoading) {
     console.log('Showing trivia card...');  // Debug log
@@ -418,7 +457,7 @@ const AnalysisResult = React.memo(({
                       {fileName}
                     </Typography.Title>
                   </Tooltip>
-                  <div className="bg-gray-100 p-3 rounded-md">
+                  <div className="bg-gray-100 p-3 rounded-md select-text selection:bg-blue-200 selection:text-inherit hover:bg-gray-50 transition-colors duration-200">
                     {renderContent(filteredData[fileName])}
                   </div>
 
@@ -491,6 +530,31 @@ const AnalysisResult = React.memo(({
           ))
         )}
       </div>
+      {quickActionPosition && (
+        <QuickActions
+          position={quickActionPosition}
+          onExplain={() => {
+            // Handle explain action
+            console.log('Explain:', selectedText);
+            // Clear text selection
+            window.getSelection().removeAllRanges();
+            // Clear quick actions popup
+            setQuickActionPosition(null);
+            // Clear selected text
+            setSelectedText('');
+          }}
+          onEnhance={() => {
+            // Handle enhance action
+            console.log('Enhance:', selectedText);
+            // Clear text selection
+            window.getSelection().removeAllRanges();
+            // Clear quick actions popup
+            setQuickActionPosition(null);
+            // Clear selected text
+            setSelectedText('');
+          }}
+        />
+      )}
     </div>
   );
 }, (prevProps, nextProps) => {
