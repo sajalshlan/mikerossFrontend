@@ -25,6 +25,7 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) 
   });
 
   const [selectedDocType, setSelectedDocType] = useState(null);
+  const [systemPromptsDocType, setSystemPromptsDocType] = useState(null);
 
   const documentTypes = [
     "Asset Purchase Agreement",
@@ -157,6 +158,11 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) 
     localStorage.setItem('document_type', JSON.stringify(value));
   };
 
+  // Handler for system prompts document type change
+  const handleSystemPromptsDocTypeChange = (value) => {
+    setSystemPromptsDocType(value);
+  };
+
   return (
     <Modal
       title={
@@ -245,8 +251,8 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) 
                     <Select
                       placeholder="General Prompt"
                       style={{ width: '100%' }}
-                      value={selectedDocType}
-                      onChange={handleDocTypeChange}
+                      value={systemPromptsDocType}
+                      onChange={handleSystemPromptsDocTypeChange}
                     >
                       <Select.Option value={null}>General Prompt</Select.Option>
                       {documentTypes.map(docType => (
@@ -258,7 +264,7 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) 
                   </div>
                 )}
                 <TextArea
-                  value={systemPrompts[type](selectedDocType)}
+                  value={systemPrompts[type](systemPromptsDocType)}
                   readOnly
                   rows={15}
                 />
