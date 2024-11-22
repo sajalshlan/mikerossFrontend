@@ -127,11 +127,12 @@ const uploadFile = async (file, onProgress) => {
     }
 };
 
-const performAnalysis = async (type, text, fileName, onProgress, signal, customPrompt = null, useGemini = true) => {
+const performAnalysis = async (type, text, fileName, onProgress, signal, customPrompt = null, useGemini = true, documentType = null) => {
   console.log('=== Analysis Request Details ===');
   console.log(`🎯 Analysis Type: ${type}`);
   console.log(`🤖 Model Selected: ${useGemini ? 'Gemini' : 'Claude'}`);
   console.log(`📝 Custom Prompt: ${customPrompt ? 'Yes' : 'No'}`);
+  console.log(`📄 Document Type: ${documentType || 'Not specified'}`);
   
   try {
     onProgress && onProgress(fileName, 0);
@@ -141,7 +142,8 @@ const performAnalysis = async (type, text, fileName, onProgress, signal, customP
       text: text,
       include_history: type === 'ask',
       custom_prompt: customPrompt,
-      use_gemini: useGemini
+      use_gemini: useGemini,
+      document_type: documentType
     };
 
     console.log('📤 Request Body:', requestBody);
