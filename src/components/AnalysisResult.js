@@ -3,6 +3,7 @@ import { Typography, List, Tooltip, Collapse, Button, Input, message } from 'ant
 import '../styles/AnalysisResult.css';
 import TriviaCard from './TriviaCard';
 import QuickActions from './QuickActions';
+import ExplanationCard from './ExplanationCard';
 
 const wrapReferences = (text) => {
   const clauseRegex = /\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/gi;
@@ -59,6 +60,8 @@ const AnalysisResult = React.memo(({
   const [feedbackText, setFeedbackText] = useState({});
   const [selectedText, setSelectedText] = useState('');
   const [quickActionPosition, setQuickActionPosition] = useState(null);
+  const [explanationData, setExplanationData] = useState(null);
+  const [isExplaining, setIsExplaining] = useState(false);
 
   const selectedFiles = files ? Object.keys(files).filter(fileName => files[fileName]?.isChecked) : [];
 
@@ -534,25 +537,46 @@ const AnalysisResult = React.memo(({
         <QuickActions
           position={quickActionPosition}
           onExplain={() => {
-            // Handle explain action
-            console.log('Explain:', selectedText);
-            // Clear text selection
+            // Calculate position for explanation card
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            
+            setExplanationData({
+              text: selectedText,
+              explanation: "This clause outlines the key terms and conditions regarding the payment schedule and obligations between the parties. It specifies the timing, method, and conditions under which payments must be made, as well as any penalties or consequences for late payments.",
+              position: {
+                x: rect.left,
+                y: rect.top
+              }
+            });
+            setIsExplaining(true);
+            
+            // Simulate API call delay
+            setTimeout(() => {
+              setIsExplaining(false);
+            }, 1500);
+
+            // Clear selection and quick actions
             window.getSelection().removeAllRanges();
-            // Clear quick actions popup
             setQuickActionPosition(null);
-            // Clear selected text
             setSelectedText('');
           }}
           onEnhance={() => {
             // Handle enhance action
             console.log('Enhance:', selectedText);
-            // Clear text selection
             window.getSelection().removeAllRanges();
-            // Clear quick actions popup
             setQuickActionPosition(null);
-            // Clear selected text
             setSelectedText('');
           }}
+        />
+      )}
+      {explanationData && (
+        <ExplanationCard
+          explanation={explanationData.explanation}
+          position={explanationData.position}
+          onClose={() => setExplanationData(null)}
+          isLoading={isExplaining}
         />
       )}
     </div>
