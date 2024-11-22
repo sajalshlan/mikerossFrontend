@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Typography, List, Tooltip, Collapse, Button, Input, message } from 'antd';
 import '../styles/AnalysisResult.css';
 import TriviaCard from './TriviaCard';
@@ -55,14 +55,14 @@ const AnalysisResult = React.memo(({
   onThumbsDown,
   isLoading
 }) => {
-  // console.log('AnalysisResult render:', { type, data, files, fileCount });
-
+  // Move all hooks to the top, before any conditional returns
   const [feedbackVisible, setFeedbackVisible] = useState({});
   const [feedbackText, setFeedbackText] = useState({});
   const [selectedText, setSelectedText] = useState('');
   const [quickActionPosition, setQuickActionPosition] = useState(null);
   const [explanationData, setExplanationData] = useState(null);
   const [isExplaining, setIsExplaining] = useState(false);
+  const abortControllerRef = useRef(null);
 
   const selectedFiles = files ? Object.keys(files).filter(fileName => files[fileName]?.isChecked) : [];
 
@@ -357,13 +357,16 @@ const AnalysisResult = React.memo(({
     );
   }
 
-  // First, create a function to handle the API call
   const generateExplanation = (selectedText, contextText, position) => {
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
     setIsExplaining(true);
     
     return api.post('/explain_text/', {
       selectedText: selectedText,
       contextText: contextText
+    }, {
+      signal: abortControllerRef.current.signal // Add signal to request
     })
     .then(response => {
       console.log('API Response:', response.data);
@@ -373,12 +376,25 @@ const AnalysisResult = React.memo(({
       }));
     })
     .catch(error => {
-      message.error('Failed to generate explanation');
-      console.error('Explanation error:', error);
+      if (error.name === 'AbortError') {
+        console.log('Request cancelled');
+      } else {
+        
+      }
     })
     .finally(() => {
       setIsExplaining(false);
+      abortControllerRef.current = null;
     });
+  };
+
+  // Add cancel handler
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsExplaining(false);
+      setExplanationData(null);
+    }
   };
 
   return (
@@ -630,9 +646,9 @@ const AnalysisResult = React.memo(({
           explanation={explanationData.explanation}
           position={explanationData.position}
           onClose={() => setExplanationData(null)}
+          onCancel={handleCancel}
           isLoading={isExplaining}
           onRegenerate={() => {
-            // Regenerate using the stored text and context
             generateExplanation(
               explanationData.text,
               explanationData.contextText,

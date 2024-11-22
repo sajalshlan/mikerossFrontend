@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Typography, Spin } from 'antd';
 import { CloseOutlined, ReloadOutlined, HolderOutlined, BulbOutlined } from '@ant-design/icons';
 
-const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenerate }) => {
+const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenerate, onCancel }) => {
   const [pos, setPos] = useState({ x: position.x, y: position.y });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -100,10 +100,8 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
                 />
               </button>
               <button 
-                onClick={onClose}
-                disabled={isLoading}
-                className={`p-1.5 rounded-md transition-colors group
-                  ${isLoading ? 'cursor-not-allowed opacity-50' : 'hover:bg-red-50'}`}
+                onClick={isLoading ? onCancel : onClose}
+                className="p-1.5 rounded-md transition-colors group hover:bg-red-50"
               >
                 <CloseOutlined className="text-gray-400 group-hover:text-red-500 transition-colors" />
               </button>
