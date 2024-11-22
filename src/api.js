@@ -127,11 +127,15 @@ const uploadFile = async (file, onProgress) => {
     }
 };
 
-const performAnalysis = async (type, text, fileName, onProgress, signal, customPrompt = null, useGemini = true, documentType = null) => {
+const performAnalysis = async (type, text, fileName, onProgress, signal, customPrompt = null, useGemini = true) => {
   console.log('=== Analysis Request Details ===');
   console.log(`🎯 Analysis Type: ${type}`);
   console.log(`🤖 Model Selected: ${useGemini ? 'Gemini' : 'Claude'}`);
   console.log(`📝 Custom Prompt: ${customPrompt ? 'Yes' : 'No'}`);
+  
+  // Get document type from localStorage
+  const savedDocType = localStorage.getItem('document_type');
+  const documentType = savedDocType ? JSON.parse(savedDocType) : null;
   console.log(`📄 Document Type: ${documentType || 'Not specified'}`);
   
   try {

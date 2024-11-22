@@ -24,7 +24,7 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) 
     conflict: ''
   });
 
-  const [selectedDocType, setSelectedDocType] = useState('');
+  const [selectedDocType, setSelectedDocType] = useState(null);
 
   const documentTypes = [
     "Asset Purchase Agreement",
@@ -109,6 +109,10 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) 
 
     // Update local state
     setPrompts(updatedPrompts);
+    
+    // Reset document type selection
+    setSelectedDocType(null);
+    localStorage.removeItem('document_type');
 
     // Save to localStorage immediately
     localStorage.setItem('customPrompts', JSON.stringify(updatedPrompts));
@@ -137,6 +141,20 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) 
   // Helper function to determine if document type selection should be shown
   const shouldShowDocTypeSelection = (type) => {
     return !['ask', 'draft', 'conflict'].includes(type);
+  };
+
+  // Load saved document type from localStorage on mount
+  useEffect(() => {
+    const savedDocType = localStorage.getItem('document_type');
+    if (savedDocType) {
+      setSelectedDocType(JSON.parse(savedDocType));
+    }
+  }, []);
+
+  // Simplified handler for document type change
+  const handleDocTypeChange = (value) => {
+    setSelectedDocType(value);
+    localStorage.setItem('document_type', JSON.stringify(value));
   };
 
   return (
@@ -176,7 +194,8 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) 
                 <Select
                   placeholder="Let AI Classify Document"
                   style={{ width: '100%' }}
-                  onChange={(value) => setSelectedDocType(value)}
+                  value={selectedDocType}
+                  onChange={handleDocTypeChange}
                 >
                   <Select.Option value={null}>Let AI Classify Document</Select.Option>
                   {documentTypes.map(docType => (
@@ -224,11 +243,12 @@ const PromptPanel = ({ visible, onClose, isAnalysisInProgress, onModelChange }) 
                   <div className="mb-4">
                     <div className="mb-2 font-medium">Select Document Type</div>
                     <Select
-                      placeholder="Let AI Classify Document"
+                      placeholder="General Prompt"
                       style={{ width: '100%' }}
-                      onChange={(value) => setSelectedDocType(value)}
+                      value={selectedDocType}
+                      onChange={handleDocTypeChange}
                     >
-                      <Select.Option value={null}>Let AI Classify Document</Select.Option>
+                      <Select.Option value={null}>General Prompt</Select.Option>
                       {documentTypes.map(docType => (
                         <Select.Option key={docType} value={docType}>
                           {docType}

@@ -190,8 +190,13 @@ const LegalAnalyzer = () => {
   };
 
   const handleAnalysis = async (type, selectedTexts, customPrompt = null) => {
-    // Get model type from localStorage, defaulting to 'gemini' if not set
+    // Get model type from localStorage
     const useGemini = localStorage.getItem('aiModel') !== 'claude';
+
+    // Get document type from localStorage
+    const savedDocTypes = localStorage.getItem('selectedDocTypes');
+    const docTypes = savedDocTypes ? JSON.parse(savedDocTypes) : {};
+    const selectedDocType = docTypes[type] || null;
 
     setAnalysisState(prev => ({
       ...prev,
@@ -277,7 +282,8 @@ const LegalAnalyzer = () => {
               },
               controller.signal,
               customPrompt,
-              useGemini  // Pass the model type from localStorage
+              useGemini,
+              selectedDocType  // Pass the selected document type
             );
             return [fileName, result];
           }
