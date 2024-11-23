@@ -89,7 +89,6 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     
     // Check if we have any text selected
     if (text) {
-      console.log("Text selected:", text); // Debug log
       
       // Get the range and its bounding rectangle
       const range = selection.getRangeAt(0);

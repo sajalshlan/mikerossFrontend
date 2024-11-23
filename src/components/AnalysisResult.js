@@ -603,13 +603,9 @@ const AnalysisResult = React.memo(({
             if (container) {
               fileName = container.getAttribute('data-filename');
               contextText = filteredData[fileName];
-              console.log('Selected from file:', fileName);
-              console.log('Selected text:', selectedText);
-              console.log('Context text from container:', contextText);
             } else {
               // Fallback if container not found
               contextText = filteredData[Object.keys(filteredData)[0]];
-              console.log('Container not found, using fallback context');
             }
             
             // Clear selection and hide QuickActions immediately
@@ -641,7 +637,6 @@ const AnalysisResult = React.memo(({
           }}
           onEnhance={() => {
             // Handle enhance action
-            console.log('Enhance:', selectedText);
             window.getSelection().removeAllRanges();
             setQuickActionPosition(null);
             setSelectedText('');
