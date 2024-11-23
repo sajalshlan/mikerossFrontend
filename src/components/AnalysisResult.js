@@ -334,11 +334,15 @@ const AnalysisResult = React.memo(({
       }
     };
 
-    document.addEventListener('mouseup', handleTextSelection);
+    const handleMouseUp = (event) => {
+      setTimeout(() => handleTextSelection(event), 0);
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
-      document.removeEventListener('mouseup', handleTextSelection);
+      document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
