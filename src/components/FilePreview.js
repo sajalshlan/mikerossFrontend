@@ -116,7 +116,19 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       case 'image':
         return <img {...commonProps} src={fileUrl} alt={file.name} onLoad={cleanup} />;
       case 'pdf':
-        return <embed {...commonProps} src={fileUrl} type="application/pdf" onLoad={cleanup} />;
+        return (
+          <embed 
+            {...commonProps} 
+            src={fileUrl} 
+            type="application/pdf" 
+            onLoad={cleanup}
+            style={{ 
+              width: '100%',
+              height: '100%',
+              minHeight: '800px'
+            }}
+          />
+        );
       case 'document':
         return (
           <div 
