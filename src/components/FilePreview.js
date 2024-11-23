@@ -1,58 +1,36 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { renderAsync } from 'docx-preview';
+import mammoth from 'mammoth';
 import SpreadsheetPreview from './SpreadsheetPreview';
+import '../styles/docPreview.css';
 
 const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   const containerRef = useRef(null);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
 
   useEffect(() => {
-    const isValidFile = selectedFile && files[selectedFile];  // Check if selected file is valid
-    const isDocument = isValidFile && getFileTypeFromName(files[selectedFile].file.name) === 'document';  // Check if the selected file is a document
-    const shouldResetSelection = Object.keys(files).length === 0 || !isValidFile;  // Condition for resetting selection
+    const isValidFile = selectedFile && files[selectedFile];
+    const isDocument = isValidFile && getFileTypeFromName(files[selectedFile].file.name) === 'document';
+    const shouldResetSelection = Object.keys(files).length === 0 || !isValidFile;
   
     if (shouldResetSelection) {
-      onFileSelect(null);  // Reset file selection if no files or selected file is invalid
+      onFileSelect(null);
     } else {
       if (isDocument) {
-        // If it is a document, render preview and add ids to document elements
-        renderDocxPreview(files[selectedFile].file, files[selectedFile].base64)
+        renderDocxPreview(files[selectedFile].file)
           .then(() => {
-            addIdsToDocumentElements();  // Add IDs to elements in the document
+            setShowPlaceholder(false);
           });
-        setShowPlaceholder(false);  // Hide placeholder since the document is valid
       } else {
-        setShowPlaceholder(!isValidFile);  // Show placeholder if no valid file
+        setShowPlaceholder(!isValidFile);
       }
     }
   
-    // If the selected file is removed from the files, show the placeholder
     if (!isValidFile) {
       setShowPlaceholder(true);
     }
   
     //eslint-disable-next-line
-  }, [selectedFile, files]);  // Dependency on selectedFile and files  
-
-  useEffect(() => {
-    const handleScrollToElement = (event) => {
-      const id = event.detail;
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.style.backgroundColor = 'yellow';
-        setTimeout(() => {
-          element.style.backgroundColor = '';
-        }, 2000);
-      }
-    };
-
-    document.addEventListener('scrollToElement', handleScrollToElement);
-
-    return () => {
-      document.removeEventListener('scrollToElement', handleScrollToElement);
-    };
-  }, []);
+  }, [selectedFile, files]);
 
   const getFileTypeFromName = (fileName) => {
     if (!fileName) return 'unknown';
@@ -140,7 +118,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
           </div>
         );
     }
-  }, [selectedFile, files]);  // Memoize preview based on selectedFile and files
+  }, [selectedFile, files]);
 
   const getMimeType = (fileType) => {
     switch (fileType) {
@@ -155,52 +133,20 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     }
   };
 
-  const renderDocxPreview = async (file, base64) => {
+  const renderDocxPreview = async (file) => {
     try {
       let arrayBuffer;
       if (file instanceof Blob) {
         arrayBuffer = await file.arrayBuffer();
-      } else if (base64) {
-        const binaryString = atob(base64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        arrayBuffer = bytes.buffer;
       } else {
-        throw new Error('No valid file or base64 provided');
+        throw new Error('No valid file provided');
       }
 
+      const result = await mammoth.convertToHtml({ arrayBuffer });
       if (containerRef.current) {
-        // Render the docx
-        await renderAsync(arrayBuffer, containerRef.current, null, {
-          className: 'docx-preview',
-          inWrapper: false,
-          ignoreWidth: true,
-          ignoreHeight: true,
-          ignoreFonts: false,
-          breakPages: true,
-          ignoreLastRenderedPageBreak: true,
-          experimental: true,
-          useBase64URL: true,
-          preserveNumbering: true
-        });
+        containerRef.current.innerHTML = result.value;
+        containerRef.current.classList.add('docx-content');
       }
-
-      // After rendering, find all links in the rendered content
-      const links = containerRef.current.querySelectorAll('a');
-      
-      // Replace each link with an Ant Design Anchor.Link
-      links.forEach(link => {
-        const anchorLink = document.createElement('div');
-        const linkText = link.textContent;
-        const linkHref = link.href;
-        const anchor = document.createElement('a');
-        anchor.href = linkHref;
-        anchor.textContent = linkText;
-        anchorLink.appendChild(anchor);
-        link.parentNode.replaceChild(anchorLink, link);
-      });
     } catch (error) {
       console.error('Error rendering docx:', error);
     }
@@ -211,26 +157,6 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       <img src="/chess1.jpg" alt="Placeholder" className="w-full h-full object-cover rounded-lg" />
     </div>
   );
-
-  const addIdsToDocumentElements = () => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const elements = container.querySelectorAll('p, h1, h2, h3, h4, h5, h6');
-    elements.forEach((element) => {
-      const text = element.textContent.trim();
-      const clauseMatch = text.match(/\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/i);
-      const sectionMatch = text.match(/^([A-Z\s&]+(?:\s+(?:OVER|AND)\s+[A-Z\s&]+)*):/);
-      
-      if (clauseMatch) {
-        const id = `doc-${clauseMatch[0].toLowerCase().replace(/\s+/g, '-')}`;
-        element.id = id;
-      } else if (sectionMatch) {
-        const id = `doc-${sectionMatch[0].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/:$/, '')}`;
-        element.id = id;
-      }
-    });
-  };
 
   return (
     <div className={`h-full overflow-auto ${selectedFile && files[selectedFile] ? 'bg-gray-900 rounded-lg shadow-lg p-4' : ''}`}>
