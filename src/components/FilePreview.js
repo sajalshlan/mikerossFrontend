@@ -48,6 +48,27 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   
   }, [selectedFile, files]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.quick-actions')) {
+        setQuickActionPosition(null);
+        window.getSelection().removeAllRanges();
+      }
+    };
+
+    const handleMouseUp = (event) => {
+      setTimeout(() => handleTextSelection(event), 0);
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const getFileTypeFromName = (fileName) => {
     if (!fileName) return 'unknown';
     const extension = fileName.split('.').pop().toLowerCase();
