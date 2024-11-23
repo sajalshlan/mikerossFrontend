@@ -3,11 +3,57 @@ import { Typography, Spin } from 'antd';
 import { CloseOutlined, ReloadOutlined, HolderOutlined, BulbOutlined } from '@ant-design/icons';
 
 const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenerate, onCancel }) => {
-  const [pos, setPos] = useState({ x: position.x, y: position.y });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const cardRef = useRef(null);
   const frameRef = useRef();
+  
+  // Add function to calculate safe position
+  const calculateSafePosition = (x, y) => {
+    if (!cardRef.current) return { x, y };
+    
+    const card = cardRef.current;
+    const cardRect = card.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    
+    // Calculate safe Y position
+    let safeY = y - cardRect.height - 20; // Position above selection with 20px gap by default
+    const cardHeight = cardRect.height;
+    
+    // If card would go above viewport, position it below the selection instead
+    if (safeY < 10) { // 10px buffer from top
+      safeY = y + 20; // Position below selection with 20px gap
+    }
+    
+    // If card would go below viewport, force it above
+    if (safeY + cardHeight > viewportHeight - 10) {
+      safeY = Math.max(10, y - cardHeight - 20); // Ensure at least 10px from top
+    }
+    
+    // Calculate safe X position
+    let safeX = x;
+    const cardWidth = cardRect.width;
+    
+    // Prevent card from going off-screen horizontally
+    if (x + cardWidth > viewportWidth - 10) { // 10px buffer from right
+      safeX = viewportWidth - cardWidth - 10;
+    }
+    if (x < 10) { // 10px buffer from left
+      safeX = 10;
+    }
+    
+    return { x: safeX, y: safeY };
+  };
+
+  // Initialize position with safety check
+  const [pos, setPos] = useState(() => calculateSafePosition(position.x, position.y));
+  
+  // Update position when props change
+  useEffect(() => {
+    setPos(calculateSafePosition(position.x, position.y));
+  }, [position.x, position.y]);
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const handleMouseDown = (e) => {
     if (!e.target.closest('.drag-handle')) return;
@@ -15,13 +61,11 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
     setIsDragging(true);
     const rect = cardRef.current.getBoundingClientRect();
     
-    // Account for the translateY(-100%) in the offset calculation
     setDragOffset({
       x: e.clientX - rect.left,
-      y: e.clientY - (rect.top + rect.height) // Add rect.height to account for the upward shift
+      y: e.clientY - rect.top // Simplified offset calculation
     });
     
-    // Prevent text selection during drag
     e.preventDefault();
   };
 
@@ -29,13 +73,13 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
     const handleMouseMove = (e) => {
       if (!isDragging) return;
       
-      // Use requestAnimationFrame for smooth updates
       cancelAnimationFrame(frameRef.current);
       frameRef.current = requestAnimationFrame(() => {
-        setPos({
-          x: e.clientX - dragOffset.x,
-          y: e.clientY - dragOffset.y
-        });
+        const newPos = calculateSafePosition(
+          e.clientX - dragOffset.x,
+          e.clientY - dragOffset.y
+        );
+        setPos(newPos);
       });
     };
 
@@ -63,9 +107,9 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
         select-none will-change-transform ${isDragging ? 'transition-none' : 'transition-transform duration-200 ease-out'}
         ring-1 ring-gray-100`}
       style={{
-        left: 0,
-        top: 0,
-        transform: `translate3d(${pos.x}px, ${pos.y - 10}px, 0) translateY(-100%)`,
+        left: pos.x,
+        top: pos.y,
+        transform: 'none', // Remove the translateY(-100%) transform
       }}
       onMouseDown={handleMouseDown}
     >
