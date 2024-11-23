@@ -62,11 +62,17 @@ const FileUploader = ({
               responseType: 'blob'
             });
 
-            const docxBlob = response.data;
-            const docxFile = new File([docxBlob], pdfFile.name.replace('.pdf', '.docx'), { type: docxBlob.type });
-
-            // Add the DOCX file to the list of files to preview
-            onFileUpload([docxFile]);
+            const contentType = response.headers['content-type'];
+            if (contentType === 'application/pdf') {
+              // If the response is a PDF, treat it as a scanned PDF
+              onFileUpload([pdfFile]);
+            } else {
+              const docxBlob = response.data;
+              console.log(docxBlob)
+              const docxFile = new File([docxBlob], pdfFile.name.replace('.pdf', '.docx'), { type: docxBlob.type });
+              // Add the DOCX file to the list of files to preview
+              onFileUpload([docxFile]);
+            }
           } catch (error) {
             console.error('Error converting PDF to DOCX:', error);
           }
