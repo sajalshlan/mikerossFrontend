@@ -6,30 +6,38 @@ import '../styles/docPreview.css';
 const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   const containerRef = useRef(null);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
+  const [docxContent, setDocxContent] = useState('');
 
   useEffect(() => {
     const isValidFile = selectedFile && files[selectedFile];
-    const isDocument = isValidFile && getFileTypeFromName(files[selectedFile].file.name) === 'document';
+    const isDocument = isValidFile && getFileTypeFromName(files[selectedFile]?.file.name) === 'document';
     const shouldResetSelection = Object.keys(files).length === 0 || !isValidFile;
   
     if (shouldResetSelection) {
       onFileSelect(null);
+      if (!isDocument) {
+        setDocxContent('');
+      }
     } else {
       if (isDocument) {
         renderDocxPreview(files[selectedFile].file)
-          .then(() => {
+          .then((content) => {
+            setDocxContent(content);
             setShowPlaceholder(false);
           });
       } else {
         setShowPlaceholder(!isValidFile);
+        setDocxContent('');
       }
     }
   
     if (!isValidFile) {
       setShowPlaceholder(true);
+      if (!isDocument) {
+        setDocxContent('');
+      }
     }
   
-    //eslint-disable-next-line
   }, [selectedFile, files]);
 
   const getFileTypeFromName = (fileName) => {
@@ -47,10 +55,6 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   };
 
   const renderFilePreview = useMemo(() => {
-    if (containerRef.current) {
-      containerRef.current.innerHTML = '';
-    }
-
     const fileObj = files[selectedFile];
     if (!fileObj) return null;
 
@@ -87,7 +91,8 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
           <div 
             {...commonProps}
             ref={containerRef} 
-            className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto"
+            className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto docx-content"
+            dangerouslySetInnerHTML={{ __html: docxContent }}
           />
         );
       case 'text':
@@ -118,7 +123,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
           </div>
         );
     }
-  }, [selectedFile, files]);
+  }, [selectedFile, files, docxContent]);
 
   const getMimeType = (fileType) => {
     switch (fileType) {
@@ -143,12 +148,10 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       }
 
       const result = await mammoth.convertToHtml({ arrayBuffer });
-      if (containerRef.current) {
-        containerRef.current.innerHTML = result.value;
-        containerRef.current.classList.add('docx-content');
-      }
+      return result.value;
     } catch (error) {
       console.error('Error rendering docx:', error);
+      return '';
     }
   };
 
