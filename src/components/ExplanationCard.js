@@ -6,7 +6,6 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
   const cardRef = useRef(null);
   const frameRef = useRef();
   
-  // Add function to calculate safe position
   const calculateSafePosition = (x, y) => {
     if (!cardRef.current) return { x, y };
     
@@ -15,42 +14,21 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     
-    // Calculate safe Y position
-    let safeY = y - cardRect.height - 20; // Position above selection with 20px gap by default
-    const cardHeight = cardRect.height;
-    
-    // If card would go above viewport, position it below the selection instead
-    if (safeY < 10) { // 10px buffer from top
-      safeY = y + 20; // Position below selection with 20px gap
-    }
-    
-    // If card would go below viewport, force it above
-    if (safeY + cardHeight > viewportHeight - 10) {
-      safeY = Math.max(10, y - cardHeight - 20); // Ensure at least 10px from top
-    }
-    
     // Calculate safe X position
-    let safeX = x;
-    const cardWidth = cardRect.width;
+    let safeX = Math.min(Math.max(x, 10), viewportWidth - cardRect.width - 10);
     
-    // Prevent card from going off-screen horizontally
-    if (x + cardWidth > viewportWidth - 10) { // 10px buffer from right
-      safeX = viewportWidth - cardWidth - 10;
-    }
-    if (x < 10) { // 10px buffer from left
-      safeX = 10;
-    }
+    // Calculate safe Y position
+    let safeY = Math.min(Math.max(y, 10), viewportHeight - cardRect.height - 10);
     
     return { x: safeX, y: safeY };
   };
 
   // Initialize position with safety check
-  const [pos, setPos] = useState(() => calculateSafePosition(position.x, position.y));
-  
-  // Update position when props change
-  useEffect(() => {
-    setPos(calculateSafePosition(position.x, position.y));
-  }, [position.x, position.y]);
+  const [pos, setPos] = useState(() => {
+    // If initial position would be above viewport, place it below the selection
+    const initialY = position.y - (cardRef.current?.getBoundingClientRect().height || 0) - 20;
+    return calculateSafePosition(position.x, initialY < 10 ? position.y + 20 : initialY);
+  });
 
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -60,10 +38,9 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
     
     setIsDragging(true);
     const rect = cardRef.current.getBoundingClientRect();
-    
     setDragOffset({
       x: e.clientX - rect.left,
-      y: e.clientY - rect.top // Simplified offset calculation
+      y: e.clientY - rect.top
     });
     
     e.preventDefault();
@@ -75,11 +52,13 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
       
       cancelAnimationFrame(frameRef.current);
       frameRef.current = requestAnimationFrame(() => {
-        const newPos = calculateSafePosition(
-          e.clientX - dragOffset.x,
-          e.clientY - dragOffset.y
-        );
-        setPos(newPos);
+        // Calculate new position based on mouse position and initial click offset
+        const newX = e.clientX - dragOffset.x;
+        const newY = e.clientY - dragOffset.y;
+        
+        // Apply safety bounds
+        const safePos = calculateSafePosition(newX, newY);
+        setPos(safePos);
       });
     };
 
@@ -89,7 +68,7 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
     };
 
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove, { passive: true });
+      document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
 
@@ -100,6 +79,12 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
     };
   }, [isDragging, dragOffset]);
 
+  // Update position when props change
+  useEffect(() => {
+    const newY = position.y - (cardRef.current?.getBoundingClientRect().height || 0) - 20;
+    setPos(calculateSafePosition(position.x, newY < 10 ? position.y + 20 : newY));
+  }, [position.x, position.y]);
+
   return (
     <div 
       ref={cardRef}
@@ -107,9 +92,9 @@ const ExplanationCard = ({ explanation, onClose, isLoading, position, onRegenera
         select-none will-change-transform ${isDragging ? 'transition-none' : 'transition-transform duration-200 ease-out'}
         ring-1 ring-gray-100`}
       style={{
-        left: pos.x,
-        top: pos.y,
-        transform: 'none', // Remove the translateY(-100%) transform
+        left: `${pos.x}px`,
+        top: `${pos.y}px`,
+        cursor: isDragging ? 'grabbing' : 'auto'
       }}
       onMouseDown={handleMouseDown}
     >
