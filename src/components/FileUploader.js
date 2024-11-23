@@ -3,6 +3,7 @@ import { Menu, Upload, Button, Progress, message, Tooltip, Typography, Checkbox 
 import { UploadOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined, CheckSquareOutlined, DeleteColumnOutlined } from '@ant-design/icons';
 import googleDriveService from '../utils/googleDriveService';
 import oneDriveService from '../utils/oneDriveService';
+import api from '../api';
 
 const { Text } = Typography;
 
@@ -31,18 +32,46 @@ const FileUploader = ({
     setUploaderState(prev => ({ ...prev, checkedFiles: initialCheckedFiles }));
   }, [files]);
 
-  const handleFileChange = (info) => {
+  const handleFileChange = async (info) => {
     const files = info.fileList.map(file => file.originFileObj);
     
     if (fileChangeTimeoutRef.current) {
       clearTimeout(fileChangeTimeoutRef.current);
     }
 
-    fileChangeTimeoutRef.current = setTimeout(() => {
+    fileChangeTimeoutRef.current = setTimeout(async () => {
       if (files.length > 0) {
         const uniqueFiles = Array.from(new Set(files.map(file => file.name)))
           .map(name => files.find(file => file.name === name));
-        onFileUpload(uniqueFiles);
+
+        const pdfFiles = uniqueFiles.filter(file => file.name.endsWith('.pdf'));
+        const otherFiles = uniqueFiles.filter(file => !file.name.endsWith('.pdf'));
+
+        // Handle non-PDF files as usual
+        if (otherFiles.length > 0) {
+          onFileUpload(otherFiles);
+        }
+
+        // Handle PDF files
+        for (const pdfFile of pdfFiles) {
+          try {
+            const formData = new FormData();
+            formData.append('file', pdfFile);
+
+            const response = await api.post('/convert_pdf_to_docx/', formData, {
+              responseType: 'blob'
+            });
+
+            const docxBlob = response.data;
+            const docxFile = new File([docxBlob], pdfFile.name.replace('.pdf', '.docx'), { type: docxBlob.type });
+
+            // Add the DOCX file to the list of files to preview
+            onFileUpload([docxFile]);
+          } catch (error) {
+            console.error('Error converting PDF to DOCX:', error);
+          }
+        }
+
         setUploaderState(prev => ({ ...prev, uploadQueue: [] }));
       }
     }, 100);
