@@ -305,11 +305,14 @@ const AnalysisResult = React.memo(({
   };
 
   // Add this new handler
-  const handleTextSelection = () => {
+  const handleTextSelection = (event) => {
     const selection = window.getSelection();
     const text = selection.toString().trim();
     
-    if (text) {
+    // Check if the selection is within the AnalysisResult component
+    const isWithinAnalysisResult = event.target.closest('.analysis-result-container');
+    
+    if (text && isWithinAnalysisResult) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
@@ -398,7 +401,7 @@ const AnalysisResult = React.memo(({
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
+    <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full analysis-result-container">
       <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
         <Typography.Title level={4} className="text-gray-800 text-center m-0">{getTitle()}</Typography.Title>
       </div>
