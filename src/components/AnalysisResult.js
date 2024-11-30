@@ -6,42 +6,111 @@ import QuickActions from './QuickActions';
 import ExplanationCard from './ExplanationCard';
 import api from '../api';
 
+const hashText = (text) => {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+};
+
+const searchInDocument = (searchText) => {
+  try {
+    console.log('Searching for:', searchText); // Debug log
+    
+    // Clean up the search text - only remove trailing ellipsis
+    const cleanedText = searchText
+      .split(/\.{3,}|…/)[0]        // Take only the part before ... or …
+      .trim();                     // Remove any trailing space
+    
+    console.log('Cleaned text:', cleanedText); // Debug log
+    
+    // Find the file preview container
+    const filePreview = document.querySelector('.file-preview-container');
+    if (!filePreview) return false;
+
+    // Create a text node walker to find the text
+    const walker = document.createTreeWalker(
+      filePreview,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: function(node) {
+          return node.textContent.includes(cleanedText) ? 
+            NodeFilter.FILTER_ACCEPT : 
+            NodeFilter.FILTER_REJECT;
+        }
+      }
+    );
+
+    // Find the first matching node
+    const node = walker.nextNode();
+    if (node) {
+      // Create a range around the matching text
+      const range = document.createRange();
+      const startIndex = node.textContent.indexOf(cleanedText);
+      range.setStart(node, startIndex);
+      range.setEnd(node, startIndex + cleanedText.length);
+
+      // Clear any existing selection
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+
+      // Add temporary highlight with enhanced styling
+      const span = document.createElement('span');
+      span.className = 'temp-highlight';
+      range.surroundContents(span);
+
+      // Scroll the matched text into view
+      setTimeout(() => {
+        span.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        });
+      }, 100);
+
+      // Remove highlight element after animation completes
+      setTimeout(() => {
+        const parent = span.parentNode;
+        while (span.firstChild) {
+          parent.insertBefore(span.firstChild, span);
+        }
+        parent.removeChild(span);
+      }, 5000); // Matches total animation duration (0.3s in + 1.7s delay + 0.3s out = 2.3s)
+
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error during search:', error);
+    return false;
+  }
+};
+
 const wrapReferences = (text) => {
-  const clauseRegex = /\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/gi;
-  const sectionRegex = /^([A-Z\s&]+(?:\s+(?:OVER|AND)\s+[A-Z\s&]+)*):/;
-  
-  const parts = text.split(/((?:\b(?:clause\s+\d+(?:\.\d+)*|\d+(?:\.\d+)*\s+clause)\b)|(?:^[A-Z\s&]+(?:\s+(?:OVER|AND)\s+[A-Z\s&]+)*:))/gi);
+  const parts = text.split(/(\[\[.*?\]\])/g);
   
   return parts.map((part, index) => {
-    if (clauseRegex.test(part)) {
-      const id = `doc-${part.toLowerCase().replace(/\s+/g, '-')}`;
+    if (part.startsWith('[[') && part.endsWith(']]')) {
+      const sourceText = part.slice(2, -2).trim();
+      
       return (
         <a
           key={index}
-          href={`#${id}`}
+          href="#"
+          className="text-blue-600 hover:text-blue-800"
           onClick={(e) => {
             e.preventDefault();
-            document.dispatchEvent(new CustomEvent('scrollToElement', { detail: id }));
+            searchInDocument(sourceText);
           }}
         >
-          {part}
-        </a>
-      );
-    } else if (sectionRegex.test(part)) {
-      const id = `doc-${part.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/:$/, '')}`;
-      return (
-        <a
-          key={index}
-          href={`#${id}`}
-          onClick={(e) => {
-            e.preventDefault();
-            document.dispatchEvent(new CustomEvent('scrollToElement', { detail: id }));
-          }}
-        >
-          {part}
+          [source]
         </a>
       );
     }
+    
     return part;
   });
 };
