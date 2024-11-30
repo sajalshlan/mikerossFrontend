@@ -6,6 +6,7 @@ import { Form, Input, Button, Card, message, Modal } from 'antd';
 import { UserOutlined, LockOutlined, ApartmentOutlined, MailOutlined } from '@ant-design/icons';
 import { getTokens, isTokenExpired } from '../services/auth';
 import api from '../api';
+import emailjs from '@emailjs/browser';
 import '../styles/animations.css';
 import TermsAndConditions from './TermsAndConditions';
 
@@ -74,19 +75,28 @@ const Login = () => {
   const handleRegisterSubmit = async (values) => {
     try {
       setLoading(true);
-      
-      // Console log the registration details
-      console.log('Registration Details:', {
-        organizationName: values.organizationName,
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email
-      });
+      // Send email using EmailJS
+      const emailResult = await emailjs.send(
+        process.env.REACT_APP_EMAILJS_SERVICE_ID,
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+        {
+          to_email: 'tech@sdpartners.in',
+          organization_name: values.organizationName,
+          first_name: values.firstName,
+          last_name: values.lastName,
+          from_email: values.email,
+        },
+        process.env.REACT_APP_EMAILJS_PUBLIC_KEY
+      );
 
-      message.success('Registration request sent successfully!');
-      setIsRegisterModalVisible(false);
-      registerForm.resetFields();
-      navigate('/');
+      if (emailResult.status === 200) {
+        message.success('Registration request sent successfully!');
+        setIsRegisterModalVisible(false);
+        registerForm.resetFields();
+        navigate('/');
+      } else {
+        throw new Error('Failed to send email');
+      }
     } catch (error) {
       console.error('Registration error:', error);
       message.error('Failed to send registration request. Please try again.');
