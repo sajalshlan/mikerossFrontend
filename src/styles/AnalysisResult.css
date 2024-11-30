@@ -114,8 +114,12 @@
   }
 }
 
-/* Override default selection color */
-::selection {
+/* Change from global to specific selector */
+.analysis-result ::selection {
+  background-color: transparent !important;
+}
+
+.file-result ::selection {
   background-color: transparent !important;
 }
 
