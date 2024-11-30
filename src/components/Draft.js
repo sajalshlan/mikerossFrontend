@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button, Input, Spin, Typography, message, Tooltip } from 'antd';
-import { CloseOutlined, SendOutlined, CopyOutlined } from '@ant-design/icons';
+import { CloseOutlined, SendOutlined, CopyOutlined, FileWordOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 import ToggleSwitch from './common/ToggleSwitch';
 import MobileToggleSwitch from './common/MobileToggleSwitch';
+import { Document, Packer, TextRun, Paragraph as DocxParagraph } from 'docx';
 
 const { Title, Paragraph } = Typography;
 
@@ -210,6 +211,72 @@ const Draft = ({
     }
   };
 
+  const handleOpenInWord = async (content) => {
+    try {
+      // Create paragraphs with TextRun
+      const doc = new Document({
+        creator: "Draft Assistant",
+        description: "Generated document",
+        title: "Draft Document",
+        sections: [{
+          properties: {},
+          children: content.split('\n').map(line => {
+            // Skip empty lines
+            if (!line.trim()) {
+              return new DocxParagraph({
+                children: [new TextRun(" ")],  // Space for empty lines
+                spacing: {
+                  after: 200,
+                  line: 276,
+                  lineRule: 'auto'
+                }
+              });
+            }
+
+            // Handle bold text markers
+            const parts = line.split(/(\*\*.*?\*\*)/g);
+            
+            return new DocxParagraph({
+              children: parts.map(part => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  return new TextRun({
+                    text: part.slice(2, -2),
+                    bold: true
+                  });
+                }
+                return new TextRun({
+                  text: part || ' '  // Space for empty parts
+                });
+              }),
+              spacing: {
+                after: 200,
+                line: 276,
+                lineRule: 'auto'
+              }
+            });
+          }).filter(para => para !== null)  // Remove any null paragraphs
+        }]
+      });
+
+      // Generate blob and download
+      Packer.toBlob(doc).then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'draft.docx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        message.success('Document downloaded successfully');
+      });
+
+    } catch (error) {
+      console.error('Failed to generate Word document:', error);
+      message.error('Failed to generate Word document');
+    }
+  };
+
   return (
     <div className={`fixed inset-0 md:inset-auto md:bottom-12 md:right-16 md:w-[600px] md:h-[600px] bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 transition-opacity duration-300 ease-in-out ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
       <header className="p-4 text-white flex justify-between items-center rounded-t-2xl" style={{
@@ -297,14 +364,24 @@ const Draft = ({
                       {item.timestamp}
                     </div>
                     {item.type === 'result' && (
-                      <Tooltip title="Copy">
-                        <Button
-                          type="text"
-                          icon={<CopyOutlined />}
-                          onClick={() => handleCopy(item.content)}
-                          className="text-gray-500 hover:text-blue-600"
-                        />
-                      </Tooltip>
+                      <div className="flex gap-2">
+                        <Tooltip title="Copy">
+                          <Button
+                            type="text"
+                            icon={<CopyOutlined />}
+                            onClick={() => handleCopy(item.content)}
+                            className="text-gray-500 hover:text-blue-600"
+                          />
+                        </Tooltip>
+                        <Tooltip title="Open in Word">
+                          <Button
+                            type="text"
+                            icon={<FileWordOutlined />}
+                            onClick={() => handleOpenInWord(item.content)}
+                            className="text-gray-500 hover:text-blue-600"
+                          />
+                        </Tooltip>
+                      </div>
                     )}
                   </div>
                 </div>
