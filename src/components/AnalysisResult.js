@@ -90,24 +90,34 @@ const searchInDocument = (searchText) => {
 };
 
 const wrapReferences = (text) => {
-  const parts = text.split(/(\[\[.*?\]\])/g);
+  // Split by [[ and ]] but preserve the brackets in the result
+  const parts = text.split(/(\[\[.*?\]\](?:\s*\[\d+\])?)/g);
+  
+  let currentReferenceNumber = 1;  // Keep track of reference numbers
   
   return parts.map((part, index) => {
-    if (part.startsWith('[[') && part.endsWith(']]')) {
-      const sourceText = part.slice(2, -2).trim();
+    // Check if this part contains a reference
+    if (part.startsWith('[[')) {
+      // Extract the reference text and any number that follows
+      const matches = part.match(/\[\[(.*?)\]\](?:\s*\[(\d+)\])?/);
+      if (!matches) return part;
+
+      const sourceText = matches[1].trim();
       
       return (
-        <a
-          key={index}
-          href="#"
-          className="text-blue-600 hover:text-blue-800"
-          onClick={(e) => {
-            e.preventDefault();
-            searchInDocument(sourceText);
-          }}
-        >
-          [source]
-        </a>
+        <span key={index}>
+          <a
+            href="#"
+            className="text-blue-600 hover:text-blue-800"
+            onClick={(e) => {
+              e.preventDefault();
+              searchInDocument(sourceText);
+            }}
+          >
+            {`[${currentReferenceNumber++}]`}
+          </a>
+          {' '}
+        </span>
       );
     }
     
