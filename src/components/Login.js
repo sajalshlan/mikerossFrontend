@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Form, Input, Button, Card, message, Checkbox } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { getTokens, isTokenExpired } from '../services/auth';
-import api from '../api'; // Assuming you have an API setup for making requests
+import api from '../api';
 import '../styles/animations.css';
 import TermsAndConditions from './TermsAndConditions';
 
@@ -20,17 +20,16 @@ const Login = () => {
   // Redirect if user is already logged in
   useEffect(() => {
     if (user && tokens && !isTokenExpired(tokens.access)) {
-      navigate('/');
+      navigate('/analyzer');
     }
   }, [user, navigate]);
 
   const handleOk = async () => {
     setIsModalOpen(false);
     try {
-      // Using the same endpoint for accepting terms
       await api.patch('/accept_terms/', { accepted_terms: true });
       message.success('Terms accepted successfully');
-      navigate('/');
+      navigate('/analyzer');
     } catch (error) {
       console.error('Error accepting terms:', error);
       message.error('Failed to accept terms. Please try again.');
@@ -39,8 +38,6 @@ const Login = () => {
 
   const handleCancel = () => {
     setIsModalOpen(false);
-    // Logout user if they don't accept terms
-    // You might want to add a logout function to your auth context
     logout();
     message.info('You must accept the terms to continue');
   };
@@ -60,13 +57,13 @@ const Login = () => {
           ),
           duration: 3,
         });
-        navigate('/');
+        navigate('/analyzer');
       } else {
-        message.error({ content: result.error });
+        message.error(result.error || 'Login failed');
       }
     } catch (error) {
-      console.error('[Login] Login error:', error);
-      message.error('Login failed: ' + (error.message || 'Unknown error'));
+      console.error('[Login] Error:', error);
+      message.error('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
