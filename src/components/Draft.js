@@ -211,7 +211,7 @@ const Draft = ({
     }
   };
 
-  const handleOpenInWord = async (content) => {
+  const handleDownloadAsWord = async (content) => {
     try {
       // Create paragraphs with TextRun
       const doc = new Document({
@@ -222,16 +222,7 @@ const Draft = ({
           properties: {},
           children: content.split('\n').map(line => {
             // Skip empty lines
-            if (!line.trim()) {
-              return new DocxParagraph({
-                children: [new TextRun(" ")],  // Space for empty lines
-                spacing: {
-                  after: 200,
-                  line: 276,
-                  lineRule: 'auto'
-                }
-              });
-            }
+            if (line.trim() === '') return null;
 
             // Handle bold text markers
             const parts = line.split(/(\*\*.*?\*\*)/g);
@@ -373,11 +364,11 @@ const Draft = ({
                             className="text-gray-500 hover:text-blue-600"
                           />
                         </Tooltip>
-                        <Tooltip title="Open in Word">
+                        <Tooltip title="Download as Word">
                           <Button
                             type="text"
                             icon={<FileWordOutlined />}
-                            onClick={() => handleOpenInWord(item.content)}
+                            onClick={() => handleDownloadAsWord(item.content)}
                             className="text-gray-500 hover:text-blue-600"
                           />
                         </Tooltip>
