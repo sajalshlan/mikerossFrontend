@@ -395,15 +395,14 @@ const AnalysisResult = React.memo(({
     return titleMap[type] || 'Analysis Results';
   };
 
-  // Add this new handler
   const handleTextSelection = (event) => {
+    const container = event.target.closest('.analysis-result-container');
+    if (!container) return;
+
     const selection = window.getSelection();
     const text = selection.toString().trim();
     
-    // Check if the selection is within the AnalysisResult component
-    const isWithinAnalysisResult = event.target.closest('.analysis-result-container');
-    
-    if (text && isWithinAnalysisResult) {
+    if (text) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
@@ -417,26 +416,33 @@ const AnalysisResult = React.memo(({
     }
   };
 
-  // Add useEffect for handling clicks outside
+  // const handleClickOutside = (event) => {
+  //   if (!event.target.closest('.quick-actions')) {
+  //     setQuickActionPosition(null);
+  //         window.getSelection().removeAllRanges();
+  //   }
+  // };
+    
+
   useEffect(() => {
+    const container = document.querySelector('.analysis-result-container');
+    if (!container) return;
+
     const handleClickOutside = (event) => {
       if (!event.target.closest('.quick-actions')) {
         setQuickActionPosition(null);
+        window.getSelection().removeAllRanges();
       }
     };
 
-    const handleMouseUp = (event) => {
-      setTimeout(() => handleTextSelection(event), 0);
-    };
-
-    document.addEventListener('mouseup', handleMouseUp);
+    container.addEventListener('mouseup', handleTextSelection);
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
-      document.removeEventListener('mouseup', handleMouseUp);
+      container.removeEventListener('mouseup', handleTextSelection);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [quickActionPosition]);
 
   // Only render if we have valid results
   if (type === 'placeholder' || !hasResults || !filteredData || isLoading) {
@@ -496,7 +502,10 @@ const AnalysisResult = React.memo(({
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full analysis-result-container">
+    <div 
+      className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full analysis-result-container"
+      onMouseUp={handleTextSelection}
+    >
       <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
         <Typography.Title level={4} className="text-gray-800 text-center m-0">{getTitle()}</Typography.Title>
       </div>
@@ -677,16 +686,16 @@ const AnalysisResult = React.memo(({
           ))
         )}
       </div>
+      
       {quickActionPosition && (
         <QuickActions
           position={quickActionPosition}
+          showCommentButton={false}
           onExplain={() => {
-            // Get position before clearing selection
             const selection = window.getSelection();
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
             
-            // Find the container element that holds the file's analysis result
             const container = range.startContainer.parentElement?.closest('.file-analysis-container');
             let contextText = '';
             let fileName = '';
@@ -695,19 +704,16 @@ const AnalysisResult = React.memo(({
               fileName = container.getAttribute('data-filename');
               contextText = filteredData[fileName];
             } else {
-              // Fallback if container not found
               contextText = filteredData[Object.keys(filteredData)[0]];
             }
             
-            // Clear selection and hide QuickActions immediately
             window.getSelection().removeAllRanges();
             setQuickActionPosition(null);
             setSelectedText('');
             
-            // Set loading state and make API call
             setExplanationData({
               text: selectedText,
-              contextText: contextText,  // Store the context
+              contextText: contextText,
               explanation: "",
               position: {
                 x: rect.left,
@@ -716,7 +722,6 @@ const AnalysisResult = React.memo(({
             });
             setIsExplaining(true);
             
-            // Make API call
             generateExplanation(
               selectedText,
               contextText,
@@ -726,14 +731,9 @@ const AnalysisResult = React.memo(({
               }
             );
           }}
-          onEnhance={() => {
-            // Handle enhance action
-            window.getSelection().removeAllRanges();
-            setQuickActionPosition(null);
-            setSelectedText('');
-          }}
         />
       )}
+      
       {explanationData && (
         <ExplanationCard
           explanation={explanationData.explanation}

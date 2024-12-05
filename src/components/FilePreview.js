@@ -49,15 +49,21 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   }, [selectedFile, files]);
 
   useEffect(() => {
+    const filePreviewContainer = document.querySelector('.file-preview-container');
+    
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.quick-actions')) {
-        setQuickActionPosition(null);
-        window.getSelection().removeAllRanges();
+      if (quickActionPosition) {
+        if (!event.target.closest('.quick-actions')) {
+          setQuickActionPosition(null);
+          window.getSelection().removeAllRanges();
+        }
       }
     };
 
     const handleMouseUp = (event) => {
-      setTimeout(() => handleTextSelection(event), 0);
+      if (event.target.closest('.file-preview-container')) {
+        setTimeout(() => handleTextSelection(event), 0);
+      }
     };
 
     document.addEventListener('mouseup', handleMouseUp);
@@ -67,7 +73,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [quickActionPosition]);
 
   const getFileTypeFromName = (fileName) => {
     if (!fileName) return 'unknown';
@@ -262,6 +268,13 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     }
   };
 
+  const handleClickOutsideSelection = (event) => {
+    if (!event.target.closest('.quick-actions')) {
+      setQuickActionPosition(null);
+      window.getSelection().removeAllRanges();
+    }
+  };
+
   return (
     <div 
       className={`h-full overflow-auto ${selectedFile && files[selectedFile] ? 'bg-gray-900 rounded-lg shadow-lg p-4' : ''}`}
@@ -277,6 +290,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       {quickActionPosition && (
         <QuickActions
           position={quickActionPosition}
+          showCommentButton={true}
           onExplain={() => {
             const selection = window.getSelection();
             const range = selection.getRangeAt(0);
@@ -307,6 +321,14 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
                 y: rect.top
               }
             );
+          }}
+          onComment={() => {
+            console.log({
+              selectedText,
+              fileName: selectedFile
+            });
+            window.getSelection().removeAllRanges();
+            setQuickActionPosition(null);
           }}
         />
       )}
