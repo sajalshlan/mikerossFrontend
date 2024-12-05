@@ -8,7 +8,7 @@ const { Text } = Typography;
 
 const FileUploader = ({ 
   files,              
-  isUploading,       
+  isFileProcessing,  // renamed from isUploading for clarity
   onFileUpload,       
   onRemoveFile,       
   onCheckedFilesChange,
@@ -22,6 +22,11 @@ const FileUploader = ({
     uploadQueue: []                // Queue for pending uploads
   });
   const fileChangeTimeoutRef = useRef(null);
+
+  // Add a computed value to check if any file is currently uploading
+  const isUploading = Object.values(files).some(
+    file => file.progress?.status === 'uploading'
+  );
 
   useEffect(() => {
     const initialCheckedFiles = Object.entries(files).reduce((acc, [fileName, file]) => {
@@ -359,7 +364,7 @@ const FileUploader = ({
           key: 'fileActions',
           label: (
             <div className="flex justify-between items-center px-8 py-1">
-              <Tooltip title="Select all uploaded files">
+              <Tooltip title={isUploading ? "Please wait for uploads to complete" : "Select all uploaded files"}>
                 <Button
                   size="small"
                   type="primary"
@@ -369,6 +374,7 @@ const FileUploader = ({
                     e.stopPropagation();
                     handleSelectAll();
                   }}
+                  disabled={isUploading}
                   className="flex items-center text-xs hover:scale-105 transition-all duration-200 shadow-sm "
                   style={{
                     borderRadius: '6px',
@@ -388,6 +394,7 @@ const FileUploader = ({
                            Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
                       ? 'white'
                       : '#1890ff',
+                    opacity: isUploading ? 0.5 : 1,
                   }}
                   icon={<CheckSquareOutlined style={{ 
                     fontSize: '14px',
@@ -400,11 +407,12 @@ const FileUploader = ({
                   Select All
                 </Button>
               </Tooltip>
-              <Tooltip title="Remove all files">
+              <Tooltip title={isUploading ? "Please wait for uploads to complete" : "Remove all files"}>
                 <Button
                   size="small"
                   danger
                   ghost
+                  disabled={isUploading}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteAll();
@@ -420,7 +428,8 @@ const FileUploader = ({
                     justifyContent: 'center',
                     gap: '6px',
                     marginBottom: '8px',
-                    background: 'rgba(255, 77, 79, 0.05)'
+                    background: 'rgba(255, 77, 79, 0.05)',
+                    opacity: isUploading ? 0.5 : 1,
                   }}
                   icon={<DeleteColumnOutlined style={{ fontSize: '14px' }} />}
                 >
@@ -459,15 +468,17 @@ const FileUploader = ({
                     {fileName}
                   </span>
                 </div>
-                <Tooltip title="Delete file">
-                  <DeleteOutlined
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFile(fileName);
-                    }}
-                    className="cursor-pointer text-red-400 hover:text-red-600 transition-colors duration-200 flex-shrink-0 ml-2"
-                  />
-                </Tooltip>
+                {(!file.progress || file.progress.status === 'success') && (
+                  <Tooltip title="Delete file">
+                    <DeleteOutlined
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveFile(fileName);
+                      }}
+                      className="cursor-pointer text-red-400 hover:text-red-600 transition-colors duration-200 flex-shrink-0 ml-2"
+                    />
+                  </Tooltip>
+                )}
               </div>
               {file.progress && (
                 <Progress 
