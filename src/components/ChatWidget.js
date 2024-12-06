@@ -5,6 +5,92 @@ import { performAnalysis } from '../api';
 import ToggleSwitch from './common/ToggleSwitch';
 import MobileToggleSwitch from './common/MobileToggleSwitch';
 
+const searchInDocument = (searchText) => {
+  try {
+    console.log('Searching for:', searchText);
+    
+    // Clean up the search text
+    let cleanedText = searchText
+      .split(/\.{3,}|…/)[0]        // Take only the part before ... or …
+      .trim();                     // Remove any trailing space
+    
+    // Remove ordinal indicators only when they follow a number
+    cleanedText = cleanedText.replace(/(\d+)(?:st|nd|rd|th)\b.*$/, '$1');
+    
+    console.log('Cleaned text:', cleanedText);
+    
+    // Create variations of the search text
+    const searchVariations = [
+      cleanedText,                    // Original cleaned text
+      cleanedText.toUpperCase(),      // ALL CAPS version
+    ];
+    
+    // Find the file preview container
+    const filePreview = document.querySelector('.file-preview-container');
+    if (!filePreview) return false;
+
+    // Try each variation until we find a match
+    for (const searchVariation of searchVariations) {
+      // Create a text node walker to find the text
+      const walker = document.createTreeWalker(
+        filePreview,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode: function(node) {
+            return node.textContent.includes(searchVariation) ? 
+              NodeFilter.FILTER_ACCEPT : 
+              NodeFilter.FILTER_REJECT;
+          }
+        }
+      );
+
+      // Find the first matching node
+      const node = walker.nextNode();
+      if (node) {
+        // Create a range around the matching text
+        const range = document.createRange();
+        const startIndex = node.textContent.indexOf(searchVariation);
+        range.setStart(node, startIndex);
+        range.setEnd(node, startIndex + searchVariation.length);
+
+        // Clear any existing selection
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+
+        // Add temporary highlight with enhanced styling
+        const span = document.createElement('span');
+        span.className = 'temp-highlight';
+        range.surroundContents(span);
+
+        // Scroll the matched text into view
+        setTimeout(() => {
+          span.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }, 100);
+
+        // Remove highlight element after animation completes
+        setTimeout(() => {
+          const parent = span.parentNode;
+          while (span.firstChild) {
+            parent.insertBefore(span.firstChild, span);
+          }
+          parent.removeChild(span);
+        }, 5000);
+
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error during search:', error);
+    return false;
+  }
+};
+
 const ChatWidget = ({ 
   extractedTexts, 
   onClose, 
@@ -131,13 +217,23 @@ const ChatWidget = ({
   };
 
   const renderMessageContent = (content) => {
+    // Extract citations and their texts first
+    const citationTexts = {};
+    const citationRegex = /\[(\d+)\]:\s*"([^"]+)"/g;
+    let match;
+    
+    // Find all citations and their texts at the bottom of the message
+    const contentWithoutCitations = content.replace(/\n\[(\d+)\]:\s*"([^"]+)"/g, (match, number, text) => {
+      citationTexts[number] = text.trim();
+      return '';
+    });
+    
     // Split the content into paragraphs
-    const paragraphs = content.split('\n\n');
+    const paragraphs = contentWithoutCitations.split('\n\n');
     
     return paragraphs.map((paragraph, pIndex) => {
       // Check if this is a numbered list section
       if (paragraph.includes('1.') && paragraph.includes('2.')) {
-        // Split into list items, keeping the numbers
         const items = paragraph.split(/(?=\d+\.\s)/).filter(Boolean);
         
         return (
@@ -146,7 +242,7 @@ const ChatWidget = ({
               const itemContent = item.replace(/^\d+\.\s/, '').trim();
               return (
                 <li key={itemIndex} value={itemIndex + 1} className="pl-2">
-                  {renderInlineFormatting(itemContent)}
+                  {renderInlineFormatting(itemContent, citationTexts)}
                 </li>
               );
             })}
@@ -155,20 +251,63 @@ const ChatWidget = ({
       }
       
       // Regular paragraph
-      return <p key={pIndex} className="mb-4">{renderInlineFormatting(paragraph)}</p>;
+      return <p key={pIndex} className="mb-4">{renderInlineFormatting(paragraph, citationTexts)}</p>;
     });
   };
 
-  const renderInlineFormatting = (text) => {
-    const parts = text.split(/(\*\*.*?\*\*|`.*?`|\[[\d]+\])/g);
+  const renderInlineFormatting = (text, citationTexts) => {
+    if (!text) return null;
+    
+    // Split by citations and bold text
+    const parts = text.split(/(\[\d+\](?:\s*\([^)]+\))?|\*\*[^*]+\*\*)/g);
+    
     return parts.map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="text-blue-600 font-semibold">{part.slice(2, -2)}</strong>;
-      } else if (part.startsWith('`') && part.endsWith('`')) {
-        return <code key={index} className="bg-gray-200 text-red-600 px-1 rounded">{part.slice(1, -1)}</code>;
-      } else if (part.match(/^\[[\d]+\]$/)) {
-        return <span key={index} className="text-blue-600 font-medium">{part}</span>;
+      // Handle citations: [1] or [1] (filename.pdf)
+      if (part?.match(/\[(\d+)\](?:\s*\([^)]+\))?/)) {
+        const matches = part.match(/\[(\d+)\](?:\s*\(([^)]+)\))?/);
+        if (!matches) return part;
+
+        const citationNumber = matches[1];
+        const filename = matches[2];
+        const sourceText = citationTexts[citationNumber];
+        
+        return (
+          <span key={index}>
+            <a
+              href="#"
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+              onClick={(e) => {
+                e.preventDefault();
+                if (sourceText) {
+                  searchInDocument(sourceText);
+                }
+              }}
+              title={sourceText || `Citation ${citationNumber}`}
+            >
+              {`[${citationNumber}]`}
+            </a>
+            {filename && (
+              <span className="text-gray-500 ml-1">({filename})</span>
+            )}
+          </span>
+        );
       }
+      
+      // Handle bold text
+      if (part?.match(/^\*\*.*\*\*$/)) {
+        const boldText = part.slice(2, -2); // Remove ** from start and end
+        return (
+          <strong key={index} className="text-blue-600 font-semibold">
+            {boldText}
+          </strong>
+        );
+      }
+      
+      // Handle code blocks
+      if (part?.startsWith('`') && part?.endsWith('`')) {
+        return <code key={index} className="bg-gray-200 text-red-600 px-1 rounded">{part.slice(1, -1)}</code>;
+      }
+      
       return part;
     });
   };

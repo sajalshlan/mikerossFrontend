@@ -91,10 +91,6 @@ const Draft = ({
           .filter(msg => !msg.type.includes('system') && !msg.type.includes('tip'))
           .slice(-5);
 
-        console.log(`[Draft] 📄 Files included: ${indexedTexts.length}`);
-        console.log(`[Draft] 📄 Draft history: ${recentHistory.map(item => `${item.type}: ${item.content}`).join('\n\n')}`);
-        console.log(`[Draft] 📄 Current query: ${draftQuery}`);
-
         const result = await performAnalysis('draft', 
           `${indexedTexts}\n\n` +
           `Previous Drafts (last ${recentHistory.length} items):\n${recentHistory

@@ -42,19 +42,14 @@ api.interceptors.request.use(async (config) => {
     
     // Add organization header if not root user
     const isRoot = localStorage.getItem('is_root') === 'true';
-    console.log('[API] 🔑 Is Root User:', isRoot);
     
     if (!isRoot) {
         const orgId = localStorage.getItem('organization_id');
-        console.log('[API] 🏢 Organization ID:', orgId);
         if (orgId) {
             config.headers['X-Organization-ID'] = orgId;
         }
     }
-    
-    // Log request details
-    console.log('[API] 📝 Request Headers:', config.headers);
-    console.log('[API] 📦 Request Body:', config.data);
+    ;
     
     return config;
 }, (error) => {
