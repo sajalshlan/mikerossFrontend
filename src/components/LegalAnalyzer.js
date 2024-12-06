@@ -43,6 +43,8 @@ const LegalAnalyzer = () => {
     );
   }, [fileState.uploadedFiles]);
 
+  const [isDragging, setIsDragging] = useState(false);
+
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/x-icon';
@@ -423,8 +425,46 @@ const LegalAnalyzer = () => {
     }));
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFileUpload(files);
+    }
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragging(false);
+    }
+  };
+
   return (
-    <Layout className="h-screen overflow-hidden">
+    <Layout 
+      className="h-screen overflow-hidden"
+      onDragOver={handleDragOver}
+      onDrop={(e) => {
+        handleDrop(e);
+        setIsDragging(false);
+      }}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+    >
       <Helmet>
         <title>Cornelia</title>
         <meta property="og:title" content="Your super intelligent legal assistant" />
@@ -551,6 +591,35 @@ const LegalAnalyzer = () => {
         onAccept={handleAcceptTerms}
         onDecline={handleDeclineTerms}
       />
+      {isDragging && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(24, 144, 255, 0.1)',
+            border: '2px dashed #1677ff',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+          }}
+        >
+          <div
+            style={{
+              background: 'white',
+              padding: '20px 40px',
+              borderRadius: '8px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            }}
+          >
+            <h3 style={{ margin: 0, color: '#1677ff' }}>Drop files here</h3>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };
