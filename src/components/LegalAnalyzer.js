@@ -616,7 +616,7 @@ const LegalAnalyzer = () => {
               boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
             }}
           >
-            <h3 style={{ margin: 0, color: '#1677ff' }}>Drop files here</h3>
+            <h3 style={{ margin: 0, color: '#1677ff' }}>Drop files anywhere to upload</h3>
           </div>
         </div>
       )}
