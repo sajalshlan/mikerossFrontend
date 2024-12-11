@@ -5,6 +5,7 @@ import '../styles/docPreview.css';
 import QuickActions from './QuickActions';
 import ExplanationCard from './ExplanationCard';
 import api from '../api';
+import TabBar from './TabBar';
 
 const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   const containerRef = useRef(null);
@@ -15,6 +16,13 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
   const [explanationData, setExplanationData] = useState(null);
   const [isExplaining, setIsExplaining] = useState(false);
   const abortControllerRef = useRef(null);
+  const [openTabs, setOpenTabs] = useState(new Set());
+
+  useEffect(() => {
+    if (selectedFile && files[selectedFile]) {
+      setOpenTabs(prev => new Set([...prev, selectedFile]));
+    }
+  }, [selectedFile]);
 
   useEffect(() => {
     const isValidFile = selectedFile && files[selectedFile];
@@ -275,18 +283,57 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     }
   };
 
+  const handleTabClick = (fileName) => {
+    onFileSelect(fileName);
+  };
+
+  const handleTabClose = (fileName) => {
+    setOpenTabs(prev => {
+      const newTabs = new Set(prev);
+      newTabs.delete(fileName);
+      
+      // If we're closing the active tab, switch to another tab if available
+      if (fileName === selectedFile) {
+        const remainingTabs = Array.from(newTabs);
+        if (remainingTabs.length > 0) {
+          onFileSelect(remainingTabs[remainingTabs.length - 1]);
+        } else {
+          onFileSelect(null);
+        }
+      }
+      
+      return newTabs;
+    });
+  };
+
+  const openTabsFiles = useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(files).filter(([fileName]) => openTabs.has(fileName))
+    );
+  }, [files, openTabs]);
+
   return (
     <div 
-      className={`h-full overflow-auto ${selectedFile && files[selectedFile] ? 'bg-gray-900 rounded-lg shadow-lg p-4' : ''}`}
+      className={`h-full flex flex-col ${selectedFile && files[selectedFile] ? 'bg-gray-900 rounded-lg shadow-lg' : ''}`}
       onMouseUp={handleTextSelection}
     >
-      {showPlaceholder ? (
-        renderPlaceholder()
-      ) : (
-        <div className="file-preview-container select-text">
-          {selectedFile && files[selectedFile] && renderFilePreview}
-        </div>
+      {openTabs.size > 0 && (
+        <TabBar
+          files={openTabsFiles}
+          activeTab={selectedFile}
+          onTabClick={handleTabClick}
+          onTabClose={handleTabClose}
+        />
       )}
+      <div className="flex-1 overflow-auto p-4">
+        {showPlaceholder ? (
+          renderPlaceholder()
+        ) : (
+          <div className="file-preview-container select-text">
+            {selectedFile && files[selectedFile] && renderFilePreview}
+          </div>
+        )}
+      </div>
       {quickActionPosition && (
         <QuickActions
           position={quickActionPosition}

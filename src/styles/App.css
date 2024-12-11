@@ -693,5 +693,80 @@ h2 {
   animation: gradient 8s ease infinite;
 }
 
+.tab-bar {
+  display: flex;
+  overflow-x: auto;
+  background-color: #1f2937;
+  border-bottom: 1px solid #374151;
+  padding: 0.5rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+.tab-bar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tab-bar::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.tab-bar::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+  border-radius: 3px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  width: 160px; /* Fixed width for tabs */
+  min-width: 160px; /* Ensure minimum width */
+  max-width: 160px; /* Ensure maximum width */
+  padding: 0.5rem 1rem;
+  margin-right: 0.5rem;
+  background-color: #374151;
+  color: #d1d5db;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tab.active {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.tab:hover {
+  background-color: #4b5563;
+}
+
+.tab .truncate {
+  max-width: calc(100% - 24px); /* Account for close icon */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab .close-icon {
+  margin-left: 0.5rem;
+  color: #9ca3af;
+  transition: color 0.3s;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.tab:hover .close-icon {
+  opacity: 1;
+  color: #ffffff;
+}
+
+.tab .close-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
 
 
