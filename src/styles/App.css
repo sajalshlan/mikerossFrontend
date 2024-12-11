@@ -768,5 +768,15 @@ h2 {
   border-radius: 50%;
 }
 
+.temp-highlight {
+  background-color: yellow;
+  animation: fadeHighlight 5s;
+}
+
+@keyframes fadeHighlight {
+  0%, 80% { background-color: yellow; }
+  100% { background-color: transparent; }
+}
+
 
 

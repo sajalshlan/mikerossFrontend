@@ -4,7 +4,7 @@ import { MessageOutlined, FileTextOutlined, CloseOutlined } from '@ant-design/ic
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 
-const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) => {
+const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed, setActiveFile }) => {
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isDraftVisible, setIsDraftVisible] = useState(false);
   const [isChatClosing, setIsChatClosing] = useState(false);
@@ -152,6 +152,7 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
           isClosing={isChatClosing}
           isWaitingForResponse={isWaitingForChatResponse}
           setIsWaitingForResponse={setIsWaitingForChatResponse}
+          setActiveFile={setActiveFile}
         />
       )}
       {isDraftVisible && (

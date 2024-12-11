@@ -102,7 +102,8 @@ const ChatWidget = ({
   setUseSelectedFiles, 
   isClosing,
   isWaitingForResponse,
-  setIsWaitingForResponse
+  setIsWaitingForResponse,
+  setActiveFile
 }) => {
   const chatMessagesRef = useRef(null);
   const latestMessageRef = useRef(null);
@@ -182,9 +183,9 @@ const ChatWidget = ({
               .map(msg => `${msg.role}: ${msg.content}`)
               .join('\n\n');
 
-        console.log(`[ChatWidget] 📄 Files included: ${indexedTexts.length}`);
-        console.log(`[ChatWidget] 📄 Chat history: ${chatHistory}`);
-        console.log(`[ChatWidget] 📄 Current query: ${newUserMessage.content}`);
+        // console.log(`[ChatWidget] 📄 Files included: ${indexedTexts.length}`);
+        // console.log(`[ChatWidget] 📄 Chat history: ${chatHistory}`);
+        // console.log(`[ChatWidget] 📄 Current query: ${newUserMessage.content}`);
         
         // Send both chat history and current query
         const result = await performAnalysis('ask', 
@@ -219,17 +220,22 @@ const ChatWidget = ({
   const renderMessageContent = (content) => {
     // Extract citations and their texts first
     const citationTexts = {};
-    const citationRegex = /\[(\d+)\]:\s*"([^"]+)"/g;
+    const citationRegex = /\[(\d+)\]\{\{([^}]+)\}\}\s*"([^"]+)"/g;
     let match;
     
-    // Find all citations and their texts at the bottom of the message
-    const contentWithoutCitations = content.replace(/\n\[(\d+)\]:\s*"([^"]+)"/g, (match, number, text) => {
+    console.log('Processing message content:', content);
+    
+    // Find all citations and their texts
+    while ((match = citationRegex.exec(content)) !== null) {
+      console.log('Found citation:', match);
+      const [full, number, filename, text] = match;
       citationTexts[number] = text.trim();
-      return '';
-    });
+    }
+    
+    console.log('Extracted citation texts:', citationTexts);
     
     // Split the content into paragraphs
-    const paragraphs = contentWithoutCitations.split('\n\n');
+    const paragraphs = content.split('\n\n');
     
     return paragraphs.map((paragraph, pIndex) => {
       // Check if this is a numbered list section
@@ -258,54 +264,69 @@ const ChatWidget = ({
   const renderInlineFormatting = (text, citationTexts) => {
     if (!text) return null;
     
-    // Split by citations and bold text
-    const parts = text.split(/(\[\d+\](?:\s*\([^)]+\))?|\*\*[^*]+\*\*)/g);
+    let citationCounter = 1;
+    const citationMap = new Map(); // To store citation text -> number mapping
+    
+    // First pass: collect all citations and assign numbers
+    const citationRegex = /\[\[([^\]]+)\]\](?:\{\{([^}]+)\}\})?/g;
+    let match;
+    while ((match = citationRegex.exec(text))) {
+      const [_, citationText] = match;
+      if (!citationMap.has(citationText)) {
+        citationMap.set(citationText, citationCounter++);
+      }
+    }
+    
+    // Split by citations with format [[text]]{{filename}} and bold text
+    const parts = text.split(/(\[\[[^\]]+\]\](?:\{\{[^}]+\}\})?|\*\*[^*]+\*\*)/g);
     
     return parts.map((part, index) => {
-      // Handle citations: [1] or [1] (filename.pdf)
-      if (part?.match(/\[(\d+)\](?:\s*\([^)]+\))?/)) {
-        const matches = part.match(/\[(\d+)\](?:\s*\(([^)]+)\))?/);
+      // Handle citations: [[text]]{{filename}}
+      if (part?.match(/\[\[[^\]]+\]\](?:\{\{[^}]+\}\})?/)) {
+        const matches = part.match(/\[\[([^\]]+)\]\](?:\{\{([^}]+)\}\})?/);
         if (!matches) return part;
 
-        const citationNumber = matches[1];
+        const citationText = matches[1];
         const filename = matches[2];
-        const sourceText = citationTexts[citationNumber];
+        const citationNumber = citationMap.get(citationText);
         
         return (
-          <span key={index}>
-            <a
-              href="#"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-              onClick={(e) => {
-                e.preventDefault();
-                if (sourceText) {
-                  searchInDocument(sourceText);
+          <a
+            key={index}
+            href="#"
+            className="text-blue-600 hover:text-blue-800 hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              if (citationText) {
+                if (filename) {
+                  console.log('Setting active file to:', filename);
+                  setActiveFile(filename);
+                  
+                  setTimeout(() => {
+                    console.log('Searching for text:', citationText);
+                    searchInDocument(citationText);
+                  }, 100);
+                } else {
+                  console.log('No filename, searching in current document');
+                  searchInDocument(citationText);
                 }
-              }}
-              title={sourceText || `Citation ${citationNumber}`}
-            >
-              {`[${citationNumber}]`}
-            </a>
-            {filename && (
-              <span className="text-gray-500 ml-1">({filename})</span>
-            )}
-          </span>
+              }
+            }}
+            title={citationText}
+          >
+            {`[${citationNumber}]`}
+          </a>
         );
       }
       
       // Handle bold text
       if (part?.match(/^\*\*.*\*\*$/)) {
-        const boldText = part.slice(2, -2); // Remove ** from start and end
+        const boldText = part.slice(2, -2);
         return (
           <strong key={index} className="text-blue-600 font-semibold">
             {boldText}
           </strong>
         );
-      }
-      
-      // Handle code blocks
-      if (part?.startsWith('`') && part?.endsWith('`')) {
-        return <code key={index} className="bg-gray-200 text-red-600 px-1 rounded">{part.slice(1, -1)}</code>;
       }
       
       return part;

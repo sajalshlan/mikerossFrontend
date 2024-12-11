@@ -454,6 +454,11 @@ const LegalAnalyzer = () => {
     }
   };
 
+  // Create a function to set active file
+  const setActiveFile = (fileName) => {
+    setFileState(prev => ({ ...prev, previewFile: fileName }));
+  };
+
   return (
     <Layout 
       className="h-screen overflow-hidden"
@@ -571,6 +576,7 @@ const LegalAnalyzer = () => {
           Object.entries(fileState.uploadedFiles).map(([fileName, file]) => [fileName, file.extractedText])
         )}
         isSiderCollapsed={uiState.isSiderCollapsed}
+        setActiveFile={setActiveFile}
       />
       {uiState.isMobileView && uiState.isSiderCollapsed && (
         <FloatButton
