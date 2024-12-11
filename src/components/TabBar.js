@@ -1,5 +1,5 @@
 import React from 'react';
-import { CloseOutlined } from '@ant-design/icons';
+import { FileOutlined } from '@ant-design/icons';
 import { Tooltip } from 'antd';
 import '../styles/App.css';
 
@@ -18,16 +18,10 @@ const TabBar = ({
             className={`tab ${activeTab === fileName ? 'active' : ''}`}
             onClick={() => onTabClick(fileName)}
           >
+            <FileOutlined className="mr-2 text-xs" />
             <Tooltip title={fileName}>
               <span className="truncate flex-1">{fileName}</span>
             </Tooltip>
-            <CloseOutlined
-              className="close-icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onTabClose(fileName);
-              }}
-            />
           </div>
         ))}
       </div>

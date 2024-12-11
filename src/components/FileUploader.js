@@ -277,223 +277,6 @@ const FileUploader = ({
     });
   };
 
-  const menuItems = [
-    {
-      key: 'upload',
-      icon: <UploadOutlined />,
-      label: 'Upload',
-      children: [
-        {
-          key: 'uploadInstructions',
-          label: (
-            <Text type="secondary" className="text-xs">
-              Supported formats: PDF, JPEG, PNG, DOC, DOCX
-            </Text>
-          ),
-        },
-        {
-          key: 'mainUpload',
-          label: (
-            <div className="p-2">
-              <div 
-                className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-500 transition-colors"
-                onDragOver={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onDrop={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const files = Array.from(e.dataTransfer.files);
-                  handleFileChange({ fileList: files.map(file => ({ originFileObj: file })) });
-                }}
-              >
-                <Upload {...uploadProps}>
-                  <div className="cursor-pointer">
-                    <UploadOutlined className="text-2xl text-gray-400 mb-1" />
-                    <p className="text-gray-600 text-sm mb-1">Drag & drop files here</p>
-                    <p className="text-gray-400 text-xs mb-2">or click to browse</p>
-                  </div>
-                </Upload>
-                
-                {/* Temporarily hidden cloud storage options
-                <div className="flex justify-center space-x-3 pt-2 border-t border-gray-200">
-                  <Tooltip title={isUploading ? "Please wait for current upload to finish" : "Import from Google Drive"}>
-                    <Button 
-                      onClick={handleGoogleDriveClick}
-                      className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-1"
-                      disabled={isUploading}
-                      icon={
-                        <img 
-                          src="/google-drive-icon.png" 
-                          alt="Google Drive" 
-                          className="w-5 h-5"
-                        />
-                      }
-                    />
-                  </Tooltip>
-                  
-                  <Tooltip title={isUploading ? "Please wait for current upload to finish" : "Import from OneDrive"}>
-                    <Button 
-                      onClick={handleOneDriveClick}
-                      className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-1"
-                      disabled={isUploading}
-                      icon={
-                        <img 
-                          src="/onedrive-icon.png" 
-                          alt="OneDrive" 
-                          className="w-5 h-5"
-                        />
-                      }
-                    />
-                  </Tooltip>
-                </div>
-                */}
-              </div>
-            </div>
-          ),
-        },
-      ],
-    },
-    {
-      key: 'files',
-      icon: <FileOutlined />,
-      label: 'Click files to select, eye to preview',
-      children: [
-        {
-          key: 'fileActions',
-          label: (
-            <div className="flex justify-between items-center px-8 py-1">
-              <Tooltip title={isUploading ? "Please wait for uploads to complete" : "Select all uploaded files"}>
-                <Button
-                  size="small"
-                  type="primary"
-                  ghost={!Object.keys(files).length > 0 || 
-                        !Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSelectAll();
-                  }}
-                  disabled={isUploading}
-                  className="flex items-center text-xs hover:scale-105 transition-all duration-200 shadow-sm "
-                  style={{
-                    borderRadius: '6px',
-                    padding: '4px 12px',
-                    height: '28px',
-                    minWidth: '50px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    marginBottom: '8px',
-                    background: Object.keys(files).length > 0 && 
-                               Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
-                      ? '#1890ff'
-                      : 'rgba(24, 144, 255, 0.05)',
-                    color: Object.keys(files).length > 0 && 
-                           Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
-                      ? 'white'
-                      : '#1890ff',
-                    opacity: isUploading ? 0.5 : 1,
-                  }}
-                  icon={<CheckSquareOutlined style={{ 
-                    fontSize: '14px',
-                    color: Object.keys(files).length > 0 && 
-                           Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
-                      ? 'white'
-                      : '#1890ff'
-                  }} />}
-                >
-                  Select All
-                </Button>
-              </Tooltip>
-              <Tooltip title={isUploading ? "Please wait for uploads to complete" : "Remove all files"}>
-                <Button
-                  size="small"
-                  danger
-                  ghost
-                  disabled={isUploading}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteAll();
-                  }}
-                  className="flex items-center text-xs hover:scale-105 transition-all duration-200 shadow-sm"
-                  style={{
-                    borderRadius: '6px',
-                    padding: '4px 12px',
-                    height: '28px',
-                    minWidth: '50px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    marginBottom: '8px',
-                    background: 'rgba(255, 77, 79, 0.05)',
-                    opacity: isUploading ? 0.5 : 1,
-                  }}
-                  icon={<DeleteColumnOutlined style={{ fontSize: '14px' }} />}
-                >
-                  Delete All
-                </Button>
-              </Tooltip>
-            </div>
-          ),
-        },
-        ...Object.entries(files).map(([fileName, file]) => ({
-          key: fileName,
-          label: (
-            <div className={`flex flex-col w-full ${uploaderState.checkedFiles[fileName] ? 'bg-blue-100 rounded-md p-2 mb-1' : 'py-2'}`}>
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center space-x-2 flex-grow min-w-0">
-                  <Checkbox
-                    checked={uploaderState.checkedFiles[fileName]}
-                    onChange={() => handleFileSelection(fileName)}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <Tooltip title="Preview file">
-                    <EyeOutlined 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onFileSelection(fileName);
-                      }}
-                      className="cursor-pointer text-blue-400 hover:text-blue-600 transition-colors duration-200 flex-shrink-0"
-                    />
-                  </Tooltip>
-                  <span 
-                    onClick={() => handleFileSelection(fileName)}
-                    className={`cursor-pointer transition-colors duration-200 truncate 
-                      ${uploaderState.checkedFiles[fileName] ? 'font-bold text-blue-700' : 'hover:text-blue-400'}
-                      ${file.progress && file.progress.status !== 'success' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {fileName}
-                  </span>
-                </div>
-                {(!file.progress || file.progress.status === 'success') && (
-                  <Tooltip title="Delete file">
-                    <DeleteOutlined
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveFile(fileName);
-                      }}
-                      className="cursor-pointer text-red-400 hover:text-red-600 transition-colors duration-200 flex-shrink-0 ml-2"
-                    />
-                  </Tooltip>
-                )}
-              </div>
-              {file.progress && (
-                <Progress 
-                  percent={Math.round(file.progress.progress)} 
-                  status={file.progress.status === 'error' ? 'exception' : file.progress.status === 'success' ? 'success' : 'active'}
-                  size="small"
-                />
-              )}
-            </div>
-          ),
-        })),
-      ],
-    },
-  ];
-
   return (
     <div className="file-uploader h-full flex flex-col shadow-lg rounded-l-2xl" 
       onClick={() => collapsed && setCollapsed(false)}
@@ -520,7 +303,207 @@ const FileUploader = ({
         defaultOpenKeys={['upload', 'files']}
         mode="inline"
         theme="light"
-        items={menuItems}
+        items={[
+          {
+            key: 'upload',
+            icon: <UploadOutlined />,
+            label: 'Upload',
+            children: [
+              {
+                key: 'uploadInstructions',
+                label: (
+                  <Text type="secondary" className="text-xs">
+                    Supported formats: PDF, JPEG, PNG, DOC, DOCX
+                  </Text>
+                ),
+              },
+              {
+                key: 'mainUpload',
+                label: (
+                  <div className="p-2">
+                    <div 
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-500 transition-colors"
+                      onDragOver={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const files = Array.from(e.dataTransfer.files);
+                        handleFileChange({ fileList: files.map(file => ({ originFileObj: file })) });
+                      }}
+                    >
+                      <Upload {...uploadProps}>
+                        <div className="cursor-pointer">
+                          <UploadOutlined className="text-2xl text-gray-400 mb-1" />
+                          <p className="text-gray-600 text-sm mb-1">Drag & drop files here</p>
+                          <p className="text-gray-400 text-xs mb-2">or click to browse</p>
+                        </div>
+                      </Upload>
+                      
+                      {/* Temporarily hidden cloud storage options
+                      <div className="flex justify-center space-x-3 pt-2 border-t border-gray-200">
+                        <Tooltip title={isUploading ? "Please wait for current upload to finish" : "Import from Google Drive"}>
+                          <Button 
+                            onClick={handleGoogleDriveClick}
+                            className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-1"
+                            disabled={isUploading}
+                            icon={
+                              <img 
+                                src="/google-drive-icon.png" 
+                                alt="Google Drive" 
+                                className="w-5 h-5"
+                              />
+                            }
+                          />
+                        </Tooltip>
+                        
+                        <Tooltip title={isUploading ? "Please wait for current upload to finish" : "Import from OneDrive"}>
+                          <Button 
+                            onClick={handleOneDriveClick}
+                            className="flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-1"
+                            disabled={isUploading}
+                            icon={
+                              <img 
+                                src="/onedrive-icon.png" 
+                                alt="OneDrive" 
+                                className="w-5 h-5"
+                              />
+                            }
+                          />
+                        </Tooltip>
+                      </div>
+                      */}
+                    </div>
+                  </div>
+                ),
+              },
+            ],
+          },
+          {
+            key: 'files',
+            icon: <FileOutlined />,
+            label: 'Click files to select',
+            children: [
+              {
+                key: 'fileActions',
+                label: (
+                  <div className="flex justify-between items-center px-8 py-1">
+                    <Tooltip title={isUploading ? "Please wait for uploads to complete" : "Select all uploaded files"}>
+                      <Button
+                        size="small"
+                        type="primary"
+                        ghost={!Object.keys(files).length > 0 || 
+                              !Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectAll();
+                        }}
+                        disabled={isUploading}
+                        className="flex items-center text-xs hover:scale-105 transition-all duration-200 shadow-sm"
+                        style={{
+                          borderRadius: '6px',
+                          padding: '4px 12px',
+                          height: '28px',
+                          minWidth: '50px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          marginBottom: '8px',
+                          background: Object.keys(files).length > 0 && 
+                                     Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
+                              ? '#1890ff'
+                              : 'rgba(24, 144, 255, 0.05)',
+                          color: Object.keys(files).length > 0 && 
+                                 Object.keys(files).every(fileName => uploaderState.checkedFiles[fileName])
+                              ? 'white'
+                              : '#1890ff',
+                          opacity: isUploading ? 0.5 : 1,
+                        }}
+                        icon={<CheckSquareOutlined />}
+                      >
+                        Select All
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title={isUploading ? "Please wait for uploads to complete" : "Remove all files"}>
+                      <Button
+                        size="small"
+                        danger
+                        ghost
+                        disabled={isUploading}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAll();
+                        }}
+                        className="flex items-center text-xs hover:scale-105 transition-all duration-200 shadow-sm"
+                        style={{
+                          borderRadius: '6px',
+                          padding: '4px 12px',
+                          height: '28px',
+                          minWidth: '50px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          marginBottom: '8px',
+                          background: 'rgba(255, 77, 79, 0.05)',
+                          opacity: isUploading ? 0.5 : 1,
+                        }}
+                        icon={<DeleteColumnOutlined style={{ fontSize: '14px' }} />}
+                      >
+                        Delete All
+                      </Button>
+                    </Tooltip>
+                  </div>
+                ),
+              },
+              ...Object.entries(files).map(([fileName, file]) => ({
+                key: fileName,
+                label: (
+                  <div className={`flex flex-col w-full ${uploaderState.checkedFiles[fileName] ? 'bg-blue-100 rounded-md p-2 mb-1' : 'py-2'}`}>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center space-x-2 flex-grow min-w-0">
+                        <Checkbox
+                          checked={uploaderState.checkedFiles[fileName]}
+                          onChange={() => handleFileSelection(fileName)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span 
+                          onClick={() => handleFileSelection(fileName)}
+                          className={`cursor-pointer transition-colors duration-200 truncate 
+                            ${uploaderState.checkedFiles[fileName] ? 'font-bold text-blue-700' : 'hover:text-blue-400'}
+                            ${file.progress && file.progress.status !== 'success' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          {fileName}
+                        </span>
+                      </div>
+                      {(!file.progress || file.progress.status === 'success') && (
+                        <Tooltip title="Delete file">
+                          <DeleteOutlined
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveFile(fileName);
+                            }}
+                            className="cursor-pointer text-red-400 hover:text-red-600 transition-colors duration-200 flex-shrink-0 ml-2"
+                          />
+                        </Tooltip>
+                      )}
+                    </div>
+                    {file.progress && (
+                      <Progress 
+                        percent={Math.round(file.progress.progress)} 
+                        status={file.progress.status === 'error' ? 'exception' : file.progress.status === 'success' ? 'success' : 'active'}
+                        size="small"
+                      />
+                    )}
+                  </div>
+                ),
+              })),
+            ],
+          },
+        ]}
         triggerSubMenuAction=""
         className="flex-grow custom-menu"
         style={{ 
