@@ -350,7 +350,7 @@ const ChatWidget = ({
   const ReferenceBox = ({ text }) => {
     if (!text) return null;
     
-    const truncatedText = text.length > 150 
+    const truncatedText = text.length > 100 
       ? text.substring(0, 100) + '...' 
       : text;
     
@@ -453,10 +453,10 @@ const ChatWidget = ({
                       : 'bg-white border border-blue-100 text-gray-800'
                   }`}>
                     {message.referenceText && (
-                      <div className="mb-2 p-2 bg-white bg-opacity-90 rounded text-sm border border-white border-opacity-20">
+                      <div className="mb-2 p-2 bg-white rounded text-sm border border-white border-opacity-20">
                         <p className="text-blue-500 m-0">
-                          {message.referenceText.length > 150 
-                            ? message.referenceText.substring(0, 150) + '...' 
+                          {message.referenceText.length > 50 
+                            ? message.referenceText.substring(0, 50) + '...' 
                             : message.referenceText}
                         </p>
                       </div>
