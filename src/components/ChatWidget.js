@@ -162,6 +162,7 @@ const ChatWidget = ({
         };
         setChatMessages(prev => [...prev, newUserMessage]);
         setChatInput('');
+        setBrainstormText('');
         setIsWaitingForResponse(true);
 
         const textsToUse = extractedTexts;
