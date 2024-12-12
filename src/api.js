@@ -130,7 +130,8 @@ const performAnalysis = async (type, text, fileName, onProgress, signal) => {
     const requestBody = {
       analysis_type: type,
       text: text,
-      include_history: type === 'ask'
+      include_history: type === 'ask',
+      referenced_text: window.selectedText || null
     };
 
     const response = await api.post('/perform_analysis/', requestBody, {

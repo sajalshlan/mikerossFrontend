@@ -7,7 +7,6 @@ import MobileToggleSwitch from './common/MobileToggleSwitch';
 
 const searchInDocument = (searchText) => {
   try {
-    console.log('Searching for:', searchText);
     
     // Clean up the search text
     let cleanedText = searchText
@@ -17,7 +16,6 @@ const searchInDocument = (searchText) => {
     // Remove ordinal indicators only when they follow a number
     cleanedText = cleanedText.replace(/(\d+)(?:st|nd|rd|th)\b.*$/, '$1');
     
-    console.log('Cleaned text:', cleanedText);
     
     // Create variations of the search text
     const searchVariations = [
@@ -154,24 +152,30 @@ const ChatWidget = ({
   const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (chatInput.trim() && !isWaitingForResponse) {
-      // Clear brainstorm text when submitting
-      setBrainstormText(null);
-      
-      const newUserMessage = { 
-        role: 'user', 
-        content: chatInput,
-        timestamp: new Date().toLocaleTimeString()
-      };
-      setChatMessages(prev => [...prev, newUserMessage]);
-      setChatInput('');
-      setIsWaitingForResponse(true);
-
       try {
+        window.selectedText = brainstormText;
+        
+        const newUserMessage = { 
+          role: 'user', 
+          content: chatInput,
+          timestamp: new Date().toLocaleTimeString()
+        };
+        setChatMessages(prev => [...prev, newUserMessage]);
+        setChatInput('');
+        setIsWaitingForResponse(true);
+
         const textsToUse = extractedTexts;
+        console.log('********************************')
+        console.log(textsToUse)
+        console.log('********************************')
         const fileName = Object.keys(extractedTexts)[0];
         const indexedTexts = Object.entries(textsToUse).map(([fileName, content], index) => 
           `[${index + 1}] ${fileName}:\n${content}`
         ).join('\n\n\n\n');
+
+        console.log('********************************')
+        console.log(indexedTexts)
+        console.log('********************************')
 
         // Only include messages since the last document change, excluding doc change messages
         const messagesAfterDocChange = chatMessages
@@ -218,6 +222,7 @@ const ChatWidget = ({
         }]);
       } finally {
         setIsWaitingForResponse(false);
+        window.selectedText = null;
       }
     }
   };
@@ -228,16 +233,13 @@ const ChatWidget = ({
     const citationRegex = /\[(\d+)\]\{\{([^}]+)\}\}\s*"([^"]+)"/g;
     let match;
     
-    console.log('Processing message content:', content);
     
     // Find all citations and their texts
     while ((match = citationRegex.exec(content)) !== null) {
-      console.log('Found citation:', match);
       const [full, number, filename, text] = match;
       citationTexts[number] = text.trim();
     }
     
-    console.log('Extracted citation texts:', citationTexts);
     
     // Split the content into paragraphs
     const paragraphs = content.split('\n\n');
@@ -304,15 +306,12 @@ const ChatWidget = ({
               e.preventDefault();
               if (citationText) {
                 if (filename) {
-                  console.log('Setting active file to:', filename);
                   setActiveFile(filename);
                   
                   setTimeout(() => {
-                    console.log('Searching for text:', citationText);
                     searchInDocument(citationText);
                   }, 100);
                 } else {
-                  console.log('No filename, searching in current document');
                   searchInDocument(citationText);
                 }
               }
