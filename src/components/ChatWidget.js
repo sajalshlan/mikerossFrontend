@@ -107,6 +107,7 @@ const ChatWidget = ({
 }) => {
   const chatMessagesRef = useRef(null);
   const latestMessageRef = useRef(null);
+  const inputRef = useRef(null);
   const previousTextsLengthRef = useRef(Object.keys(extractedTexts).length);
   const lastDocChangeRef = useRef(0); // Track when documents last changed
 
@@ -143,6 +144,12 @@ const ChatWidget = ({
     scrollToLatestMessage();
   }, [chatMessages]);
 
+  useEffect(() => {
+    if (brainstormText && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [brainstormText]);
+
   const scrollToLatestMessage = () => {
     if (latestMessageRef.current) {
       latestMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -158,6 +165,7 @@ const ChatWidget = ({
         const newUserMessage = { 
           role: 'user', 
           content: chatInput,
+          referenceText: brainstormText,
           timestamp: new Date().toLocaleTimeString()
         };
         setChatMessages(prev => [...prev, newUserMessage]);
@@ -342,13 +350,22 @@ const ChatWidget = ({
   const ReferenceBox = ({ text }) => {
     if (!text) return null;
     
-    // Truncate text to 150 characters and add ellipsis if needed
     const truncatedText = text.length > 150 
       ? text.substring(0, 100) + '...' 
       : text;
     
     return (
       <div className="mx-4 mb-2 p-3 bg-gray-50 rounded-lg border border-gray-200 relative">
+        <button 
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setBrainstormText('');
+          }}
+          className="absolute -top-2 -right-2 w-5 h-5 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center shadow-sm transition-colors duration-200"
+        >
+          <CloseOutlined className="text-gray-500 text-xs" />
+        </button>
         <div className="absolute -bottom-2 left-4 w-4 h-4 bg-gray-50 border-b border-r border-gray-200 transform rotate-45"></div>
         <p className="text-sm text-gray-600 m-0">{truncatedText}</p>
       </div>
@@ -435,6 +452,15 @@ const ChatWidget = ({
                       ? 'bg-blue-500 text-white' 
                       : 'bg-white border border-blue-100 text-gray-800'
                   }`}>
+                    {message.referenceText && (
+                      <div className="mb-2 p-2 bg-white bg-opacity-90 rounded text-sm border border-white border-opacity-20">
+                        <p className="text-blue-500 m-0">
+                          {message.referenceText.length > 150 
+                            ? message.referenceText.substring(0, 150) + '...' 
+                            : message.referenceText}
+                        </p>
+                      </div>
+                    )}
                     <div className="break-words text-sm leading-relaxed">
                       {renderMessageContent(message.content)}
                     </div>
@@ -460,6 +486,7 @@ const ChatWidget = ({
         {brainstormText && <ReferenceBox text={brainstormText} />}
         <form onSubmit={handleChatSubmit} className="flex">
           <Input
+            ref={inputRef}
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Type your question here..."
