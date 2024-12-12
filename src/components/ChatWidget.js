@@ -103,7 +103,9 @@ const ChatWidget = ({
   isClosing,
   isWaitingForResponse,
   setIsWaitingForResponse,
-  setActiveFile
+  setActiveFile,
+  brainstormText,
+  setBrainstormText
 }) => {
   const chatMessagesRef = useRef(null);
   const latestMessageRef = useRef(null);
@@ -152,6 +154,9 @@ const ChatWidget = ({
   const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (chatInput.trim() && !isWaitingForResponse) {
+      // Clear brainstorm text when submitting
+      setBrainstormText(null);
+      
       const newUserMessage = { 
         role: 'user', 
         content: chatInput,
@@ -333,6 +338,23 @@ const ChatWidget = ({
     });
   };
 
+  // Add this component for the reference UI
+  const ReferenceBox = ({ text }) => {
+    if (!text) return null;
+    
+    // Truncate text to 150 characters and add ellipsis if needed
+    const truncatedText = text.length > 150 
+      ? text.substring(0, 100) + '...' 
+      : text;
+    
+    return (
+      <div className="mx-4 mb-2 p-3 bg-gray-50 rounded-lg border border-gray-200 relative">
+        <div className="absolute -bottom-2 left-4 w-4 h-4 bg-gray-50 border-b border-r border-gray-200 transform rotate-45"></div>
+        <p className="text-sm text-gray-600 m-0">{truncatedText}</p>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 md:inset-auto md:bottom-12 md:right-16 md:w-[400px] md:h-[600px] bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50">
       <header className="p-4 text-white flex justify-between items-center" style={{
@@ -433,7 +455,9 @@ const ChatWidget = ({
           </div>
         )}
       </div>
+
       <footer className="bg-blue-50 p-4 rounded-b-2xl border-t border-blue-100">
+        {brainstormText && <ReferenceBox text={brainstormText} />}
         <form onSubmit={handleChatSubmit} className="flex">
           <Input
             value={chatInput}

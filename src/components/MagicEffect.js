@@ -24,12 +24,14 @@ const MagicEffect = ({
   const [isFloatGroupOpen, setIsFloatGroupOpen] = useState(false);
   const [isWaitingForChatResponse, setIsWaitingForChatResponse] = useState(false);
   const [isWaitingForDraftResponse, setIsWaitingForDraftResponse] = useState(false);
+  const [localBrainstormText, setLocalBrainstormText] = useState(null);
 
   const floatButtonRef = useRef(null);
 
   const toggleChat = () => {
     if (isChatVisible && !isChatClosing) {
       setIsChatClosing(true);
+      setLocalBrainstormText(null);
     } else {
       setIsChatVisible(true);
       setIsDraftVisible(false);
@@ -93,10 +95,10 @@ const MagicEffect = ({
 
   useEffect(() => {
     if (brainstormText) {
+      setLocalBrainstormText(brainstormText);
       setIsChatVisible(true);
       setIsDraftVisible(false);
       setIsDraftClosing(false);
-      setChatInput(brainstormText);
     }
   }, [brainstormText]);
 
@@ -168,6 +170,8 @@ const MagicEffect = ({
           isWaitingForResponse={isWaitingForChatResponse}
           setIsWaitingForResponse={setIsWaitingForChatResponse}
           setActiveFile={setActiveFile}
+          brainstormText={localBrainstormText}
+          setBrainstormText={setLocalBrainstormText}
         />
       )}
       {isDraftVisible && (
