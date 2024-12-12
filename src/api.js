@@ -6,7 +6,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:800
 // Create axios instance with default config
 const api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 180000,
+    timeout: 300000,
 });
 
 // Add token to all requests
