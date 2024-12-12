@@ -4,7 +4,13 @@ import { MessageOutlined, FileTextOutlined, CloseOutlined } from '@ant-design/ic
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 
-const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed, setActiveFile }) => {
+const MagicEffect = ({ 
+  extractedTexts, 
+  allExtractedTexts, 
+  isSiderCollapsed, 
+  setActiveFile,
+  brainstormText
+}) => {
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isDraftVisible, setIsDraftVisible] = useState(false);
   const [isChatClosing, setIsChatClosing] = useState(false);
@@ -84,6 +90,15 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed, setA
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (brainstormText) {
+      setIsChatVisible(true);
+      setIsDraftVisible(false);
+      setIsDraftClosing(false);
+      setChatInput(brainstormText);
+    }
+  }, [brainstormText]);
 
   const magicWandIcon = isChatVisible || isDraftVisible 
   ? <CloseOutlined />

@@ -510,6 +510,12 @@ const LegalAnalyzer = () => {
                     files={fileState.uploadedFiles}
                     selectedFile={fileState.previewFile}
                     onFileSelect={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
+                    onBrainstorm={(text) => {
+                      setFileState(prev => ({ 
+                        ...prev, 
+                        brainstormText: text 
+                      }));
+                    }}
                   />
                 </div>
               </Splitter.Panel>
@@ -577,6 +583,7 @@ const LegalAnalyzer = () => {
         )}
         isSiderCollapsed={uiState.isSiderCollapsed}
         setActiveFile={setActiveFile}
+        brainstormText={fileState.brainstormText}
       />
       {uiState.isMobileView && uiState.isSiderCollapsed && (
         <FloatButton

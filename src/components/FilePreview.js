@@ -7,7 +7,7 @@ import ExplanationCard from './ExplanationCard';
 import api from '../api';
 import TabBar from './TabBar';
 
-const FilePreview = ({ files, selectedFile, onFileSelect }) => {
+const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
   const containerRef = useRef(null);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [docxContent, setDocxContent] = useState('');
@@ -108,14 +108,10 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
     const selection = window.getSelection();
     const text = selection.toString().trim();
     
-    // Check if we have any text selected
     if (text) {
-      
-      // Get the range and its bounding rectangle
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
-      // Update state with selected text and position
       setSelectedText(text);
       setQuickActionPosition({
         x: rect.left + (rect.width / 2),
@@ -330,7 +326,6 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
       {quickActionPosition && (
         <QuickActions
           position={quickActionPosition}
-          showCommentButton={true}
           onExplain={() => {
             const selection = window.getSelection();
             const range = selection.getRangeAt(0);
@@ -362,11 +357,8 @@ const FilePreview = ({ files, selectedFile, onFileSelect }) => {
               }
             );
           }}
-          onComment={() => {
-            console.log({
-              selectedText,
-              fileName: selectedFile
-            });
+          onBrainstorm={() => {
+            onBrainstorm(selectedText);
             window.getSelection().removeAllRanges();
             setQuickActionPosition(null);
           }}

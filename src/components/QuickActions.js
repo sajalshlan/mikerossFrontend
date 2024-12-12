@@ -1,8 +1,8 @@
 import React from 'react';
 import { Button, Tooltip } from 'antd';
-import { BulbOutlined, CommentOutlined } from '@ant-design/icons';
+import { BulbOutlined, ThunderboltOutlined } from '@ant-design/icons';
 
-const QuickActions = ({ position, onExplain, onComment, showCommentButton = false }) => {
+const QuickActions = ({ position, onExplain, onBrainstorm }) => {
   return (
     <div 
       className="fixed z-50 bg-white/95 backdrop-blur-sm shadow-xl rounded-lg border border-gray-100 p-1.5 quick-actions transform -translate-y-full -translate-x-1/2 transition-all duration-200 ease-out flex gap-2"
@@ -21,17 +21,15 @@ const QuickActions = ({ position, onExplain, onComment, showCommentButton = fals
         />
       </Tooltip>
       
-      {showCommentButton && (
-        <Tooltip title="Comment">
-          <Button 
-            size="small" 
-            type="primary"
-            icon={<CommentOutlined />}
-            className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 border-none hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
-            onClick={onComment}
-          />
-        </Tooltip>
-      )}
+      <Tooltip title="Brainstorm">
+        <Button 
+          size="small" 
+          type="primary"
+          icon={<ThunderboltOutlined />}
+          className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 border-none hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+          onClick={onBrainstorm}
+        />
+      </Tooltip>
     </div>
   );
 };
