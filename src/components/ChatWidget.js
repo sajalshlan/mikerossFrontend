@@ -168,23 +168,17 @@ const ChatWidget = ({
           referenceText: brainstormText,
           timestamp: new Date().toLocaleTimeString()
         };
+
         setChatMessages(prev => [...prev, newUserMessage]);
         setChatInput('');
         setBrainstormText('');
         setIsWaitingForResponse(true);
 
         const textsToUse = extractedTexts;
-        console.log('********************************')
-        console.log(textsToUse)
-        console.log('********************************')
         const fileName = Object.keys(extractedTexts)[0];
         const indexedTexts = Object.entries(textsToUse).map(([fileName, content], index) => 
           `[${index + 1}] ${fileName}:\n${content}`
         ).join('\n\n\n\n');
-
-        console.log('********************************')
-        console.log(indexedTexts)
-        console.log('********************************')
 
         // Only include messages since the last document change, excluding doc change messages
         const messagesAfterDocChange = chatMessages
@@ -201,9 +195,12 @@ const ChatWidget = ({
               .map(msg => `${msg.role}: ${msg.content}`)
               .join('\n\n');
 
-        // console.log(`[ChatWidget] 📄 Files included: ${indexedTexts.length}`);
-        // console.log(`[ChatWidget] 📄 Chat history: ${chatHistory}`);
-        // console.log(`[ChatWidget] 📄 Current query: ${newUserMessage.content}`);
+        console.log('API Request Data:', {
+          analysis_type: 'ask',
+          text: indexedTexts,
+          referenced_text: brainstormText,
+          include_history: chatHistory
+        });
         
         // Send both chat history and current query
         const result = await performAnalysis('ask', 
