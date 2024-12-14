@@ -670,8 +670,6 @@ const AnalysisResult = React.memo(({
                     />
                     </Tooltip>
                   </div>
-
-                  
                 </div>
               </React.Fragment>
             )
@@ -682,7 +680,7 @@ const AnalysisResult = React.memo(({
       {quickActionPosition && (
         <QuickActions
           position={quickActionPosition}
-          showCommentButton={false}
+          showBrainstorm={false}
           onExplain={() => {
             const selection = window.getSelection();
             const range = selection.getRangeAt(0);

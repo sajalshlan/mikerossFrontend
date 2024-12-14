@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { BulbOutlined, ThunderboltOutlined } from '@ant-design/icons';
 
-const QuickActions = ({ position, onExplain, onBrainstorm }) => {
+const QuickActions = ({ position, onExplain, onBrainstorm, showBrainstorm=true }) => {
   return (
     <div 
       className="fixed z-50 bg-white/95 backdrop-blur-sm shadow-xl rounded-lg border border-gray-100 p-1.5 quick-actions transform -translate-y-full -translate-x-1/2 transition-all duration-200 ease-out flex gap-2"
@@ -20,7 +20,7 @@ const QuickActions = ({ position, onExplain, onBrainstorm }) => {
           onClick={onExplain}
         />
       </Tooltip>
-      
+      {showBrainstorm && (
       <Tooltip title="Brainstorm">
         <Button 
           size="small" 
@@ -30,6 +30,7 @@ const QuickActions = ({ position, onExplain, onBrainstorm }) => {
           onClick={onBrainstorm}
         />
       </Tooltip>
+      )}
     </div>
   );
 };
