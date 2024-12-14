@@ -1,58 +1,92 @@
-// frontend/src/components/ContentRenderer.js
+// frontend/src/components/common/ContentRenderer.js
 import React from 'react';
 import { Typography, List, Collapse } from 'antd';
-import { searchInDocument } from '../../utils/searchInDocument'; // Move searchInDocument to a utility file
+import { searchInDocument } from '../../utils/searchInDocument';
 
-const ContentRenderer = ({ 
-  content, 
-  type, 
-  onFilePreview, 
-  fileName,
-  onFileChange  // Add this prop
-}) => {
-  // Helper function to wrap references with click handlers
-  const wrapReferences = (text, onFileChange) => {
-    // Support both formats: [[text]] and [[text]]{{filename}}
-    const parts = text.split(/(\[\[.*?\]\](?:\{\{[^}]+\}\})?(?:\s*\[\d+\])?)/g);
-    let currentReferenceNumber = 1;
+// Extract and export wrapReferences
+export const wrapReferences = (text, onFileChange) => {
+  if (!text) return null;
+  
+  // First pass: collect and map citations
+  const citationMap = new Map();
+  let citationCounter = 1;
+  const citationRegex = /\[\[([^\]]+)\]\](?:\{\{([^}]+)\}\})?/g;
+  let match;
+  
+  while ((match = citationRegex.exec(text))) {
+    const [_, citationText] = match;
+    if (!citationMap.has(citationText)) {
+      citationMap.set(citationText, citationCounter++);
+    }
+  }
+
+  // Split text into paragraphs first
+  const paragraphs = text.split('\n');
+  
+  return paragraphs.map((paragraph, pIndex) => {
+    // Split each paragraph by citations and bold text
+    const parts = paragraph.split(/(\[\[[^\]]+\]\](?:\{\{[^}]+\}\})?|\*\*[^*]+\*\*)/g);
     
-    return parts.map((part, index) => {
-      if (part?.startsWith('[[')) {
-        // Match both formats
-        const matches = part.match(/\[\[(.*?)\]\](?:\{\{([^}]+)\}\})?(?:\s*\[(\d+)\])?/);
+    const renderedParts = parts.map((part, index) => {
+      // Handle citations: [[text]]{{filename}}
+      if (part?.match(/\[\[[^\]]+\]\](?:\{\{[^}]+\}\})?/)) {
+        const matches = part.match(/\[\[([^\]]+)\]\](?:\{\{([^}]+)\}\})?/);
         if (!matches) return part;
 
-        const sourceText = matches[1].trim();
-        const filename = matches[2];  // Will be undefined if no filename specified
-        
+        const citationText = matches[1];
+        const filename = matches[2];
+        const citationNumber = citationMap.get(citationText);
+
         return (
-          <span key={index}>
-            <a
-              href="#"
-              className="text-blue-600 hover:text-blue-800"
-              onClick={(e) => {
-                e.preventDefault();
+          <a
+            key={`${pIndex}-${index}`}
+            href="#"
+            className="text-blue-600 hover:text-blue-800 hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              if (citationText) {
                 if (filename && onFileChange) {
                   onFileChange(filename);
                   setTimeout(() => {
-                    searchInDocument(sourceText);
+                    searchInDocument(citationText);
                   }, 100);
                 } else {
-                  searchInDocument(sourceText);
+                  searchInDocument(citationText);
                 }
-              }}
-            >
-              {`[${currentReferenceNumber++}]`}
-            </a>
-            {' '}
-          </span>
+              }
+            }}
+            title={citationText}
+          >
+            {`[${citationNumber}]`}
+          </a>
         );
       }
+
+      // Handle bold text
+      if (part?.match(/^\*\*.*\*\*$/)) {
+        const boldText = part.slice(2, -2);
+        return (
+          <strong key={`${pIndex}-${index}`} className="text-blue-600 font-semibold">
+            {boldText}
+          </strong>
+        );
+      }
+
       return part;
     });
-  };
 
-  // Render individual lines with formatting
+    // Return paragraph with proper spacing
+    return (
+      <React.Fragment key={pIndex}>
+        {renderedParts}
+        {pIndex < paragraphs.length - 1 && <br />}
+      </React.Fragment>
+    );
+  });
+};
+
+const ContentRenderer = ({ content, type, onFilePreview, fileName, onFileChange }) => {
+  // Use the exported wrapReferences function
   const renderLine = (line, index) => {
     try {
       const content = wrapReferences(line, onFileChange);

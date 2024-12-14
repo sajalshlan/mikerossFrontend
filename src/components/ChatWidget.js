@@ -4,91 +4,7 @@ import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 import ToggleSwitch from './common/ToggleSwitch';
 import MobileToggleSwitch from './common/MobileToggleSwitch';
-
-const searchInDocument = (searchText) => {
-  try {
-    console.log('searchText', searchText);
-    
-    // Clean up the search text
-    let cleanedText = searchText
-      .split(/\.{3,}|…/)[0]        // Take only the part before ... or …
-      .trim();                     // Remove any trailing space
-    
-    // Remove ordinal indicators only when they follow a number
-    cleanedText = cleanedText.replace(/(\d+)(?:st|nd|rd|th)\b.*$/, '$1');
-    
-    console.log('cleanedText', cleanedText);
-    // Create variations of the search text
-    const searchVariations = [
-      cleanedText,                    // Original cleaned text
-      cleanedText.toUpperCase(),      // ALL CAPS version
-    ];
-    
-    // Find the file preview container
-    const filePreview = document.querySelector('.file-preview-container');
-    if (!filePreview) return false;
-
-    // Try each variation until we find a match
-    for (const searchVariation of searchVariations) {
-      // Create a text node walker to find the text
-      const walker = document.createTreeWalker(
-        filePreview,
-        NodeFilter.SHOW_TEXT,
-        {
-          acceptNode: function(node) {
-            return node.textContent.includes(searchVariation) ? 
-              NodeFilter.FILTER_ACCEPT : 
-              NodeFilter.FILTER_REJECT;
-          }
-        }
-      );
-
-      // Find the first matching node
-      const node = walker.nextNode();
-      if (node) {
-        // Create a range around the matching text
-        const range = document.createRange();
-        const startIndex = node.textContent.indexOf(searchVariation);
-        range.setStart(node, startIndex);
-        range.setEnd(node, startIndex + searchVariation.length);
-
-        // Clear any existing selection
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-
-        // Add temporary highlight with enhanced styling
-        const span = document.createElement('span');
-        span.className = 'temp-highlight';
-        range.surroundContents(span);
-
-        // Scroll the matched text into view
-        setTimeout(() => {
-          span.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
-        }, 100);
-
-        // Remove highlight element after animation completes
-        setTimeout(() => {
-          const parent = span.parentNode;
-          while (span.firstChild) {
-            parent.insertBefore(span.firstChild, span);
-          }
-          parent.removeChild(span);
-        }, 5000);
-
-        return true;
-      }
-    }
-
-    return false;
-  } catch (error) {
-    console.error('Error during search:', error);
-    return false;
-  }
-};
+import { wrapReferences } from './common/ContentRenderer';  // Import the function
 
 const ChatWidget = ({ 
   extractedTexts, 
@@ -235,19 +151,6 @@ const ChatWidget = ({
   };
 
   const renderMessageContent = (content) => {
-    // Extract citations and their texts first
-    const citationTexts = {};
-    const citationRegex = /\[(\d+)\]\{\{([^}]+)\}\}\s*"([^"]+)"/g;
-    let match;
-    
-    
-    // Find all citations and their texts
-    while ((match = citationRegex.exec(content)) !== null) {
-      const [full, number, filename, text] = match;
-      citationTexts[number] = text.trim();
-    }
-    
-    
     // Split the content into paragraphs
     const paragraphs = content.split('\n\n');
     
@@ -262,7 +165,7 @@ const ChatWidget = ({
               const itemContent = item.replace(/^\d+\.\s/, '').trim();
               return (
                 <li key={itemIndex} value={itemIndex + 1} className="pl-2">
-                  {renderInlineFormatting(itemContent, citationTexts)}
+                  {wrapReferences(itemContent, setActiveFile)}
                 </li>
               );
             })}
@@ -271,79 +174,9 @@ const ChatWidget = ({
       }
       
       // Regular paragraph
-      return <p key={pIndex} className="mb-4">{renderInlineFormatting(paragraph, citationTexts)}</p>;
+      return <p key={pIndex} className="mb-4">{wrapReferences(paragraph, setActiveFile)}</p>;
     });
   };
-
-  const renderInlineFormatting = (text, citationTexts) => {
-    if (!text) return null;
-    
-    let citationCounter = 1;
-    const citationMap = new Map(); // To store citation text -> number mapping
-    
-    // First pass: collect all citations and assign numbers
-    const citationRegex = /\[\[([^\]]+)\]\](?:\{\{([^}]+)\}\})?/g;
-    let match;
-    while ((match = citationRegex.exec(text))) {
-      const [_, citationText] = match;
-      if (!citationMap.has(citationText)) {
-        citationMap.set(citationText, citationCounter++);
-      }
-    }
-    
-    // Split by citations with format [[text]]{{filename}} and bold text
-    const parts = text.split(/(\[\[[^\]]+\]\](?:\{\{[^}]+\}\})?|\*\*[^*]+\*\*)/g);
-    
-    return parts.map((part, index) => {
-      // Handle citations: [[text]]{{filename}}
-      if (part?.match(/\[\[[^\]]+\]\](?:\{\{[^}]+\}\})?/)) {
-        const matches = part.match(/\[\[([^\]]+)\]\](?:\{\{([^}]+)\}\})?/);
-        if (!matches) return part;
-
-        const citationText = matches[1];
-        const filename = matches[2];
-        const citationNumber = citationMap.get(citationText);
-        
-        return (
-          <a
-            key={index}
-            href="#"
-            className="text-blue-600 hover:text-blue-800 hover:underline"
-            onClick={(e) => {
-              e.preventDefault();
-              if (citationText) {
-                if (filename) {
-                  setActiveFile(filename);
-                  
-                  setTimeout(() => {
-                    searchInDocument(citationText);
-                  }, 100);
-                } else {
-                  searchInDocument(citationText);
-                }
-              }
-            }}
-            title={citationText}
-          >
-            {`[${citationNumber}]`}
-          </a>
-        );
-      }
-      
-      // Handle bold text
-      if (part?.match(/^\*\*.*\*\*$/)) {
-        const boldText = part.slice(2, -2);
-        return (
-          <strong key={index} className="text-blue-600 font-semibold">
-            {boldText}
-          </strong>
-        );
-      }
-      
-      return part;
-    });
-  };
-
   // Add this component for the reference UI
   const ReferenceBox = ({ text }) => {
     if (!text) return null;
