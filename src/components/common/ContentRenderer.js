@@ -10,7 +10,7 @@ export const wrapReferences = (text, onFileChange) => {
   // First pass: collect and map citations
   const citationMap = new Map();
   let citationCounter = 1;
-  const citationRegex = /\[\[([^\]]+)\]\](?:\{\{([^}]+)\}\})?/g;
+  const citationRegex = /\[\[([^\]]+)\]\](?:\s*\{\{([^}]+)\}\})?/g;
   let match;
   
   while ((match = citationRegex.exec(text))) {
@@ -25,12 +25,12 @@ export const wrapReferences = (text, onFileChange) => {
   
   return paragraphs.map((paragraph, pIndex) => {
     // Split each paragraph by citations and bold text
-    const parts = paragraph.split(/(\[\[[^\]]+\]\](?:\{\{[^}]+\}\})?|\*\*[^*]+\*\*)/g);
+    const parts = paragraph.split(/(\[\[[^\]]+\]\](?:\s*\{\{[^}]+\}\})?|\*\*[^*]+\*\*)/g);
     
     const renderedParts = parts.map((part, index) => {
       // Handle citations: [[text]]{{filename}}
-      if (part?.match(/\[\[[^\]]+\]\](?:\{\{[^}]+\}\})?/)) {
-        const matches = part.match(/\[\[([^\]]+)\]\](?:\{\{([^}]+)\}\})?/);
+      if (part?.match(/\[\[[^\]]+\]\](?:\s*\{\{([^}]+)\}\})?/)) {
+        const matches = part.match(/\[\[([^\]]+)\]\](?:\s*\{\{([^}]+)\}\})?/);
         if (!matches) return part;
 
         const citationText = matches[1];
