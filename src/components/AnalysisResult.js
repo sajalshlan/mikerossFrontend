@@ -5,129 +5,7 @@ import TriviaCard from './TriviaCard';
 import QuickActions from './QuickActions';
 import ExplanationCard from './ExplanationCard';
 import api from '../api';
-
-
-const searchInDocument = (searchText) => {
-  try {
-    console.log('Searching for:', searchText); // Debug log
-    
-    // Clean up the search text
-    let cleanedText = searchText
-      .split(/\.{3,}|…/)[0]        // Take only the part before ... or …
-      .trim();                     // Remove any trailing space
-    
-    // Remove ordinal indicators only when they follow a number
-    cleanedText = cleanedText.replace(/(\d+)(?:st|nd|rd|th)\b.*$/, '$1');
-    
-    console.log('Cleaned text:', cleanedText); // Debug log
-    
-    // Create variations of the search text
-    const searchVariations = [
-      cleanedText,                    // Original cleaned text
-      cleanedText.toUpperCase(),      // ALL CAPS version
-    ];
-    
-    // Find the file preview container
-    const filePreview = document.querySelector('.file-preview-container');
-    if (!filePreview) return false;
-
-    // Try each variation until we find a match
-    for (const searchVariation of searchVariations) {
-      // Create a text node walker to find the text
-      const walker = document.createTreeWalker(
-        filePreview,
-        NodeFilter.SHOW_TEXT,
-        {
-          acceptNode: function(node) {
-            return node.textContent.includes(searchVariation) ? 
-              NodeFilter.FILTER_ACCEPT : 
-              NodeFilter.FILTER_REJECT;
-          }
-        }
-      );
-
-      // Find the first matching node
-      const node = walker.nextNode();
-      if (node) {
-        // Create a range around the matching text
-        const range = document.createRange();
-        const startIndex = node.textContent.indexOf(searchVariation);
-        range.setStart(node, startIndex);
-        range.setEnd(node, startIndex + searchVariation.length);
-
-        // Clear any existing selection
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-
-        // Add temporary highlight with enhanced styling
-        const span = document.createElement('span');
-        span.className = 'temp-highlight';
-        range.surroundContents(span);
-
-        // Scroll the matched text into view
-        setTimeout(() => {
-          span.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
-        }, 100);
-
-        // Remove highlight element after animation completes
-        setTimeout(() => {
-          const parent = span.parentNode;
-          while (span.firstChild) {
-            parent.insertBefore(span.firstChild, span);
-          }
-          parent.removeChild(span);
-        }, 5000);
-
-        return true;
-      }
-    }
-
-    return false;
-  } catch (error) {
-    console.error('Error during search:', error);
-    return false;
-  }
-};
-
-const wrapReferences = (text) => {
-  // Split by [[ and ]] but preserve the brackets in the result
-  const parts = text.split(/(\[\[.*?\]\](?:\s*\[\d+\])?)/g);
-  
-  let currentReferenceNumber = 1;  // Keep track of reference numbers
-  
-  return parts.map((part, index) => {
-    // Check if this part contains a reference
-    if (part.startsWith('[[')) {
-      // Extract the reference text and any number that follows
-      const matches = part.match(/\[\[(.*?)\]\](?:\s*\[(\d+)\])?/);
-      if (!matches) return part;
-
-      const sourceText = matches[1].trim();
-      
-      return (
-        <span key={index}>
-          <a
-            href="#"
-            className="text-blue-600 hover:text-blue-800"
-            onClick={(e) => {
-              e.preventDefault();
-              searchInDocument(sourceText);
-            }}
-          >
-            {`[${currentReferenceNumber++}]`}
-          </a>
-          {' '}
-        </span>
-      );
-    }
-    
-    return part;
-  });
-};
+import ContentRenderer from './common/ContentRenderer';
 
 const AnalysisResult = React.memo(({ 
   type, 
@@ -136,7 +14,8 @@ const AnalysisResult = React.memo(({
   onFilePreview, 
   onThumbsUp, 
   onThumbsDown,
-  isLoading
+  isLoading,
+  setActiveFile
 }) => {
   // Move all hooks to the top, before any conditional returns
   const [feedbackVisible, setFeedbackVisible] = useState({});
@@ -274,115 +153,6 @@ const AnalysisResult = React.memo(({
     }));
   };
   
-  const renderRiskAnalysis = (content) => {
-    const cleanedContent = content.substring(content.indexOf('*****'))
-      .replace(/^#+\s*/gm, '')
-      .trim();
-
-    const parts = cleanedContent.split('*****').filter(part => part.trim() !== '');
-    const parties = [];
-
-    for (let i = 0; i < parts.length; i += 2) {
-      if (i + 1 < parts.length) {
-        parties.push({
-          name: parts[i].trim(),
-          content: parts[i + 1].trim()
-        });
-      }
-    }
-
-    return (
-      <Collapse>
-        {parties.map((party, index) => (
-          <Collapse.Panel header={`For ${party.name}`} key={index} className="font-bold">
-            <Typography.Paragraph className="font-normal">
-              {party.content.split('\n').map((line, lineIndex) => renderLine(line, lineIndex))}
-            </Typography.Paragraph>
-          </Collapse.Panel>
-        ))}
-      </Collapse>
-    );
-  };
-
-  const renderContent = (content) => {
-    try {
-      // Early return if content is null, undefined, or empty
-      if (!content) {
-        return null;
-      }
-
-      if (type === 'conflict') {
-        // For conflict analysis, check if we have valid content
-        const conflictResult = Object.values(content)[0];
-        if (!conflictResult) {
-          return null;
-        }
-        return (
-          <div className="text-gray-700">
-            {conflictResult.split('\n').map((line, index) => renderLine(line, index))}
-          </div>
-        );
-      } else if (type === 'risky') {
-        return renderRiskAnalysis(content);
-      } else if (typeof content === 'string') {
-        return (
-          <Typography.Paragraph className="text-gray-700">
-            {content.split('\n').map((line, index) => renderLine(line, index))}
-          </Typography.Paragraph>
-        );
-      } else if (Array.isArray(content)) {
-        return (
-          <List
-            dataSource={content}
-            renderItem={(item, index) => (
-              <List.Item key={index} className="text-gray-700">
-                <Typography.Text>{renderContent(item)}</Typography.Text>
-              </List.Item>
-            )}
-          />
-        );
-      } else if (typeof content === 'object' && content !== null) {
-        return (
-          <List
-            dataSource={Object.entries(content)}
-            renderItem={([key, value]) => (
-              <List.Item key={key} className="text-gray-700">
-                <Typography.Text strong>{key}:</Typography.Text> {renderContent(value)}
-              </List.Item>
-            )}
-          />
-        );
-      }
-      return <Typography.Text className="text-gray-700">{content}</Typography.Text>;
-    } catch (error) {
-      console.error('Error in renderContent:', error);
-      return null;  // Return null instead of error message
-    }
-  };
-
-  const renderLine = (line, index) => {
-    try {
-      const content = wrapReferences(line);
-
-      if (line.trim().startsWith('•')) {
-        return <Typography.Paragraph key={index} className="text-gray-700 ml-4">{content}</Typography.Paragraph>;
-      } else if (line.includes('**')) {
-        return (
-          <Typography.Paragraph key={index} className="text-gray-700">
-            {line.split('**').map((part, i) => 
-              i % 2 === 0 ? wrapReferences(part) : <Typography.Text strong key={i} className="text-gray-900">{wrapReferences(part)}</Typography.Text>
-            )}
-          </Typography.Paragraph>
-        );
-      } else {
-        return <Typography.Paragraph key={index} className="text-gray-700">{content}</Typography.Paragraph>;
-      }
-    } catch (error) {
-      console.error('Error in renderLine:', error);
-      return <Typography.Text key={index} type="danger">Error rendering line. Please try again.</Typography.Text>;
-    }
-  };
-
   const getTitle = () => {
     return titleMap[type] || 'Analysis Results';
   };
@@ -407,14 +177,6 @@ const AnalysisResult = React.memo(({
       setQuickActionPosition(null);
     }
   };
-
-  // const handleClickOutside = (event) => {
-  //   if (!event.target.closest('.quick-actions')) {
-  //     setQuickActionPosition(null);
-  //         window.getSelection().removeAllRanges();
-  //   }
-  // };
-    
 
   useEffect(() => {
     const container = document.querySelector('.analysis-result-container');
@@ -512,9 +274,11 @@ const AnalysisResult = React.memo(({
             </Typography.Title>
 
             <div className="bg-white border border-blue-100 text-gray-800 p-4 rounded-2xl shadow-sm">
-              <div className="break-words text-sm leading-relaxed">
-                {renderContent(filteredData)}
-              </div>
+              <ContentRenderer 
+                content={Object.values(filteredData)[0]} 
+                type={type}
+                onFileChange={setActiveFile}
+              />
 
               <div className="flex justify-end mt-2 space-x-2">
                 <Tooltip title="I like this analysis">
@@ -591,84 +355,79 @@ const AnalysisResult = React.memo(({
                   </div>
                 )}
                 <div className="first:mt-2 last:mb-0">
-                  <div 
-                    className="file-analysis-container"
-                    data-filename={fileName}
-                  >
-                    <Tooltip title="Click to preview file">
-                      <Typography.Title 
-                        level={4} 
-                        className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2 cursor-pointer hover:text-blue-600"
-                        onClick={() => onFilePreview(fileName)}
-                      >
-                        {fileName}
-                      </Typography.Title>
-                    </Tooltip>
-                    <div className="bg-gray-100 p-3 rounded-md select-text selection:bg-blue-200 selection:text-inherit hover:bg-gray-50 transition-colors duration-200">
-                      {renderContent(filteredData[fileName])}
+                  <div className="file-analysis-container" data-filename={fileName}>
+                  <ContentRenderer 
+                      content={filteredData[fileName]}
+                      type={type}
+                      fileName={fileName}
+                      onFilePreview={onFilePreview}
+                      onFileChange={setActiveFile}  // Pass the file change handler
+                    />
+
+                    {feedbackVisible[fileName] && (
+                      <div className="mt-2">
+                        <Input.TextArea
+                          value={feedbackText[fileName] || ''}
+                          onChange={(e) => setFeedbackText((prev) => ({ 
+                            ...prev, 
+                            [fileName]: e.target.value 
+                          }))}
+                          rows={4}
+                          placeholder="Enter your feedback here"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleFeedbackSubmit(fileName);
+                            }
+                          }}
+                        />
+                        <Button 
+                          type="primary" 
+                          onClick={() => handleFeedbackSubmit(fileName)}
+                          style={{ marginTop: "5px" }}
+                        >
+                          Submit Feedback
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <Tooltip title="I like this analysis">
+                        <Button 
+                          type="text" 
+                          icon={<img src="/like.png" alt="Thumbs Up" style={{ width: 20, height: 20 }} />} 
+                          onClick={() => onThumbsUp(fileName)} 
+                          style={{ color: '#4CAF50' }} 
+                        />
+                      </Tooltip>
+
+                      <Tooltip title="I don't like this analysis">
+                        <Button 
+                          type="text" 
+                          icon={<img src="/dislike.png" alt="Thumbs Down" style={{ width: 20, height: 20 }} />} 
+                          onClick={() => onThumbsDown(fileName)} 
+                          style={{ color: '#F44336' }} 
+                        />
+                      </Tooltip>
+
+                      <Tooltip title="Give Feedback">
+                        <Button 
+                          type="text" 
+                          icon={<img src="/review.png" alt="Feedback" style={{ width: 20, height: 20 }} />} 
+                          onClick={() => toggleFeedback(fileName)} 
+                          style={{ color: '#4CAF50' }} 
+                        />
+                      </Tooltip>
+
+                      <Tooltip title="Copy">
+                        <Button 
+                          type="text" 
+                          icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
+                          onClick={() => handleCopy(fileName, filteredData[fileName])} 
+                          style={{ color: '#F44336' }} 
+                        />
+                      </Tooltip>
                     </div>
-                  </div>
-
-                  {feedbackVisible[fileName] && (
-                    <div className="mt-2">
-                      <Input.TextArea
-                        value={feedbackText[fileName] || ''}
-                        onChange={(e) => setFeedbackText((prev) => ({ ...prev, [fileName]: e.target.value }))}
-                        rows={4}
-                        placeholder="Enter your feedback here"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {  // Only triggers if Enter is pressed without Shift
-                            e.preventDefault();  // Prevents adding a new line
-                            handleFeedbackSubmit(fileName);  // Calls the submit function
-                          }
-                        }}
-                      />
-                      <Button 
-                        type="primary" 
-                        onClick={() => handleFeedbackSubmit(fileName)}
-                        style={{ marginTop: "5px" }}
-                      >
-                        Submit Feedback
-                      </Button>
-                    </div>
-                  )}
-                  {/* Thumbs up/down buttons */}
-                  <div className="flex justify-end mt-2 space-x-2">
-                    <Tooltip title="I like this analysis">
-                    <Button 
-                      type="text" 
-                      icon={<img src="/like.png" alt="Thumbs Up" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => onThumbsUp(fileName)} 
-                      style={{ color: '#4CAF50' }} 
-                    />
-                    </Tooltip>
-
-                    <Tooltip title="I don't like this analysis">
-                    <Button 
-                      type="text" 
-                      icon={<img src="/dislike.png" alt="Thumbs Down" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => onThumbsDown(fileName)} 
-                      style={{ color: '#F44336' }} 
-                    />
-                    </Tooltip>
-
-                    <Tooltip title="Give Feedback">
-                    <Button 
-                      type="text" 
-                      icon={<img src="/review.png" alt="Feedback" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => toggleFeedback(fileName)} 
-                      style={{ color: '#4CAF50' }} 
-                    />
-                    </Tooltip>
-
-                    <Tooltip title="Copy">
-                    <Button 
-                      type="text" 
-                      icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => handleCopy(fileName, filteredData[fileName])} 
-                      style={{ color: '#F44336' }} 
-                    />
-                    </Tooltip>
                   </div>
                 </div>
               </React.Fragment>

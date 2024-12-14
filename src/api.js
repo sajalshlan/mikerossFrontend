@@ -130,6 +130,7 @@ const performAnalysis = async (type, text, fileName, onProgress, signal) => {
     const requestBody = {
       analysis_type: type,
       text: text,
+      filename: fileName,
       include_history: type === 'ask',
       referenced_text: window.selectedText || null
     };
@@ -163,7 +164,7 @@ const performConflictCheck = async (texts, onProgress) => {
     const controller = new AbortController();
     console.log(`[API] 🎮 Created controller for conflict check`);
     window.currentAnalysisControllers['conflict'] = controller;
-
+    console.log('texts', texts);
     const response = await api.post('/perform_conflict_check/', 
       { texts },
       {

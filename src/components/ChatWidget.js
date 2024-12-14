@@ -7,6 +7,7 @@ import MobileToggleSwitch from './common/MobileToggleSwitch';
 
 const searchInDocument = (searchText) => {
   try {
+    console.log('searchText', searchText);
     
     // Clean up the search text
     let cleanedText = searchText
@@ -16,7 +17,7 @@ const searchInDocument = (searchText) => {
     // Remove ordinal indicators only when they follow a number
     cleanedText = cleanedText.replace(/(\d+)(?:st|nd|rd|th)\b.*$/, '$1');
     
-    
+    console.log('cleanedText', cleanedText);
     // Create variations of the search text
     const searchVariations = [
       cleanedText,                    // Original cleaned text

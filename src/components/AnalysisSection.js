@@ -371,6 +371,7 @@ const AnalysisSection = ({
                   onThumbsUp={handleThumbsUp}
                   onThumbsDown={handleThumbsDown}
                   isLoading={analysisState[type].isLoading}
+                  setActiveFile={onFileSelection}
                 />
               )
             ))
@@ -385,6 +386,7 @@ const AnalysisSection = ({
               onThumbsUp={handleThumbsUp}
               onThumbsDown={handleThumbsDown}
               isLoading={false}
+              setActiveFile={onFileSelection}
             />
           )
         ) : (
@@ -398,6 +400,7 @@ const AnalysisSection = ({
             onThumbsUp={() => {}}
             onThumbsDown={() => {}}
             isLoading={false}
+            setActiveFile={onFileSelection}
           />
         )}
       </div>

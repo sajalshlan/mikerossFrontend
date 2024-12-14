@@ -226,7 +226,7 @@ const LegalAnalyzer = () => {
     }
   };
 
-  const handleAnalysis = async (type, selectedTexts) => {
+const handleAnalysis = async (type, selectedTexts) => {
     setAnalysisState(prev => ({
       ...prev,
       types: {
@@ -486,10 +486,7 @@ const LegalAnalyzer = () => {
                 isFileProcessing={isUploading}
                 onAnalysis={handleAnalysis}
                 onToggleVisibility={toggleAnalysisVisibility}
-                onFileSelection={(fileName) => setFileState(prev => ({ 
-                  ...prev, 
-                  previewFile: fileName 
-                }))}
+                onFileSelection={setActiveFile}
                 onStopAnalysis={handleStopAnalysis}
               />
             </Content>
@@ -527,7 +524,7 @@ const LegalAnalyzer = () => {
                     isFileProcessing={isUploading}
                     onAnalysis={handleAnalysis}
                     onToggleVisibility={toggleAnalysisVisibility}
-                    onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
+                    onFileSelection={setActiveFile}
                     onStopAnalysis={handleStopAnalysis}
                   />
                 </div>
