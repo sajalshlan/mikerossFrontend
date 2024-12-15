@@ -194,6 +194,25 @@ const performConflictCheck = async (texts, onProgress) => {
   }
 };
 
+const previewPdfAsDocx = async (file) => {
+    console.log('[API] 🚀 Converting PDF to DOCX for preview...');
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await api.post('/preview_pdf_as_docx/', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        });
+        
+        return response.data;
+    } catch (error) {
+        console.error('[API] ❌ Error converting PDF:', error);
+        throw error;
+    }
+};
+
 // Export the api instance along with the other functions
 export default api;
-export { performAnalysis, performConflictCheck, uploadFile };
+export { performAnalysis, performConflictCheck, uploadFile, previewPdfAsDocx };
