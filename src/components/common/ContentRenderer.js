@@ -85,6 +85,83 @@ export const wrapReferences = (text, onFileChange) => {
   });
 };
 
+const formatAnalysisContent = (content, onFileChange) => {
+  // First, remove any initial "I'll analyze..." text
+  content = content.replace(/^I'll analyze.*?\n\n/i, '');
+
+  // Split into major sections by numbered headers
+  const sections = content.split(/(?=\d+\.\s+[A-Z])/);
+
+  return sections.filter(Boolean).map((section, index) => {
+    // Extract section title and content
+    const [sectionTitle, ...sectionContentArr] = section.split('\n');
+    let sectionContent = sectionContentArr.join('\n');
+
+    // Format the section title
+    const titleMatch = sectionTitle.match(/(\d+)\.\s+(.+)/);
+    if (!titleMatch) return null;
+
+    const [_, number, title] = titleMatch;
+
+    return (
+      <div key={index} className="mb-8">
+        <Typography.Title 
+          level={3} 
+          className="text-blue-800 font-bold mb-4"
+        >
+          {number}. {title}
+        </Typography.Title>
+
+        {sectionContent.split(/\n\n+/).map((block, blockIndex) => {
+          const subsectionMatch = block.match(/^([^:]+):\n([\s\S]+)/);
+          
+          if (subsectionMatch) {
+            const [_, subheader, subcontent] = subsectionMatch;
+            return (
+              <div key={blockIndex} className="mb-6">
+                <Typography.Title 
+                  level={4} 
+                  className="text-blue-600 font-semibold ml-4 mb-3"
+                >
+                  {subheader}:
+                </Typography.Title>
+                {subcontent.split(/\n(?=[-•])/).map((paragraph, pIndex) => (
+                  <Typography.Paragraph 
+                    key={pIndex} 
+                    className="ml-8 mb-2 text-gray-700"
+                  >
+                    {wrapReferences(paragraph.trim(), onFileChange)}
+                  </Typography.Paragraph>
+                ))}
+              </div>
+            );
+          }
+
+          if (block.startsWith('-')) {
+            return (
+              <Typography.Paragraph 
+                key={blockIndex} 
+                className="ml-8 mb-2 text-gray-700"
+              >
+                {wrapReferences(block.trim(), onFileChange)}
+              </Typography.Paragraph>
+            );
+          }
+
+          return (
+            <Typography.Paragraph 
+              key={blockIndex} 
+              className="ml-4 mb-4 text-gray-700"
+            >
+              {wrapReferences(block.trim(), onFileChange)}
+            </Typography.Paragraph>
+          );
+        })}
+      </div>
+    );
+  });
+};
+
 const ContentRenderer = ({ content, type, onFilePreview, fileName, onFileChange }) => {
   // Use the exported wrapReferences function
   const renderLine = (line, index) => {
@@ -162,6 +239,91 @@ const ContentRenderer = ({ content, type, onFilePreview, fileName, onFileChange 
     );
   };
 
+  // Add new function to render conflict analysis
+  const renderConflictAnalysis = (content, onFileChange, onFilePreview) => {
+    try {
+      const data = typeof content === 'string' ? JSON.parse(content) : content;
+      
+      if (!data) {
+        console.error('No result data found:', data);
+        return (
+          <div className="text-center p-4">
+            <Typography.Text className="text-gray-600 text-lg">
+              Error: Could not load analysis results.
+            </Typography.Text>
+          </div>
+        );
+      }
+
+      const { analyses, common_parties } = data;
+
+      if (!common_parties || common_parties.length === 0) {
+        return (
+          <div className="text-center p-4">
+            <Typography.Text className="text-gray-600 text-lg">
+              No common parties found across the documents. No conflicts to analyze.
+            </Typography.Text>
+          </div>
+        );
+      }
+
+      return (
+        <Collapse className="conflict-analysis-collapse">
+          {common_parties.map((party, index) => (
+            <Collapse.Panel 
+              header={
+                <div className="party-header">
+                  <span className="text-lg font-bold text-blue-800">
+                    {party.name}
+                  </span>
+                  <div className="mt-1">
+                    {party.roles.map((role, i) => (
+                      <div 
+                        key={i} 
+                        className="ml-2 mb-1"
+                      >
+                        <span className="font-medium text-blue-600">
+                          {role.role}
+                        </span>
+                        <span className="text-gray-500">
+                          {" in "}
+                        </span>
+                        <span 
+                          className="font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onFilePreview?.(role.filename);
+                          }}
+                        >
+                          {role.filename}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              }
+              key={index}
+              className="mb-2"
+            >
+              <div className="mt-3">
+                {formatAnalysisContent(analyses[party.name], onFileChange)}
+              </div>
+            </Collapse.Panel>
+          ))}
+        </Collapse>
+      );
+    } catch (error) {
+      console.error('Error in renderConflictAnalysis:', error);
+      return (
+        <div className="text-center p-4">
+          <Typography.Text className="text-gray-600 text-lg">
+            Error rendering conflict analysis.
+          </Typography.Text>
+        </div>
+      );
+    }
+  };
+
   // Main render function
   const renderContent = () => {
     try {
@@ -169,15 +331,11 @@ const ContentRenderer = ({ content, type, onFilePreview, fileName, onFileChange 
         return null;
       }
 
-      // Handle conflict analysis
+      // Handle conflict analysis with collapsible sections
       if (type === 'conflict') {
-        return (
-          <div className="text-gray-700">
-            {content.split('\n').map((line, index) => renderLine(line, index))}
-          </div>
-        );
-      } 
-      
+        return renderConflictAnalysis(content, onFileChange, onFilePreview);
+      }
+
       // Handle risk analysis
       if (type === 'risky') {
         return renderRiskAnalysis(content);
