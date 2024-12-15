@@ -48,10 +48,10 @@ export const wrapReferences = (text, onFileChange) => {
                 if (filename && onFileChange) {
                   onFileChange(filename);
                   setTimeout(() => {
-                    searchInDocument(citationText);
+                    searchInDocument(citationText, filename);
                   }, 100);
                 } else {
-                  searchInDocument(citationText);
+                  searchInDocument(citationText, filename);
                 }
               }
             }}

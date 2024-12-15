@@ -213,6 +213,24 @@ const previewPdfAsDocx = async (file) => {
     }
 };
 
+const chat = async (message, documentContext, chatHistory, referencedText) => {
+  console.log(`[API] 🚀 Starting chat...`);
+  try {
+    const response = await api.post('/chat/', {
+      message,
+      documentContext,
+      chatHistory,
+      referencedText
+    });
+
+    console.log(`[API] ✅ Chat completed:`, response.data);
+    return response.data.success ? response.data.response : null;
+  } catch (error) {
+    console.error(`[API] ❌ Error in chat:`, error);
+    throw error;
+  }
+};
+
 // Export the api instance along with the other functions
 export default api;
-export { performAnalysis, performConflictCheck, uploadFile, previewPdfAsDocx };
+export { performAnalysis, performConflictCheck, uploadFile, previewPdfAsDocx, chat };

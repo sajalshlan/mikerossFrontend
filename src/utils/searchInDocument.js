@@ -1,5 +1,7 @@
-export const searchInDocument = (searchText) => {
+export const searchInDocument = (searchText, filename) => {
     try {
+      console.log(searchText)
+
       // Clean up the search text
       let cleanedText = searchText
         .split(/\.{3,}|…/)[0]        // Take only the part before ... or …
@@ -7,7 +9,11 @@ export const searchInDocument = (searchText) => {
       
       // Remove ordinal indicators only when they follow a number
       cleanedText = cleanedText.replace(/(\d+)(?:st|nd|rd|th)\b.*$/, '$1');
+      console.log(cleanedText)
       
+      if (filename?.toLowerCase().endsWith('.pdf')) {
+        cleanedText = cleanedText.slice(0, 15);
+      }
       // Create variations of the search text
       const searchVariations = [
         cleanedText,                    // Original cleaned text

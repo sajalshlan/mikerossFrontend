@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Button, Input, Spin, Tooltip } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
-import { performAnalysis } from '../api';
+import { chat, performAnalysis } from '../api';
 import ToggleSwitch from './common/ToggleSwitch';
 import MobileToggleSwitch from './common/MobileToggleSwitch';
 import { wrapReferences } from './common/ContentRenderer';  // Import the function
@@ -91,11 +91,11 @@ const ChatWidget = ({
         setBrainstormText('');
         setIsWaitingForResponse(true);
 
+        // Get document context from selected or all files
         const textsToUse = extractedTexts;
-        const fileName = Object.keys(extractedTexts)[0];
-        const indexedTexts = Object.entries(textsToUse).map(([fileName, content], index) => 
-          `[${index + 1}] ${fileName}:\n${content}`
-        ).join('\n\n\n\n');
+        const documentContext = Object.entries(textsToUse).map(([fileName, content]) => 
+          `[${fileName}]:\n${content}`
+        ).join('\n\n');
 
         // Only include messages since the last document change, excluding doc change messages
         const messagesAfterDocChange = chatMessages
@@ -103,27 +103,20 @@ const ChatWidget = ({
           .filter(msg => !msg.isInitialTip && msg.content !== 'Conversation context updated');
         
         const recentMessages = messagesAfterDocChange.slice(-10);
-        
-        const chatHistory = recentMessages.length < messagesAfterDocChange.length 
-          ? `[Earlier conversation omitted...]\n\n${recentMessages
-              .map(msg => `${msg.role}: ${msg.content}`)
-              .join('\n\n')}`
-          : recentMessages
-              .map(msg => `${msg.role}: ${msg.content}`)
-              .join('\n\n');
 
-        console.log('API Request Data:', {
-          analysis_type: 'ask',
-          text: indexedTexts,
-          referenced_text: brainstormText,
-          include_history: chatHistory
+        console.log('Chat Request Data:', {
+          message: chatInput,
+          documentContext: documentContext,
+          chatHistory: recentMessages,
+          referencedText: brainstormText
         });
         
-        // Send both chat history and current query
-        const result = await performAnalysis('ask', 
-          `${indexedTexts}\n\n` +
-          `Previous Conversation (last ${recentMessages.length} messages):\n${chatHistory}\n\n` +
-          `Current Query: ${newUserMessage.content}`, fileName
+        // Call new chat endpoint
+        const result = await chat(
+          chatInput,
+          documentContext,
+          recentMessages,
+          brainstormText
         );
         
         if (result) {
