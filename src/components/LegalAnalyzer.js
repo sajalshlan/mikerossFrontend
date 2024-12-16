@@ -437,6 +437,7 @@ const handleAnalysis = async (type, selectedTexts) => {
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
       handleFileUpload(files);
+      setIsDragging(false);
     }
   };
 
@@ -463,10 +464,7 @@ const handleAnalysis = async (type, selectedTexts) => {
     <Layout 
       className="h-screen overflow-hidden"
       onDragOver={handleDragOver}
-      onDrop={(e) => {
-        handleDrop(e);
-        setIsDragging(false);
-      }}
+      onDrop={handleDrop}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
     >

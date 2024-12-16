@@ -323,21 +323,11 @@ const FileUploader = ({
                   <div className="p-2">
                     <div 
                       className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-500 transition-colors"
-                      onDragOver={e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onDrop={e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const files = Array.from(e.dataTransfer.files);
-                        handleFileChange({ fileList: files.map(file => ({ originFileObj: file })) });
-                      }}
                     >
                       <Upload {...uploadProps}>
                         <div className="cursor-pointer">
                           <UploadOutlined className="text-2xl text-gray-400 mb-1" />
-                          <p className="text-gray-600 text-sm mb-1">Drag & drop files here</p>
+                          <p className="text-gray-600 text-sm mb-1">Drag & drop files anywhere</p>
                           <p className="text-gray-400 text-xs mb-2">or click to browse</p>
                         </div>
                       </Upload>
