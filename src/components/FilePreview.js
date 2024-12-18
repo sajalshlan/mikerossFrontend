@@ -150,6 +150,27 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
     });
   }, [files]);
 
+  useEffect(() => {
+    const preventDrag = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+
+    const filePreviewContainer = document.querySelector('.file-preview-container');
+    if (filePreviewContainer) {
+      ['dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        filePreviewContainer.addEventListener(eventName, preventDrag);
+      });
+
+      return () => {
+        ['dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          filePreviewContainer.removeEventListener(eventName, preventDrag);
+        });
+      };
+    }
+  }, []);
+
   const getFileTypeFromName = (fileName) => {
     if (!fileName) return 'unknown';
     const extension = fileName.split('.').pop().toLowerCase();
@@ -214,15 +235,24 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
         return <img {...commonProps} src={fileUrl} alt={file.name} onLoad={cleanup} />;
       case 'pdf':
         return (
-          <div {...commonProps} className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto docx-content">
+          <div 
+            {...commonProps} 
+            className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto docx-content"
+            draggable="false"
+            onDragStart={e => e.preventDefault()}
+          >
             {isConvertingPdf ? (
               <div className="flex items-center justify-center h-full">
                 <span>Converting PDF for preview...</span>
               </div>
             ) : (
-              <div dangerouslySetInnerHTML={{ 
-                __html: pdfDocxContents.get(selectedFile) || '' 
-              }} />
+              <div 
+                draggable="false"
+                onDragStart={e => e.preventDefault()}
+                dangerouslySetInnerHTML={{ 
+                  __html: pdfDocxContents.get(selectedFile) || '' 
+                }} 
+              />
             )}
           </div>
         );
