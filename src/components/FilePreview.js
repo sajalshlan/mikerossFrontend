@@ -150,26 +150,26 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
     });
   }, [files]);
 
-  useEffect(() => {
-    const preventDrag = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    };
+  // useEffect(() => {
+  //   const preventDrag = (e) => {
+  //     e.preventDefault();
+  //     e.stopPropagation();
+  //     return false;
+  //   };
 
-    const filePreviewContainer = document.querySelector('.file-preview-container');
-    if (filePreviewContainer) {
-      ['dragstart'].forEach(eventName => {
-        filePreviewContainer.addEventListener(eventName, preventDrag);
-      });
+  //   const filePreviewContainer = document.querySelector('.file-preview-container');
+  //   if (filePreviewContainer) {
+  //     ['dragstart'].forEach(eventName => {
+  //       filePreviewContainer.addEventListener(eventName, preventDrag);
+  //     });
 
-      return () => {
-        ['dragstart'].forEach(eventName => {
-          filePreviewContainer.removeEventListener(eventName, preventDrag);
-        });
-      };
-    }
-  }, []);
+  //     return () => {
+  //       ['dragstart'].forEach(eventName => {
+  //         filePreviewContainer.removeEventListener(eventName, preventDrag);
+  //       });
+  //     };
+  //   }
+  // }, []);
 
   const getFileTypeFromName = (fileName) => {
     if (!fileName) return 'unknown';
