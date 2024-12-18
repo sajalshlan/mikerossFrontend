@@ -159,12 +159,12 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
 
     const filePreviewContainer = document.querySelector('.file-preview-container');
     if (filePreviewContainer) {
-      ['dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      ['dragstart'].forEach(eventName => {
         filePreviewContainer.addEventListener(eventName, preventDrag);
       });
 
       return () => {
-        ['dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        ['dragstart'].forEach(eventName => {
           filePreviewContainer.removeEventListener(eventName, preventDrag);
         });
       };
