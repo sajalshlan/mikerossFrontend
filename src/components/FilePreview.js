@@ -132,7 +132,13 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
 
       if (pendingPdfs.length === 0) return;
 
-      for (const [fileName, fileObj] of pendingPdfs) {
+      // Process first file immediately if it's not converted yet
+      const firstFile = pendingPdfs[0];
+      const remainingFiles = pendingPdfs.slice(1);
+
+      // Convert first file
+      if (firstFile) {
+        const [fileName, fileObj] = firstFile;
         try {
           const result = await previewPdfAsDocx(fileObj.file);
           if (result.success) {
@@ -162,8 +168,58 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
             convertedPdfsRef.current.add(fileName);
           }
         } catch (error) {
-          console.error(`Error converting PDF ${fileName}:`, error);
+          console.error(`Error converting first PDF ${fileName}:`, error);
         }
+      }
+
+      // Process remaining files concurrently
+      if (remainingFiles.length > 0) {
+        const conversionPromises = remainingFiles.map(async ([fileName, fileObj]) => {
+          try {
+            const result = await previewPdfAsDocx(fileObj.file);
+            if (result.success) {
+              if (result.is_scanned) {
+                setPdfDocxContents(prevContents => {
+                  const newContents = new Map(prevContents);
+                  newContents.set(fileName, {
+                    isScanned: true,
+                    content: result.content
+                  });
+                  return newContents;
+                });
+              } else {
+                const content = await mammoth.convertToHtml({ 
+                  arrayBuffer: base64ToArrayBuffer(result.content) 
+                });
+                
+                setPdfDocxContents(prevContents => {
+                  const newContents = new Map(prevContents);
+                  newContents.set(fileName, {
+                    isScanned: false,
+                    content: content.value
+                  });
+                  return newContents;
+                });
+              }
+              convertedPdfsRef.current.add(fileName);
+            }
+            return { fileName, success: true };
+          } catch (error) {
+            console.error(`Error converting PDF ${fileName}:`, error);
+            return { fileName, success: false, error };
+          }
+        });
+
+        Promise.allSettled(conversionPromises)
+          .then(results => {
+            const failures = results
+              .filter(r => r.status === 'fulfilled' && !r.value.success)
+              .map(r => r.value.fileName);
+            
+            if (failures.length > 0) {
+              console.warn('Failed to convert PDFs:', failures);
+            }
+          });
       }
     };
 
