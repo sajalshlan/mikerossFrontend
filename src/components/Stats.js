@@ -3,6 +3,27 @@ import { Table, Card, Select, Space, Spin, DatePicker } from 'antd';
 
 const { Option } = Select;
 
+const TimingStats = ({ data }) => (
+  <div className="grid grid-cols-2 gap-2 text-sm">
+    <div>
+      <p className="text-gray-600">Avg Time:</p>
+      <p className="font-medium">{data?.avg_time || '0s'}</p>
+    </div>
+    <div>
+      <p className="text-gray-600">Median Time:</p>
+      <p className="font-medium">{data?.median_time || '0s'}</p>
+    </div>
+    <div>
+      <p className="text-gray-600">Max Time:</p>
+      <p className="font-medium">{data?.max_time || '0s'}</p>
+    </div>
+    <div>
+      <p className="text-gray-600">Min Time:</p>
+      <p className="font-medium">{data?.min_time || '0s'}</p>
+    </div>
+  </div>
+);
+
 const Stats = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
@@ -44,6 +65,7 @@ const Stats = () => {
 
       const response = await fetch(url);
       const data = await response.json();
+      console.log(data);
       setStats(data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -163,17 +185,60 @@ const Stats = () => {
             <h2 className="text-xl font-semibold mb-4 text-gray-800">API Endpoint Usage</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {stats?.endpoint_distribution ? (
-                Object.entries(stats.endpoint_distribution).map(([endpoint, count]) => (
+                Object.entries(stats.endpoint_distribution).map(([endpoint, data]) => (
                   <Card key={endpoint} className="shadow-sm border-gray-100">
                     <h3 className="text-gray-600 text-sm mb-2">
                       {getEndpointName(endpoint)}
                     </h3>
-                    <p className="text-2xl font-semibold text-gray-800">
-                      {count.toLocaleString()} calls
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {((count / stats.overview.total_api_calls) * 100).toFixed(1)}% of total
-                    </p>
+                    
+                    {!selectedOrg && (
+                      <>
+                        <p className="text-2xl font-semibold text-gray-800">
+                          {data?.count?.toLocaleString() || 0} calls
+                        </p>
+                        <p className="text-sm text-gray-500 mb-2">
+                          {data?.percentage || '0%'}
+                        </p>
+                      </>
+                    )}
+                    
+                    <div className={!selectedOrg ? "border-t pt-2 mt-2" : ""}>
+                      {selectedUser ? (
+                        data.organizations && 
+                        Object.entries(data.organizations)
+                          .filter(([orgName]) => orgName === selectedOrg)
+                          .map(([orgName, orgData]) => (
+                            orgData.users && 
+                            Object.entries(orgData.users)
+                              .filter(([username]) => username === selectedUser)
+                              .map(([username, userData]) => (
+                                <div key={username}>
+                                  <p className="font-medium text-sm mb-2">
+                                    {username} ({userData.count} calls, {userData.percentage})
+                                  </p>
+                                  <TimingStats data={userData} />
+                                </div>
+                              ))
+                          ))
+                      ) : selectedOrg ? (
+                        data.organizations && 
+                        Object.entries(data.organizations)
+                          .filter(([orgName]) => orgName === selectedOrg)
+                          .map(([orgName, orgData]) => (
+                            <div key={orgName}>
+                              <p className="font-medium text-sm mb-2">
+                                {orgName} ({orgData.count} calls, {orgData.percentage})
+                              </p>
+                              <TimingStats data={orgData} />
+                            </div>
+                          ))
+                      ) : (
+                        <div>
+                          <p className="font-medium text-sm mb-2">Global Timing Stats</p>
+                          <TimingStats data={data} />
+                        </div>
+                      )}
+                    </div>
                   </Card>
                 ))
               ) : (
