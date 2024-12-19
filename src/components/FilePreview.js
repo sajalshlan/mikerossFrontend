@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, memo } from 'react';
 import mammoth from 'mammoth';
 import SpreadsheetPreview from './SpreadsheetPreview';
 import '../styles/docPreview.css';
@@ -7,6 +7,33 @@ import ExplanationCard from './ExplanationCard';
 import api from '../api';
 import TabBar from './TabBar';
 import { previewPdfAsDocx } from '../api';
+
+const PdfPreview = memo(({ file, fileObj, isScanned }) => {
+  const pdfUrl = useMemo(() => {
+    return file instanceof Blob ? 
+      URL.createObjectURL(file) : 
+      `data:application/pdf;base64,${fileObj.base64}`;
+  }, [file, fileObj]);
+
+  useEffect(() => {
+    return () => {
+      if (file instanceof Blob) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [file, pdfUrl]);
+
+  return (
+    <embed
+      src={pdfUrl}
+      type="application/pdf"
+      width="100%"
+      height="100%"
+      className="min-h-[500px] h-full"
+      style={{ display: 'block' }}
+    />
+  );
+});
 
 const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
   const containerRef = useRef(null);
@@ -110,16 +137,29 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
       try {
         const result = await previewPdfAsDocx(fileObj.file);
         if (result.success) {
-          const content = await mammoth.convertToHtml({ 
-            arrayBuffer: base64ToArrayBuffer(result.content) 
-          });
-          
-          setPdfDocxContents(prevContents => {
-            const newContents = new Map(prevContents);
-            newContents.set(selectedFile, content.value);
-            return newContents;
-          });
-          
+          if (result.is_scanned) {
+            setPdfDocxContents(prevContents => {
+              const newContents = new Map(prevContents);
+              newContents.set(selectedFile, {
+                isScanned: true,
+                content: result.content
+              });
+              return newContents;
+            });
+          } else {
+            const content = await mammoth.convertToHtml({ 
+              arrayBuffer: base64ToArrayBuffer(result.content) 
+            });
+            
+            setPdfDocxContents(prevContents => {
+              const newContents = new Map(prevContents);
+              newContents.set(selectedFile, {
+                isScanned: false,
+                content: content.value
+              });
+              return newContents;
+            });
+          }
           convertedPdfsRef.current.add(selectedFile);
         }
       } catch (error) {
@@ -237,7 +277,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
         return (
           <div 
             {...commonProps} 
-            className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto docx-content"
+            className="h-full"
             draggable="false"
             onDragStart={e => e.preventDefault()}
           >
@@ -246,13 +286,21 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
                 <span>Converting PDF for preview...</span>
               </div>
             ) : (
-              <div 
-                draggable="false"
-                onDragStart={e => e.preventDefault()}
-                dangerouslySetInnerHTML={{ 
-                  __html: pdfDocxContents.get(selectedFile) || '' 
-                }} 
-              />
+              pdfDocxContents.get(selectedFile)?.isScanned ? (
+                <PdfPreview 
+                  file={files[selectedFile].file}
+                  fileObj={files[selectedFile]}
+                  isScanned={true}
+                />
+              ) : (
+                <div 
+                  className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto docx-content"
+                  draggable="false"
+                  dangerouslySetInnerHTML={{ 
+                    __html: pdfDocxContents.get(selectedFile)?.content || '' 
+                  }} 
+                />
+              )
             )}
           </div>
         );
