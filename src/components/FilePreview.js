@@ -29,7 +29,7 @@ const PdfPreview = memo(({ file, fileObj, isScanned }) => {
       type="application/pdf"
       width="100%"
       height="100%"
-      className="min-h-[500px] h-full"
+      className="min-h-[750px] h-full"
       style={{ display: 'block' }}
     />
   );
