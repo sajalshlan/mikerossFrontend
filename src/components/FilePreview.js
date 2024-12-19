@@ -122,60 +122,53 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
   }, [quickActionPosition]);
 
   useEffect(() => {
-    const convertPdf = async () => {
-      const fileObj = files[selectedFile];
-      if (!fileObj) return;
+    const processPendingPdfs = async () => {
+      const pendingPdfs = Object.entries(files).filter(([fileName, fileObj]) => {
+        const isPdf = getFileTypeFromName(fileObj.file.name) === 'pdf';
+        const notConverted = !convertedPdfsRef.current.has(fileName);
+        const isSuccess = !fileObj.progress || fileObj.progress.status === 'success';
+        return isPdf && notConverted && isSuccess;
+      });
 
-      const fileType = getFileTypeFromName(fileObj.file.name);
-      if (fileType !== 'pdf') return;
+      if (pendingPdfs.length === 0) return;
 
-      if (convertedPdfsRef.current.has(selectedFile)) {
-        return;
-      }
-
-      setIsConvertingPdf(true);
-      try {
-        const result = await previewPdfAsDocx(fileObj.file);
-        if (result.success) {
-          if (result.is_scanned) {
-            setPdfDocxContents(prevContents => {
-              const newContents = new Map(prevContents);
-              newContents.set(selectedFile, {
-                isScanned: true,
-                content: result.content
+      for (const [fileName, fileObj] of pendingPdfs) {
+        try {
+          const result = await previewPdfAsDocx(fileObj.file);
+          if (result.success) {
+            if (result.is_scanned) {
+              setPdfDocxContents(prevContents => {
+                const newContents = new Map(prevContents);
+                newContents.set(fileName, {
+                  isScanned: true,
+                  content: result.content
+                });
+                return newContents;
               });
-              return newContents;
-            });
-          } else {
-            const content = await mammoth.convertToHtml({ 
-              arrayBuffer: base64ToArrayBuffer(result.content) 
-            });
-            
-            setPdfDocxContents(prevContents => {
-              const newContents = new Map(prevContents);
-              newContents.set(selectedFile, {
-                isScanned: false,
-                content: content.value
+            } else {
+              const content = await mammoth.convertToHtml({ 
+                arrayBuffer: base64ToArrayBuffer(result.content) 
               });
-              return newContents;
-            });
+              
+              setPdfDocxContents(prevContents => {
+                const newContents = new Map(prevContents);
+                newContents.set(fileName, {
+                  isScanned: false,
+                  content: content.value
+                });
+                return newContents;
+              });
+            }
+            convertedPdfsRef.current.add(fileName);
           }
-          convertedPdfsRef.current.add(selectedFile);
+        } catch (error) {
+          console.error(`Error converting PDF ${fileName}:`, error);
         }
-      } catch (error) {
-        console.error('Error converting PDF:', error);
-      } finally {
-        setIsConvertingPdf(false);
       }
     };
 
-    if (selectedFile && 
-        files[selectedFile] && 
-        getFileTypeFromName(files[selectedFile].file.name) === 'pdf' &&
-        !convertedPdfsRef.current.has(selectedFile)) {
-      convertPdf();
-    }
-  }, [selectedFile, files]);
+    processPendingPdfs();
+  }, [files]);
 
   useEffect(() => {
     convertedPdfsRef.current.forEach(fileName => {
@@ -274,6 +267,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
       case 'image':
         return <img {...commonProps} src={fileUrl} alt={file.name} onLoad={cleanup} />;
       case 'pdf':
+        const pdfContent = pdfDocxContents.get(selectedFile);
         return (
           <div 
             {...commonProps} 
@@ -281,12 +275,12 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
             draggable="false"
             onDragStart={e => e.preventDefault()}
           >
-            {isConvertingPdf ? (
+            {!pdfContent ? (
               <div className="flex items-center justify-center h-full">
                 <span>Converting PDF for preview...</span>
               </div>
             ) : (
-              pdfDocxContents.get(selectedFile)?.isScanned ? (
+              pdfContent.isScanned ? (
                 <PdfPreview 
                   file={files[selectedFile].file}
                   fileObj={files[selectedFile]}
@@ -297,7 +291,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
                   className="bg-white text-black p-4 rounded-lg shadow-lg overflow-auto docx-content"
                   draggable="false"
                   dangerouslySetInnerHTML={{ 
-                    __html: pdfDocxContents.get(selectedFile)?.content || '' 
+                    __html: pdfContent.content || '' 
                   }} 
                 />
               )
@@ -341,7 +335,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
           </div>
         );
     }
-  }, [selectedFile, files, pdfDocxContents, isConvertingPdf, docxContent]);
+  }, [selectedFile, files, pdfDocxContents, docxContent]);
 
   const getMimeType = (fileType) => {
     switch (fileType) {
