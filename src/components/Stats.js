@@ -190,22 +190,24 @@ const Stats = () => {
   };
 
   return (
-    <div className="p-6 bg-white">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">Cornelia Usage Statistics</h1>
+    <div className="p-2 md:p-6 bg-white">
+      <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-800">API Usage Statistics</h1>
       
-      <div className="mb-6">
-        <Space size="large">
+      <div className="mb-4 md:mb-6">
+        <Space 
+          className="w-full flex flex-col md:flex-row gap-2 md:overflow-x-auto pb-2"
+          size="small"
+        >
           <DatePicker 
             onChange={(date) => setSelectedDate(date)} 
             format="DD-MM-YYYY"
-            className="border-gray-200"
+            className="h-[40px] w-full md:w-auto md:min-w-[150px]"
           />
           <Select
             placeholder="Select Organization"
             allowClear
-            style={{ width: 200 }}
             onChange={handleOrgChange}
-            className="border-gray-200"
+            className="h-[40px] w-full md:w-auto md:min-w-[200px]"
           >
             {stats?.organizations && 
               Object.keys(stats.organizations).map(org => (
@@ -216,9 +218,8 @@ const Stats = () => {
           <Select
             placeholder="Select User"
             allowClear
-            style={{ width: 200 }}
             onChange={setSelectedUser}
-            className="border-gray-200"
+            className="h-[40px] w-full md:w-auto md:min-w-[200px]"
             value={selectedUser}
           >
             {stats?.organizations && selectedOrg && 
