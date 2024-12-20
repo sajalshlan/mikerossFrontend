@@ -30,17 +30,11 @@ const LogsTable = ({ logs, selectedOrg, selectedUser }) => {
       title: 'Timestamp',
       dataIndex: 'timestamp',
       key: 'timestamp',
-      sorter: (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
     },
     {
       title: 'Endpoint',
       dataIndex: 'endpoint',
       key: 'endpoint',
-      filters: [...new Set(logs?.map(log => log.endpoint))].map(endpoint => ({
-        text: endpoint,
-        value: endpoint,
-      })),
-      onFilter: (value, record) => record.endpoint === value,
     },
     {
       title: 'Organization',
@@ -191,7 +185,7 @@ const Stats = () => {
 
   return (
     <div className="p-2 md:p-6 bg-white">
-      <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-800">API Usage Statistics</h1>
+      <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-800">Cornelia Usage Statistics</h1>
       
       <div className="mb-4 md:mb-6">
         <Space 
