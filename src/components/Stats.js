@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Select, Space, Spin, DatePicker } from 'antd';
-
+import { Table, Card, Select, Space, Spin, DatePicker, Tabs } from 'antd';
+const { TabPane } = Tabs;
 const { Option } = Select;
 
 const TimingStats = ({ data }) => (
@@ -23,6 +23,76 @@ const TimingStats = ({ data }) => (
     </div>
   </div>
 );
+
+const LogsTable = ({ logs, selectedOrg, selectedUser }) => {
+  const columns = [
+    {
+      title: 'Timestamp',
+      dataIndex: 'timestamp',
+      key: 'timestamp',
+      sorter: (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+    },
+    {
+      title: 'Endpoint',
+      dataIndex: 'endpoint',
+      key: 'endpoint',
+      filters: [...new Set(logs?.map(log => log.endpoint))].map(endpoint => ({
+        text: endpoint,
+        value: endpoint,
+      })),
+      onFilter: (value, record) => record.endpoint === value,
+    },
+    {
+      title: 'Organization',
+      dataIndex: 'organization',
+      key: 'organization',
+      filteredValue: selectedOrg ? [selectedOrg] : null,
+      onFilter: (value, record) => record.organization === value,
+    },
+    {
+      title: 'User',
+      dataIndex: 'user',
+      key: 'user',
+      filteredValue: selectedUser ? [selectedUser] : null,
+      onFilter: (value, record) => record.user === value,
+    },
+    {
+      title: 'Method',
+      dataIndex: 'method',
+      key: 'method',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status_code',
+      key: 'status_code',
+      render: (status) => (
+        <span className={`px-2 py-1 rounded ${
+          status === 200 ? 'bg-green-100 text-green-800' : 
+          status >= 400 ? 'bg-red-100 text-red-800' : 
+          'bg-yellow-100 text-yellow-800'
+        }`}>
+          {status}
+        </span>
+      ),
+    },
+    {
+      title: 'Execution Time',
+      dataIndex: 'execution_time',
+      key: 'execution_time',
+      sorter: (a, b) => parseFloat(a.execution_time) - parseFloat(b.execution_time),
+    },
+  ];
+
+  return (
+    <Table 
+      columns={columns}
+      dataSource={logs?.map(log => ({ ...log, key: log.id }))}
+      pagination={{ pageSize: 10 }}
+      className="border-gray-100 shadow-sm"
+      scroll={{ x: true }}
+    />
+  );
+};
 
 const Stats = () => {
   const [loading, setLoading] = useState(true);
@@ -121,7 +191,7 @@ const Stats = () => {
 
   return (
     <div className="p-6 bg-white">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">API Usage Statistics</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Cornelia Usage Statistics</h1>
       
       <div className="mb-6">
         <Space size="large">
@@ -165,95 +235,108 @@ const Stats = () => {
           <Spin size="large" />
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <Card className="shadow-sm border-gray-100">
-              <h3 className="text-gray-600">Total API Calls</h3>
-              <p className="text-2xl text-gray-800">{stats?.overview?.total_api_calls || 0}</p>
-            </Card>
-            <Card className="shadow-sm border-gray-100">
-              <h3 className="text-gray-600">Average Execution Time</h3>
-              <p className="text-2xl text-gray-800">{stats?.overview?.average_execution_time || '0s'}</p>
-            </Card>
-            <Card className="shadow-sm border-gray-100">
-              <h3 className="text-gray-600">Peak Hour</h3>
-              <p className="text-2xl text-gray-800">{stats?.overview?.peak_hour || 'N/A'}</p>
-            </Card>
-          </div>
-
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">API Endpoint Usage</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {stats?.endpoint_distribution ? (
-                Object.entries(stats.endpoint_distribution).map(([endpoint, data]) => (
-                  <Card key={endpoint} className="shadow-sm border-gray-100">
-                    <h3 className="text-gray-600 text-sm mb-2">
-                      {getEndpointName(endpoint)}
-                    </h3>
-                    
-                    {!selectedOrg && (
-                      <>
-                        <p className="text-2xl font-semibold text-gray-800">
-                          {data?.count?.toLocaleString() || 0} calls
-                        </p>
-                        <p className="text-sm text-gray-500 mb-2">
-                          {data?.percentage || '0%'}
-                        </p>
-                      </>
-                    )}
-                    
-                    <div className={!selectedOrg ? "border-t pt-2 mt-2" : ""}>
-                      {selectedUser ? (
-                        data.organizations && 
-                        Object.entries(data.organizations)
-                          .filter(([orgName]) => orgName === selectedOrg)
-                          .map(([orgName, orgData]) => (
-                            orgData.users && 
-                            Object.entries(orgData.users)
-                              .filter(([username]) => username === selectedUser)
-                              .map(([username, userData]) => (
-                                <div key={username}>
-                                  <p className="font-medium text-sm mb-2">
-                                    {username} ({userData.count} calls, {userData.percentage})
-                                  </p>
-                                  <TimingStats data={userData} />
-                                </div>
-                              ))
-                          ))
-                      ) : selectedOrg ? (
-                        data.organizations && 
-                        Object.entries(data.organizations)
-                          .filter(([orgName]) => orgName === selectedOrg)
-                          .map(([orgName, orgData]) => (
-                            <div key={orgName}>
-                              <p className="font-medium text-sm mb-2">
-                                {orgName} ({orgData.count} calls, {orgData.percentage})
-                              </p>
-                              <TimingStats data={orgData} />
-                            </div>
-                          ))
-                      ) : (
-                        <div>
-                          <p className="font-medium text-sm mb-2">Global Timing Stats</p>
-                          <TimingStats data={data} />
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-gray-600">No endpoint data available</p>
-              )}
+        <Tabs defaultActiveKey="overview" className="mt-4">
+          <TabPane tab="Overview" key="overview">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card className="shadow-sm border-gray-100">
+                <h3 className="text-gray-600">Total API Calls</h3>
+                <p className="text-2xl text-gray-800">{stats?.overview?.total_api_calls || 0}</p>
+              </Card>
+              <Card className="shadow-sm border-gray-100">
+                <h3 className="text-gray-600">Average Execution Time</h3>
+                <p className="text-2xl text-gray-800">{stats?.overview?.average_execution_time || '0s'}</p>
+              </Card>
+              <Card className="shadow-sm border-gray-100">
+                <h3 className="text-gray-600">Peak Hour</h3>
+                <p className="text-2xl text-gray-800">{stats?.overview?.peak_hour || 'N/A'}</p>
+              </Card>
             </div>
-          </div>
+            
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">API Endpoint Usage</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {stats?.endpoint_distribution ? (
+                  Object.entries(stats.endpoint_distribution).map(([endpoint, data]) => (
+                    <Card key={endpoint} className="shadow-sm border-gray-100">
+                      <h3 className="text-gray-600 text-sm mb-2">
+                        {getEndpointName(endpoint)}
+                      </h3>
+                      
+                      {!selectedOrg && (
+                        <>
+                          <p className="text-2xl font-semibold text-gray-800">
+                            {data?.count?.toLocaleString() || 0} calls
+                          </p>
+                          <p className="text-sm text-gray-500 mb-2">
+                            {data?.percentage || '0%'}
+                          </p>
+                        </>
+                      )}
+                      
+                      <div className={!selectedOrg ? "border-t pt-2 mt-2" : ""}>
+                        {selectedUser ? (
+                          data.organizations && 
+                          Object.entries(data.organizations)
+                            .filter(([orgName]) => orgName === selectedOrg)
+                            .map(([orgName, orgData]) => (
+                              orgData.users && 
+                              Object.entries(orgData.users)
+                                .filter(([username]) => username === selectedUser)
+                                .map(([username, userData]) => (
+                                  <div key={username}>
+                                    <p className="font-medium text-sm mb-2">
+                                      {username} ({userData.count} calls, {userData.percentage})
+                                    </p>
+                                    <TimingStats data={userData} />
+                                  </div>
+                                ))
+                            ))
+                        ) : selectedOrg ? (
+                          data.organizations && 
+                          Object.entries(data.organizations)
+                            .filter(([orgName]) => orgName === selectedOrg)
+                            .map(([orgName, orgData]) => (
+                              <div key={orgName}>
+                                <p className="font-medium text-sm mb-2">
+                                  {orgName} ({orgData.count} calls, {orgData.percentage})
+                                </p>
+                                <TimingStats data={orgData} />
+                              </div>
+                            ))
+                        ) : (
+                          <div>
+                            <p className="font-medium text-sm mb-2">Global Timing Stats</p>
+                            <TimingStats data={data} />
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-gray-600">No endpoint data available</p>
+                )}
+              </div>
+            </div>
 
-          <Table 
-            columns={columns} 
-            dataSource={transformDataForTable()} 
-            pagination={{ pageSize: 10 }}
-            className="border-gray-100 shadow-sm"
-          />
-        </>
+            <Table 
+              columns={columns} 
+              dataSource={transformDataForTable()} 
+              pagination={{ pageSize: 10 }}
+              className="border-gray-100 shadow-sm"
+            />
+          </TabPane>
+          
+          <TabPane tab="API Logs" key="logs">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">API Call Logs</h2>
+              <LogsTable 
+                logs={stats?.logs} 
+                selectedOrg={selectedOrg}
+                selectedUser={selectedUser}
+              />
+            </div>
+          </TabPane>
+        </Tabs>
       )}
     </div>
   );
