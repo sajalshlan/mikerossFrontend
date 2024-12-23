@@ -46,7 +46,10 @@ const LegalAnalyzer = () => {
 
   const [isDragging, setIsDragging] = useState(false);
 
-  const [isTourOpen, setIsTourOpen] = useState(true);
+  const [isTourOpen, setIsTourOpen] = useState(() => {
+    const tourDone = localStorage.getItem('tourCompleted');
+    return tourDone !== 'true';
+  });
 
   const [previousCollapsedState, setPreviousCollapsedState] = useState(null);
 
@@ -56,6 +59,7 @@ const LegalAnalyzer = () => {
     analysisButtonsRef: useRef(null),
     filePreviewRef: useRef(null),
     chatDraftRef: useRef(null),
+    siderButtonRef: useRef(null),
   };
 
   const tourSteps = [
@@ -69,7 +73,9 @@ const LegalAnalyzer = () => {
     {
       title: 'Select Files for Analysis',
       description: 'Once you have uploaded your files, you will see them in this side panel. Select them for analysis by clicking the checkbox next to a file. Selected files will be highlighted in blue. You can select multiple files for analysis.',
-      prevButtonProps: { style: { display: 'none' } },
+      target: () => siderRef.current,
+      placement: 'left',
+      mask: true,
       cover: (
         <img src="/selectedFiles.png" />
       ),
@@ -95,6 +101,13 @@ const LegalAnalyzer = () => {
       ),
     },
     {
+      title: 'File Manager',
+      description: 'Click this button to access your uploaded files. Here you can select files for analysis, delete them, or upload new ones.',
+      target: () => tourRefs.siderButtonRef.current,
+      placement: 'left',
+      mask: true,
+    },
+    {
       title: 'Magic Helper',
       description: 'Access powerful helpers: Chat with your documents using the AI Assistant or Generate drafts and emails with the Draft Assistant.',
       target: () => tourRefs.chatDraftRef.current,
@@ -113,6 +126,8 @@ const LegalAnalyzer = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (isTourOpen) return;
+      
       if (siderRef.current && !siderRef.current.contains(event.target) && !uiState.isSiderCollapsed) {
         setUiState(prev => ({ ...prev, isSiderCollapsed: true }));
       }
@@ -122,7 +137,7 @@ const LegalAnalyzer = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [uiState.isSiderCollapsed]);
+  }, [uiState.isSiderCollapsed, isTourOpen]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -177,6 +192,12 @@ const LegalAnalyzer = () => {
         isSiderCollapsed: true
       }));
     } else if (current === 4) {
+      // For File Manager step
+      setUiState(prev => ({
+        ...prev,
+        isSiderCollapsed: true
+      }));
+    } else if (current === 5) {
       // For Magic Helpers step
       setUiState(prev => ({
         ...prev,
@@ -561,6 +582,7 @@ const handleAnalysis = async (type, selectedTexts) => {
     }));
     setPreviousCollapsedState(null);
     setIsTourOpen(false);
+    localStorage.setItem('tourCompleted', 'true');
   };
 
   const handleSiderCollapse = (collapsed) => {

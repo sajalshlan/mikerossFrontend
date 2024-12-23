@@ -287,6 +287,7 @@ const FileUploader = forwardRef(({
       }}
     >
       <Button
+          ref={tourRefs.siderButtonRef}
         type="primary"
         onClick={() => setCollapsed(!collapsed)}
         onMouseEnter={() => setCollapsed(!collapsed)}
