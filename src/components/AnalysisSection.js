@@ -1,19 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, forwardRef } from 'react';
 import { Typography, Tooltip, message, Dropdown, Menu } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import AnalysisResult from './AnalysisResult';
 
 const { Title } = Typography;
 
-const AnalysisSection = ({
+const AnalysisSection = forwardRef(({
   files,
   analysisState,
   onAnalysis,
   onToggleVisibility,
   isUploading,
   onFileSelection,
-  onStopAnalysis
-}) => {
+  onStopAnalysis,
+  tourRefs
+}, ref) => {
   const analysisTypes = ['shortSummary', 'longSummary', 'risky', 'conflict'];
   const [selectedSummaryType, setSelectedSummaryType] = useState('Summary');
   const [lastUsedSummaryType, setLastUsedSummaryType] = useState(null);
@@ -226,7 +227,7 @@ const AnalysisSection = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
+    <div ref={ref} className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
       <div className="flex-shrink-0">
         <Title level={3} className="text-gray-800 mb-2 font-semibold text-center">Analyze</Title>
         <div className="flex gap-4 mb-2 items-start">
@@ -406,6 +407,6 @@ const AnalysisSection = ({
       </div>
     </div>
   );
-};
+});
 
 export default AnalysisSection;

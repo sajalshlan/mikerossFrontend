@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { FloatButton, Tooltip } from 'antd';
 import { MessageOutlined, FileTextOutlined, CloseOutlined } from '@ant-design/icons';
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 
-const MagicEffect = ({ 
+const MagicEffect = forwardRef(({ 
   extractedTexts, 
   allExtractedTexts, 
   isSiderCollapsed, 
   setActiveFile,
-  brainstormText
-}) => {
+  brainstormText,
+  tourRefs
+}, ref) => {
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isDraftVisible, setIsDraftVisible] = useState(false);
   const [isChatClosing, setIsChatClosing] = useState(false);
@@ -108,15 +109,16 @@ const MagicEffect = ({
 
 
   return (
-    <>
+    <div ref={ref}>
       <div 
-        ref={floatButtonRef}
         style={{ 
           opacity: !isSiderCollapsed ? 0 : 1,
           pointerEvents: !isSiderCollapsed ? 'none' : 'auto',
         }}
       >
         <FloatButton.Group
+        ref={tourRefs.magicEffectRef}
+
           trigger="hover"
             type="primary"
             style={{ 
@@ -124,6 +126,7 @@ const MagicEffect = ({
               bottom: 24,
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
+            z
             className="float-button-group"
             onClick={handleMainButtonClick}
             icon={
@@ -191,8 +194,8 @@ const MagicEffect = ({
           setIsWaitingForResponse={setIsWaitingForDraftResponse}
         />
       )}
-    </>
+    </div>
   );
-};
+});
 
 export default MagicEffect;

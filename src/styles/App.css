@@ -778,5 +778,28 @@ h2 {
   100% { background-color: transparent; }
 }
 
+/* Add these styles to make the tour more visible */
+.ant-tour {
+  --antd-arrow-background-color: #1890ff;
+}
+
+.ant-tour .ant-tour-inner {
+  width: 320px;
+}
+
+.ant-tour-content {
+  padding: 16px;
+}
+
+.ant-tour-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.ant-tour-description {
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 1.5;
+}
+
 
 

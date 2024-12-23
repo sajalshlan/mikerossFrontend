@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo, memo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, memo, forwardRef } from 'react';
 import mammoth from 'mammoth';
 import SpreadsheetPreview from './SpreadsheetPreview';
 import '../styles/docPreview.css';
@@ -35,7 +35,7 @@ const PdfPreview = memo(({ file, fileObj, isScanned }) => {
   );
 });
 
-const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
+const FilePreview = forwardRef(({ files, selectedFile, onFileSelect, onBrainstorm, tourRefs, ref }) => {
   const containerRef = useRef(null);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [docxContent, setDocxContent] = useState('');
@@ -499,7 +499,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
   };
 
   return (
-    <div 
+    <div ref={ref}
       className={`h-full flex flex-col ${selectedFile && files[selectedFile] ? 'bg-gray-900 rounded-lg shadow-lg' : ''}`}
       onMouseUp={handleTextSelection}
     >
@@ -511,7 +511,7 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
           onTabClose={handleTabClose}
         />
       )}
-      <div className="flex-1 overflow-auto p-4">
+      <div ref={tourRefs.filePreviewRef} className="flex-1 overflow-auto p-4">
         {showPlaceholder ? (
           renderPlaceholder()
         ) : (
@@ -579,6 +579,6 @@ const FilePreview = ({ files, selectedFile, onFileSelect, onBrainstorm }) => {
       )}
     </div>
   );
-};
+});
 
 export default FilePreview;

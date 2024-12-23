@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { Menu, Upload, Button, Progress, message, Tooltip, Typography, Checkbox } from 'antd';
 import { UploadOutlined, DeleteOutlined, FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, EyeOutlined, CheckSquareOutlined, DeleteColumnOutlined } from '@ant-design/icons';
 import googleDriveService from '../utils/googleDriveService';
@@ -6,7 +6,7 @@ import oneDriveService from '../utils/oneDriveService';
 
 const { Text } = Typography;
 
-const FileUploader = ({ 
+const FileUploader = forwardRef(({ 
   files,              
   isFileProcessing,  // renamed from isUploading for clarity
   onFileUpload,       
@@ -14,8 +14,9 @@ const FileUploader = ({
   onCheckedFilesChange,
   onFileSelection,    
   collapsed,         
-  setCollapsed       
-}) => {
+  setCollapsed,       
+  tourRefs
+}, ref) => {
   const [uploaderState, setUploaderState] = useState({
     checkedFiles: {},              // Local tracking of checked files
     isGoogleDriveReady: false,     // Google Drive integration state
@@ -278,7 +279,7 @@ const FileUploader = ({
   };
 
   return (
-    <div className="file-uploader h-full flex flex-col shadow-lg rounded-l-2xl" 
+    <div ref={ref} className="file-uploader h-full flex flex-col shadow-lg rounded-l-2xl" 
       onClick={() => collapsed && setCollapsed(false)}
       style={{
         background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
@@ -312,7 +313,7 @@ const FileUploader = ({
               {
                 key: 'uploadInstructions',
                 label: (
-                  <Text type="secondary" className="text-xs">
+                  <Text  type="secondary" className="text-xs">
                     Supported formats: PDF, JPEG, PNG, DOC, DOCX
                   </Text>
                 ),
@@ -320,7 +321,7 @@ const FileUploader = ({
               {
                 key: 'mainUpload',
                 label: (
-                  <div className="p-2">
+                  <div ref={tourRefs?.uploadAreaRef} className="p-2">
                     <div 
                       className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-500 transition-colors"
                     >
@@ -374,12 +375,18 @@ const FileUploader = ({
           {
             key: 'files',
             icon: <FileOutlined />,
-            label: 'Click files to select',
+            label: (
+              <div className="flex items-center">
+                <Text strong className="text-base text-blue-600 flex items-center gap-2">
+                  Select files for analysis
+                </Text>
+              </div>
+            ),
             children: [
               {
                 key: 'fileActions',
                 label: (
-                  <div className="flex justify-between items-center px-8 py-1">
+                  <div  className="flex justify-between items-center px-8 py-1">
                     <Tooltip title={isUploading ? "Please wait for uploads to complete" : "Select all uploaded files"}>
                       <Button
                         size="small"
@@ -453,7 +460,7 @@ const FileUploader = ({
                 key: fileName,
                 label: (
                   <div className={`flex flex-col w-full ${uploaderState.checkedFiles[fileName] ? 'bg-blue-100 rounded-md p-2 mb-1' : 'py-2'}`}>
-                    <div className="flex items-center justify-between w-full">
+                    <div  className="flex items-center justify-between w-full">
                       <div className="flex items-center space-x-2 flex-grow min-w-0">
                         <Checkbox
                           checked={uploaderState.checkedFiles[fileName]}
@@ -507,6 +514,6 @@ const FileUploader = ({
       />
     </div>
   );
-};
+});
 
 export default FileUploader;

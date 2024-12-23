@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Layout, Splitter, Button, FloatButton } from 'antd';
 import { Helmet } from 'react-helmet';
-import { MenuFoldOutlined, MenuUnfoldOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { MenuFoldOutlined, MenuUnfoldOutlined, FolderOpenOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import FileUploader from './FileUploader';
 import AnalysisSection from './AnalysisSection';
 import FilePreview from './FilePreview';
@@ -12,6 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { message } from 'antd';
 import  api  from '../api';
 import TermsAndConditions from './TermsAndConditions';
+import { Tour } from 'antd';
 
 const { Sider, Content } = Layout;
 
@@ -44,6 +45,58 @@ const LegalAnalyzer = () => {
   }, [fileState.uploadedFiles]);
 
   const [isDragging, setIsDragging] = useState(false);
+
+  const [isTourOpen, setIsTourOpen] = useState(true);
+
+  const [previousCollapsedState, setPreviousCollapsedState] = useState(null);
+
+  const tourRefs = {
+    uploadAreaRef: useRef(null),
+    fileSelectionRef: useRef(null),
+    analysisButtonsRef: useRef(null),
+    filePreviewRef: useRef(null),
+    chatDraftRef: useRef(null),
+  };
+
+  const tourSteps = [
+    {
+      title: 'Upload Documents',
+      description: 'Start by uploading your legal documents here. Drag & drop files or Click to browse.',
+      target: () => tourRefs.uploadAreaRef.current,
+      placement: 'bottom',
+      mask: true,
+    },
+    {
+      title: 'Select Files for Analysis',
+      description: 'Once you have uploaded your files, you will see them in this side panel. You can select them for analysis by clicking the checkbox next to a file. Selected files will be highlighted in blue.',
+      prevButtonProps: { style: { display: 'none' } },
+    },
+    {
+      title: 'Generate Analysis',
+      description: 'After selecting files, use these buttons to generate different types of analysis: Summaries, Risk Analysis, or Conflict Check.',
+      target: () => tourRefs.analysisButtonsRef.current,
+      placement: 'left',
+      mask: true,
+    },
+    {
+      title: 'File Preview',
+      description: 'View your documents here and select text to get explanations or brainstorm on ideas.',
+      target: () => tourRefs.filePreviewRef.current,
+      placement: 'right',
+      mask: true,
+    },
+    {
+      title: 'Magic Helper',
+      description: 'Access powerful AI tools: Chat with your documents using the AI Assistant, or generate drafts and emails with the Draft Assistant.',
+      target: () => tourRefs.chatDraftRef.current,
+      placement: 'top',
+      mask: true,
+      style: {
+        maxWidth: '400px'
+      },
+      offset: [0, -10]
+    }
+  ];
 
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
@@ -90,6 +143,42 @@ const LegalAnalyzer = () => {
     };
     checkTerms();
   }, []);
+
+  const handleTourChange = (current) => {
+    console.log('Tour step changed to:', current);
+    
+    if (current === 0) {
+      // For Upload Documents step
+      setPreviousCollapsedState(uiState.isSiderCollapsed);
+      setUiState(prev => ({
+        ...prev,
+        isSiderCollapsed: false
+      }));
+    } else if (current === 1) {
+      // For Select Files step - ensure Sider is fully expanded
+      setUiState(prev => ({
+        ...prev,
+        isSiderCollapsed: false
+      }));
+    } else if (current === 2) {
+      setUiState(prev => ({
+        ...prev,
+        isSiderCollapsed: true
+      }));
+    } else if (current === 3) {
+      // For File Preview step
+      setUiState(prev => ({
+        ...prev,
+        isSiderCollapsed: true
+      }));
+    } else if (current === 4) {
+      // For Magic Helpers step
+      setUiState(prev => ({
+        ...prev,
+        isSiderCollapsed: true
+      }));
+    }
+  };
 
   const handleAcceptTerms = async () => {
     try {
@@ -460,6 +549,24 @@ const handleAnalysis = async (type, selectedTexts) => {
     setFileState(prev => ({ ...prev, previewFile: fileName }));
   };
 
+  const handleTourClose = () => {
+    setUiState(prev => ({
+      ...prev,
+      isSiderCollapsed: previousCollapsedState
+    }));
+    setPreviousCollapsedState(null);
+    setIsTourOpen(false);
+  };
+
+  const handleSiderCollapse = (collapsed) => {
+    if (!isTourOpen) {
+      setUiState(prev => ({
+        ...prev,
+        isSiderCollapsed: collapsed
+      }));
+    }
+  };
+
   return (
     <Layout 
       className="h-screen overflow-hidden"
@@ -502,6 +609,7 @@ const handleAnalysis = async (type, selectedTexts) => {
               >
                 <div className="h-full overflow-auto p-2">
                   <FilePreview
+                    ref={tourRefs.filePreviewRef}
                     files={fileState.uploadedFiles}
                     selectedFile={fileState.previewFile}
                     onFileSelect={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
@@ -511,12 +619,14 @@ const handleAnalysis = async (type, selectedTexts) => {
                         brainstormText: text 
                       }));
                     }}
+                    tourRefs={tourRefs}
                   />
                 </div>
               </Splitter.Panel>
               <Splitter.Panel style={{ height: '100%', overflow: 'hidden' }}>
                 <div className="h-full overflow-auto p-2">
                   <AnalysisSection
+                    ref={tourRefs.analysisButtonsRef}
                     files={fileState.uploadedFiles}
                     analysisState={analysisState.types}
                     isFileProcessing={isUploading}
@@ -524,6 +634,7 @@ const handleAnalysis = async (type, selectedTexts) => {
                     onToggleVisibility={toggleAnalysisVisibility}
                     onFileSelection={setActiveFile}
                     onStopAnalysis={handleStopAnalysis}
+                    tourRefs={tourRefs}
                   />
                 </div>
               </Splitter.Panel>
@@ -534,9 +645,9 @@ const handleAnalysis = async (type, selectedTexts) => {
           ref={siderRef}
           width={uiState.isMobileView ? '75%' : 350}
           theme="light"
-          collapsible
+          collapsible={true}
           collapsed={uiState.isSiderCollapsed}
-          onCollapse={(collapsed) => setUiState(prev => ({ ...prev, isSiderCollapsed: collapsed }))}
+          onCollapse={handleSiderCollapse}
           reverseArrow={true}
           trigger={null}
           collapsedWidth={uiState.isMobileView ? 0 : 55}
@@ -545,21 +656,16 @@ const handleAnalysis = async (type, selectedTexts) => {
             right: 0,
             top: 0,
             bottom: 0,
-            zIndex: 999,
+            zIndex: isTourOpen ? 1000 : 999,
             background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)',
             borderTopLeftRadius: '24px',
             borderBottomLeftRadius: '24px',
             overflow: 'hidden',
-            boxShadow: '-4px 0 15px rgba(0, 0, 0, 0.05)',
-            ...(uiState.isMobileView && {
-              position: 'fixed',
-              height: '100%',
-              right: uiState.isSiderCollapsed ? '-100%' : 0,
-              transition: 'right 0.3s',
-            }),
+            transition: 'all 0.3s ease',
           }}
         >
           <FileUploader
+            ref={tourRefs.fileUploaderRef}
             files={fileState.uploadedFiles}
             isFileProcessing={isUploading}
             onFileUpload={handleFileUpload}
@@ -567,11 +673,17 @@ const handleAnalysis = async (type, selectedTexts) => {
             onCheckedFilesChange={handleCheckedFilesChange}
             onFileSelection={(fileName) => setFileState(prev => ({ ...prev, previewFile: fileName }))}
             collapsed={uiState.isSiderCollapsed}
-            setCollapsed={(collapsed) => setUiState(prev => ({ ...prev, isSiderCollapsed: collapsed }))}
+            setCollapsed={handleSiderCollapse}
+            tourRefs={tourRefs}
           />
         </Sider>
       </Layout>
       <MagicEffect 
+        ref={(el) => {
+          if (tourRefs.chatDraftRef) {
+            tourRefs.chatDraftRef.current = el?.querySelector('.float-button-group') || el;
+          }
+        }}
         extractedTexts={getSelectedFilesExtractedTexts()}
         allExtractedTexts={Object.fromEntries(
           Object.entries(fileState.uploadedFiles).map(([fileName, file]) => [fileName, file.extractedText])
@@ -579,6 +691,7 @@ const handleAnalysis = async (type, selectedTexts) => {
         isSiderCollapsed={uiState.isSiderCollapsed}
         setActiveFile={setActiveFile}
         brainstormText={fileState.brainstormText}
+        tourRefs={tourRefs}
       />
       {uiState.isMobileView && uiState.isSiderCollapsed && (
         <FloatButton
@@ -628,6 +741,19 @@ const handleAnalysis = async (type, selectedTexts) => {
           </div>
         </div>
       )}
+      <Tour 
+        open={isTourOpen}
+        onClose={handleTourClose}
+        steps={tourSteps}
+        mask={true}
+        maskClosable={false}
+        closeOnMaskClick={false}
+        closeOnEscKeyDown={false}
+        zIndex={1500}
+        arrow={true}
+        scrollIntoViewOptions={false}
+        onChange={handleTourChange}
+      />
     </Layout>
   );
 };
