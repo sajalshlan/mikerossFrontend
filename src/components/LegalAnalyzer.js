@@ -68,8 +68,11 @@ const LegalAnalyzer = () => {
     },
     {
       title: 'Select Files for Analysis',
-      description: 'Once you have uploaded your files, you will see them in this side panel. You can select them for analysis by clicking the checkbox next to a file. Selected files will be highlighted in blue.',
+      description: 'Once you have uploaded your files, you will see them in this side panel. Select them for analysis by clicking the checkbox next to a file. Selected files will be highlighted in blue. You can select multiple files for analysis.',
       prevButtonProps: { style: { display: 'none' } },
+      cover: (
+        <img src="/selectedFiles.png" />
+      ),
     },
     {
       title: 'Generate Analysis',
@@ -77,24 +80,26 @@ const LegalAnalyzer = () => {
       target: () => tourRefs.analysisButtonsRef.current,
       placement: 'left',
       mask: true,
+      cover: (
+        <img src="/analysisButtons.png" />
+      ),
     },
     {
       title: 'File Preview',
-      description: 'View your documents here and select text to get explanations or brainstorm on ideas.',
+      description: 'After uploading your files, select your files from the tabs at the top to preview them. You can select text from them to get explanations or you can brainstorm on ideas.',
       target: () => tourRefs.filePreviewRef.current,
       placement: 'right',
       mask: true,
+      cover: (
+        <img src="/filePreview.png" />
+      ),
     },
     {
       title: 'Magic Helper',
-      description: 'Access powerful AI tools: Chat with your documents using the AI Assistant, or generate drafts and emails with the Draft Assistant.',
+      description: 'Access powerful helpers: Chat with your documents using the AI Assistant or Generate drafts and emails with the Draft Assistant.',
       target: () => tourRefs.chatDraftRef.current,
       placement: 'top',
       mask: true,
-      style: {
-        maxWidth: '400px'
-      },
-      offset: [0, -10]
     }
   ];
 
