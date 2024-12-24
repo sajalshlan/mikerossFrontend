@@ -48,7 +48,9 @@ const LegalAnalyzer = () => {
 
   const [isTourOpen, setIsTourOpen] = useState(() => {
     const tourDone = localStorage.getItem('tourCompleted');
-    return tourDone !== 'true';
+    const urlParams = new URLSearchParams(window.location.search);
+    const showTour = urlParams.get('tour');
+    return tourDone !== 'true' || showTour === 'true';
   });
 
   const [previousCollapsedState, setPreviousCollapsedState] = useState(null);
