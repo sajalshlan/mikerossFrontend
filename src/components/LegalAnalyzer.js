@@ -16,7 +16,7 @@ import { Tour } from 'antd';
 
 const { Sider, Content } = Layout;
 
-const LegalAnalyzer = () => {
+const LegalAnalyzer = ({ shouldShowTour, setShouldShowTour }) => {
   const [fileState, setFileState] = useState({
     uploadedFiles: {},
     previewFile: null,
@@ -46,10 +46,7 @@ const LegalAnalyzer = () => {
 
   const [isDragging, setIsDragging] = useState(false);
 
-  const [isTourOpen, setIsTourOpen] = useState(() => {
-    const tourDone = localStorage.getItem('tourCompleted');
-    return tourDone !== 'true';
-  });
+  const [isTourOpen, setIsTourOpen] = useState(shouldShowTour);
 
   const [previousCollapsedState, setPreviousCollapsedState] = useState(null);
 
@@ -163,6 +160,10 @@ const LegalAnalyzer = () => {
     };
     checkTerms();
   }, []);
+
+  useEffect(() => {
+    setIsTourOpen(shouldShowTour);
+  }, [shouldShowTour]);
 
   const handleTourChange = (current) => {
     console.log('Tour step changed to:', current);
@@ -582,6 +583,7 @@ const handleAnalysis = async (type, selectedTexts) => {
     }));
     setPreviousCollapsedState(null);
     setIsTourOpen(false);
+    setShouldShowTour(false);
     localStorage.setItem('tourCompleted', 'true');
   };
 

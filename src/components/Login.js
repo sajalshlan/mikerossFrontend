@@ -10,7 +10,7 @@ import emailjs from '@emailjs/browser';
 import '../styles/animations.css';
 import TermsAndConditions from './TermsAndConditions';
 
-const Login = () => {
+const Login = ({ shouldShowTour, setShouldShowTour }) => {
   const [form] = Form.useForm();
   const [registerForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -60,6 +60,9 @@ const Login = () => {
           ),
           duration: 3,
         });
+        if (localStorage.getItem('tourCompleted') !== 'true') {
+          setShouldShowTour(true);
+        }
         navigate('/analyzer');
       } else {
         message.error(result.error || 'Login failed');
