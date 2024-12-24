@@ -23,7 +23,7 @@ const LandingPage = () => {
 
   const handleGetStarted = () => {
     if (user) {
-      navigate('/analyzer?tour=true');
+      navigate('/analyzer');
     } else {
       navigate('/login');
     }

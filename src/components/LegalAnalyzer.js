@@ -46,12 +46,7 @@ const LegalAnalyzer = () => {
 
   const [isDragging, setIsDragging] = useState(false);
 
-  const [isTourOpen, setIsTourOpen] = useState(() => {
-    const tourDone = localStorage.getItem('tourCompleted');
-    const urlParams = new URLSearchParams(window.location.search);
-    const showTour = urlParams.get('tour');
-    return tourDone !== 'true' || showTour === 'true';
-  });
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
   const [previousCollapsedState, setPreviousCollapsedState] = useState(null);
 
@@ -164,6 +159,13 @@ const LegalAnalyzer = () => {
       }
     };
     checkTerms();
+  }, []);
+
+  useEffect(() => {
+    const tourDone = localStorage.getItem('tourCompleted');
+    if (tourDone !== 'true') {
+      setIsTourOpen(true);
+    }
   }, []);
 
   const handleTourChange = (current) => {
