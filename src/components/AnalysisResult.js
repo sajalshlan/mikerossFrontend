@@ -203,11 +203,11 @@ const AnalysisResult = React.memo(({
     console.log('Showing trivia card...');  // Debug log
     return (
       <div className="flex flex-col h-full bg-gray-50">
-        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200">
+        {/* <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200">
           <Typography.Title level={4} className="text-gray-800 text-center m-0">
             {type === 'placeholder' ? 'Did you know?' : 'While you wait...'}
           </Typography.Title>
-        </div>
+        </div> */}
         <div className="flex-grow flex items-center justify-center p-8">
           {triviaCard}
         </div>

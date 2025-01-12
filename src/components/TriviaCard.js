@@ -4,29 +4,17 @@ import { Card, Typography } from 'antd';
 const { Text, Title } = Typography;
 
 const triviaData = [
-  // Corporate Law Facts
-  { title: "Corporate Trivia", fact: "The first modern corporation, the Dutch East India Company, was established in 1602 and was the first to issue stocks." },
-  { title: "Did You Know?", fact: "Delaware, with less than 1% of the US population, is home to 68% of Fortune 500 companies due to its corporate-friendly laws." },
-  { title: "Corporate History", fact: "The concept of 'limited liability' was first introduced in Sweden in 1655, revolutionizing business law." },
-  { title: "Corporate Milestone", fact: "The world's largest corporate merger was between Vodafone and Mannesmann in 2000, valued at $180 billion." },
-  { title: "Business Law", fact: "The term 'corporation sole' originated in the 15th century to protect church property under English law." },
-
-  // Funny Law Facts
-  { title: "Quirky Law", fact: "In Vermont, it's illegal to whistle underwater. Yes, someone actually made this a law!" },
-  { title: "Legal Humor", fact: "The shortest will ever probated simply read 'All to wife.' It was accepted by the court in 1967." },
-  { title: "Strange Law", fact: "In Arizona, it's illegal for donkeys to sleep in bathtubs due to a 1924 incident involving a merchant's donkey." },
-  { title: "Funny Statute", fact: "In Rhode Island, it's illegal to challenge someone to a duel or accept a dueling challenge. Probably for the best!" },
-  { title: "Legal Oddity", fact: "In Seattle, it's illegal to carry a concealed weapon over 6 feet in length. The shorter ones are fine, apparently." },
-
-  // Additional Law Facts
-  { title: "Historical Law", fact: "The Code of Hammurabi, from around 1750 BC, is one of the earliest known written legal codes." },
-  { title: "Legal Custom", fact: "The tradition of judges wearing black robes comes from the mourning clothes worn after Queen Mary II's death in 1694." },
-  { title: "Strange Law", fact: "In Britain, it's illegal to handle salmon in suspicious circumstances, according to the Salmon Act of 1986." },
-  { title: "Legal Curiosity", fact: "In Switzerland, it's illegal to own just one guinea pig because they are prone to loneliness." },
-  { title: "Modern Law", fact: "The longest court case in history lasted 681 years, between the Spanish Church and a local council over property rights." },
-  { title: "Legal Tradition", fact: "The practice of saying 'God save the King/Queen' in courts originated in medieval England to show the source of judicial power." },
-  { title: "Unusual Law", fact: "In France, it's illegal to name a pig 'Napoleon' due to a law protecting the dignity of the former emperor." },
-  { title: "Court Custom", fact: "The US Supreme Court maintains a strict 'no cameras' policy in the courtroom, allowing only pencil sketches." },
+  // Document Interaction
+  { title: "Select & Learn", fact: "Simply select any text in your document to instantly get explanations or start a focused brainstorming session about that specific section." },
+  { title: "Multi-Document Analysis", fact: "Choose multiple documents from the sidebar and generate comparative summaries, risk analyses, or conflict checks with just one click." },
+  { title: "Smart Chat", fact: "Chat naturally with your documents - select specific text to ask focused questions or discuss the entire document with full context awareness." },
+  { title: "Instant Explanations", fact: "Highlight any legal term, clause, or section to get immediate, context-aware explanations in seconds." },
+  
+  // Document Analysis
+  { title: "Quick Summaries", fact: "Select one or more files from your sidebar and get instant AI-generated summaries - from brief overviews to detailed analyses." },
+  { title: "Risk Scanning", fact: "Upload your documents and let Cornelia automatically highlight potential risks, obligations, and critical clauses that need your attention." },
+  { title: "Conflict Detection", fact: "Check for conflicts across multiple agreements by selecting the documents you want to compare - Cornelia will identify inconsistencies automatically." },
+  
 ];
 
 const TriviaCard = React.memo(() => {
