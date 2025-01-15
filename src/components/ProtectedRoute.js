@@ -1,17 +1,18 @@
-import React from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { isTokenExpired, getTokens } from '../services/auth';
 
 const ProtectedRoute = ({ children }) => {
-    const { user } = useAuth();
-    const tokens = getTokens();
+  const { isSignedIn, isLoaded } = useAuth();
 
-    if (!user || !tokens || isTokenExpired(tokens.access)) {
-        return <Navigate to="/login" />;
-    }
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
 
-    return children;
+  if (!isSignedIn) {
+    return <Navigate to="/login" />;
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;

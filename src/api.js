@@ -232,5 +232,4 @@ const chat = async (message, documentContext, chatHistory, referencedText) => {
 };
 
 // Export the api instance along with the other functions
-export default api;
-export { performAnalysis, performConflictCheck, uploadFile, previewPdfAsDocx, chat };
+export default api;export { performAnalysis, performConflictCheck, uploadFile, previewPdfAsDocx, chat };

@@ -7,6 +7,8 @@ import LegalAnalyzer from './components/LegalAnalyzer';
 import Logout from './components/Logout';
 import LandingPage from './components/LandingPage';
 import Stats from './components/Stats';
+import { ClerkProvider } from '@clerk/clerk-react';
+import { dark } from '@clerk/themes';
 
 function App() {
     const [shouldShowTour, setShouldShowTour] = useState(() => {
@@ -14,35 +16,42 @@ function App() {
     });
 
     return (
-        <AuthProvider>
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/" element={<LandingPage />} />
-                    <Route 
-                        path="/login" 
-                        element={
-                            <Login 
-                                shouldShowTour={shouldShowTour} 
-                                setShouldShowTour={setShouldShowTour} 
-                            />
-                        } 
-                    />
-                    <Route path="/logout" element={<Logout />} />
-                    <Route path="/stats" element={<Stats />} />
-                    <Route
-                        path="/analyzer"
-                        element={
-                            <ProtectedRoute>
-                                <LegalAnalyzer 
+        <ClerkProvider 
+            publishableKey={process.env.REACT_APP_CLERK_PUBLISHABLE_KEY}
+            appearance={{
+                baseTheme: dark
+            }}
+        >
+            <AuthProvider>
+                <BrowserRouter>
+                    <Routes>
+                        <Route path="/" element={<LandingPage />} />
+                        <Route 
+                            path="/login" 
+                            element={
+                                <Login 
                                     shouldShowTour={shouldShowTour} 
-                                    setShouldShowTour={setShouldShowTour}
+                                    setShouldShowTour={setShouldShowTour} 
                                 />
-                            </ProtectedRoute>
-                        }
-                    />
-                </Routes>
-            </BrowserRouter>
-        </AuthProvider>
+                            } 
+                        />
+                        <Route path="/logout" element={<Logout />} />
+                        <Route path="/stats" element={<Stats />} />
+                        <Route
+                            path="/analyzer"
+                            element={
+                                <ProtectedRoute>
+                                    <LegalAnalyzer 
+                                        shouldShowTour={shouldShowTour} 
+                                        setShouldShowTour={setShouldShowTour}
+                                    />
+                                </ProtectedRoute>
+                            }
+                        />
+                    </Routes>
+                </BrowserRouter>
+            </AuthProvider>
+        </ClerkProvider>
     );
 }
 
