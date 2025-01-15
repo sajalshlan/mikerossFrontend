@@ -1,12 +1,12 @@
 import axios from 'axios';
 import { getTokens, storeTokens, clearTokens, isTokenExpired } from './services/auth';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8000/api';
 
 // Create axios instance with default config
 const api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 180000,
+    timeout: 420000,
 });
 
 // Add token to all requests
@@ -42,19 +42,14 @@ api.interceptors.request.use(async (config) => {
     
     // Add organization header if not root user
     const isRoot = localStorage.getItem('is_root') === 'true';
-    console.log('[API] 🔑 Is Root User:', isRoot);
     
     if (!isRoot) {
         const orgId = localStorage.getItem('organization_id');
-        console.log('[API] 🏢 Organization ID:', orgId);
         if (orgId) {
             config.headers['X-Organization-ID'] = orgId;
         }
     }
-    
-    // Log request details
-    console.log('[API] 📝 Request Headers:', config.headers);
-    console.log('[API] 📦 Request Body:', config.data);
+    ;
     
     return config;
 }, (error) => {
@@ -144,10 +139,13 @@ const performAnalysis = async (type, text, fileName, onProgress, signal, customP
     const requestBody = {
       analysis_type: type,
       text: text,
+      filename: fileName,
       include_history: type === 'ask',
       custom_prompt: customPrompt,
       use_gemini: useGemini,
-      document_type: documentType
+      document_type: documentType,
+      referenced_text: window.selectedText || null
+
     };
 
     console.log('📤 Request Body:', requestBody);
@@ -181,7 +179,7 @@ const performConflictCheck = async (texts, onProgress) => {
     const controller = new AbortController();
     console.log(`[API] 🎮 Created controller for conflict check`);
     window.currentAnalysisControllers['conflict'] = controller;
-
+    console.log('texts', texts);
     const response = await api.post('/perform_conflict_check/', 
       { texts },
       {
@@ -211,6 +209,43 @@ const performConflictCheck = async (texts, onProgress) => {
   }
 };
 
+const previewPdfAsDocx = async (file) => {
+    console.log('[API] 🚀 Converting PDF to DOCX for preview...');
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await api.post('/preview_pdf_as_docx/', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        });
+        
+        return response.data;
+    } catch (error) {
+        console.error('[API] ❌ Error converting PDF:', error);
+        throw error;
+    }
+};
+
+const chat = async (message, documentContext, chatHistory, referencedText) => {
+  console.log(`[API] 🚀 Starting chat...`);
+  try {
+    const response = await api.post('/chat/', {
+      message,
+      documentContext,
+      chatHistory,
+      referencedText
+    });
+
+    console.log(`[API] ✅ Chat completed:`, response.data);
+    return response.data.success ? response.data.response : null;
+  } catch (error) {
+    console.error(`[API] ❌ Error in chat:`, error);
+    throw error;
+  }
+};
+
 // Export the api instance along with the other functions
 export default api;
-export { performAnalysis, performConflictCheck, uploadFile };
+export { performAnalysis, performConflictCheck, uploadFile, previewPdfAsDocx, chat };

@@ -1,47 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Typography, List, Tooltip, Collapse, Button, Input, message } from 'antd';
 import '../styles/AnalysisResult.css';
 import TriviaCard from './TriviaCard';
-
-const wrapReferences = (text) => {
-  const clauseRegex = /\b(clause\s+\d+(\.\d+)*|\d+(\.\d+)*\s+clause)\b/gi;
-  const sectionRegex = /^([A-Z\s&]+(?:\s+(?:OVER|AND)\s+[A-Z\s&]+)*):/;
-  
-  const parts = text.split(/((?:\b(?:clause\s+\d+(?:\.\d+)*|\d+(?:\.\d+)*\s+clause)\b)|(?:^[A-Z\s&]+(?:\s+(?:OVER|AND)\s+[A-Z\s&]+)*:))/gi);
-  
-  return parts.map((part, index) => {
-    if (clauseRegex.test(part)) {
-      const id = `doc-${part.toLowerCase().replace(/\s+/g, '-')}`;
-      return (
-        <a
-          key={index}
-          href={`#${id}`}
-          onClick={(e) => {
-            e.preventDefault();
-            document.dispatchEvent(new CustomEvent('scrollToElement', { detail: id }));
-          }}
-        >
-          {part}
-        </a>
-      );
-    } else if (sectionRegex.test(part)) {
-      const id = `doc-${part.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/:$/, '')}`;
-      return (
-        <a
-          key={index}
-          href={`#${id}`}
-          onClick={(e) => {
-            e.preventDefault();
-            document.dispatchEvent(new CustomEvent('scrollToElement', { detail: id }));
-          }}
-        >
-          {part}
-        </a>
-      );
-    }
-    return part;
-  });
-};
+import QuickActions from './QuickActions';
+import ExplanationCard from './ExplanationCard';
+import api from '../api';
+import ContentRenderer from './common/ContentRenderer';
 
 const AnalysisResult = React.memo(({ 
   type, 
@@ -50,12 +14,17 @@ const AnalysisResult = React.memo(({
   onFilePreview, 
   onThumbsUp, 
   onThumbsDown,
-  isLoading
+  isLoading,
+  setActiveFile
 }) => {
-  // console.log('AnalysisResult render:', { type, data, files, fileCount });
-
+  // Move all hooks to the top, before any conditional returns
   const [feedbackVisible, setFeedbackVisible] = useState({});
   const [feedbackText, setFeedbackText] = useState({});
+  const [selectedText, setSelectedText] = useState('');
+  const [quickActionPosition, setQuickActionPosition] = useState(null);
+  const [explanationData, setExplanationData] = useState(null);
+  const [isExplaining, setIsExplaining] = useState(false);
+  const abortControllerRef = useRef(null);
 
   const selectedFiles = files ? Object.keys(files).filter(fileName => files[fileName]?.isChecked) : [];
 
@@ -182,138 +151,61 @@ const AnalysisResult = React.memo(({
     }));
   };
   
-  const renderRiskAnalysis = (content) => {
-    const cleanedContent = content.substring(content.indexOf('*****'))
-      .replace(/^#+\s*/gm, '')
-      .trim();
-
-    const parts = cleanedContent.split('*****').filter(part => part.trim() !== '');
-    const parties = [];
-
-    for (let i = 0; i < parts.length; i += 2) {
-      if (i + 1 < parts.length) {
-        parties.push({
-          name: parts[i].trim(),
-          content: parts[i + 1].trim()
-        });
-      }
-    }
-
-    return (
-      <Collapse>
-        {parties.map((party, index) => (
-          <Collapse.Panel header={`For ${party.name}`} key={index} className="font-bold">
-            <Typography.Paragraph className="font-normal">
-              {party.content.split('\n').map((line, lineIndex) => renderLine(line, lineIndex))}
-            </Typography.Paragraph>
-          </Collapse.Panel>
-        ))}
-      </Collapse>
-    );
-  };
-
-  const renderContent = (content) => {
-    try {
-      if (!content) {
-        return null;
-      }
-
-      if (type === 'conflict') {
-        const conflictResult = Object.values(content)[0];
-        if (!conflictResult) {
-          return null;
-        }
-        return (
-          <div className="text-gray-700">
-            {conflictResult.split('\n').map((line, index) => renderLine(line, index))}
-          </div>
-        );
-      } else if (type === 'risky') {
-        const savedPrompts = localStorage.getItem('customPrompts');
-        const customPrompts = savedPrompts ? JSON.parse(savedPrompts) : {};
-        const hasCustomPrompt = customPrompts['risky'] && customPrompts['risky'].trim() !== '';
-
-        if (hasCustomPrompt) {
-          return (
-            <Typography.Paragraph className="text-gray-700">
-              {content.split('\n').map((line, index) => renderLine(line, index))}
-            </Typography.Paragraph>
-          );
-        }
-        return renderRiskAnalysis(content);
-      } else if (typeof content === 'string') {
-        return (
-          <Typography.Paragraph className="text-gray-700">
-            {content.split('\n').map((line, index) => renderLine(line, index))}
-          </Typography.Paragraph>
-        );
-      } else if (Array.isArray(content)) {
-        return (
-          <List
-            dataSource={content}
-            renderItem={(item, index) => (
-              <List.Item key={index} className="text-gray-700">
-                <Typography.Text>{renderContent(item)}</Typography.Text>
-              </List.Item>
-            )}
-          />
-        );
-      } else if (typeof content === 'object' && content !== null) {
-        return (
-          <List
-            dataSource={Object.entries(content)}
-            renderItem={([key, value]) => (
-              <List.Item key={key} className="text-gray-700">
-                <Typography.Text strong>{key}:</Typography.Text> {renderContent(value)}
-              </List.Item>
-            )}
-          />
-        );
-      }
-      return <Typography.Text className="text-gray-700">{content}</Typography.Text>;
-    } catch (error) {
-      console.error('Error in renderContent:', error);
-      return null;  // Return null instead of error message
-    }
-  };
-
-  const renderLine = (line, index) => {
-    try {
-      const content = wrapReferences(line);
-
-      if (line.trim().startsWith('•')) {
-        return <Typography.Paragraph key={index} className="text-gray-700 ml-4">{content}</Typography.Paragraph>;
-      } else if (line.includes('**')) {
-        return (
-          <Typography.Paragraph key={index} className="text-gray-700">
-            {line.split('**').map((part, i) => 
-              i % 2 === 0 ? wrapReferences(part) : <Typography.Text strong key={i} className="text-gray-900">{wrapReferences(part)}</Typography.Text>
-            )}
-          </Typography.Paragraph>
-        );
-      } else {
-        return <Typography.Paragraph key={index} className="text-gray-700">{content}</Typography.Paragraph>;
-      }
-    } catch (error) {
-      console.error('Error in renderLine:', error);
-      return <Typography.Text key={index} type="danger">Error rendering line. Please try again.</Typography.Text>;
-    }
-  };
-
   const getTitle = () => {
     return titleMap[type] || 'Analysis Results';
   };
+
+  const handleTextSelection = (event) => {
+    const container = event.target.closest('.analysis-result-container');
+    if (!container) return;
+
+    const selection = window.getSelection();
+    const text = selection.toString().trim();
+    
+    if (text) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      setSelectedText(text);
+      setQuickActionPosition({
+        x: rect.left + (rect.width / 2),
+        y: rect.top
+      });
+    } else {
+      setQuickActionPosition(null);
+    }
+  };
+
+  useEffect(() => {
+    const container = document.querySelector('.analysis-result-container');
+    if (!container) return;
+
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.quick-actions')) {
+        setQuickActionPosition(null);
+        window.getSelection().removeAllRanges();
+      }
+    };
+
+    container.addEventListener('mouseup', handleTextSelection);
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      container.removeEventListener('mouseup', handleTextSelection);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [quickActionPosition]);
 
   // Only render if we have valid results
   if (type === 'placeholder' || !hasResults || !filteredData || isLoading) {
     console.log('Showing trivia card...');  // Debug log
     return (
       <div className="flex flex-col h-full bg-gray-50">
-        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200">
+        {/* <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200">
           <Typography.Title level={4} className="text-gray-800 text-center m-0">
             {type === 'placeholder' ? 'Did you know?' : 'While you wait...'}
           </Typography.Title>
-        </div>
+        </div> */}
         <div className="flex-grow flex items-center justify-center p-8">
           {triviaCard}
         </div>
@@ -321,15 +213,136 @@ const AnalysisResult = React.memo(({
     );
   }
 
+  const generateExplanation = (selectedText, contextText, position) => {
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+    setIsExplaining(true);
+    
+    return api.post('/explain_text/', {
+      selectedText: selectedText,
+      contextText: contextText
+    }, {
+      signal: abortControllerRef.current.signal // Add signal to request
+    })
+    .then(response => {
+      console.log('API Response:', response.data);
+      setExplanationData(prev => ({
+        ...prev,
+        explanation: response.data
+      }));
+    })
+    .catch(error => {
+      if (error.name === 'AbortError') {
+        console.log('Request cancelled');
+      } else {
+        
+      }
+    })
+    .finally(() => {
+      setIsExplaining(false);
+      abortControllerRef.current = null;
+    });
+  };
+
+  // Add cancel handler
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsExplaining(false);
+      setExplanationData(null);
+    }
+  };
+
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
+    <div 
+      className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full analysis-result-container"
+      onMouseUp={handleTextSelection}
+    >
       <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
         <Typography.Title level={4} className="text-gray-800 text-center m-0">{getTitle()}</Typography.Title>
       </div>
       <div className="flex-grow overflow-auto p-2">
         {type === 'conflict' ? (
-          <div className="bg-gray-100 p-3 rounded-md">
-            {renderContent(filteredData)}
+          <div className="first:mt-2 last:mb-0">
+            <Typography.Title 
+              level={4} 
+              className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2"
+            >
+              Conflict Analysis
+            </Typography.Title>
+
+            <div className="bg-white border border-blue-100 text-gray-800 p-4 rounded-2xl shadow-sm">
+              <ContentRenderer 
+                content={Object.values(filteredData)[0]} 
+                type={type}
+                onFileChange={setActiveFile}
+              />
+
+              <div className="flex justify-end mt-2 space-x-2">
+                <Tooltip title="I like this analysis">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/like.png" alt="Thumbs Up" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => onThumbsUp('conflict')} 
+                    style={{ color: '#4CAF50' }} 
+                  />
+                </Tooltip>
+
+                <Tooltip title="I don't like this analysis">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/dislike.png" alt="Thumbs Down" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => onThumbsDown('conflict')} 
+                    style={{ color: '#F44336' }} 
+                  />
+                </Tooltip>
+
+                <Tooltip title="Give Feedback">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/review.png" alt="Feedback" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => toggleFeedback('conflict')} 
+                    style={{ color: '#4CAF50' }} 
+                  />
+                </Tooltip>
+
+                <Tooltip title="Copy">
+                  <Button 
+                    type="text" 
+                    icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
+                    onClick={() => handleCopy('Conflict Analysis', Object.values(filteredData)[0])} 
+                    style={{ color: '#F44336' }} 
+                  />
+                </Tooltip>
+              </div>
+            </div>
+
+            {feedbackVisible['conflict'] && (
+              <div className="mt-2">
+                <Input.TextArea
+                  value={feedbackText['conflict'] || ''}
+                  onChange={(e) => setFeedbackText((prev) => ({ 
+                    ...prev, 
+                    ['conflict']: e.target.value 
+                  }))}
+                  rows={4}
+                  placeholder="Enter your feedback here"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleFeedbackSubmit('conflict');
+                    }
+                  }}
+                />
+                <Button 
+                  type="primary" 
+                  onClick={() => handleFeedbackSubmit('conflict')}
+                  style={{ marginTop: "5px" }}
+                >
+                  Submit Feedback
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           selectedFiles.map((fileName, index) => (
@@ -340,88 +353,150 @@ const AnalysisResult = React.memo(({
                   </div>
                 )}
                 <div className="first:mt-2 last:mb-0">
-                  <Tooltip title="Click to preview file">
-                    <Typography.Title 
-                      level={4} 
-                      className="text-gray-800 text-center mx-auto max-w-md font-bold m-0 mb-2 cursor-pointer hover:text-blue-600"
-                      onClick={() => onFilePreview(fileName)}
-                    >
-                      {fileName}
-                    </Typography.Title>
-                  </Tooltip>
-                  <div className="bg-gray-100 p-3 rounded-md">
-                    {renderContent(filteredData[fileName])}
-                  </div>
+                  <div className="file-analysis-container" data-filename={fileName}>
+                  <ContentRenderer 
+                      content={filteredData[fileName]}
+                      type={type}
+                      fileName={fileName}
+                      onFilePreview={onFilePreview}
+                      onFileChange={setActiveFile}  // Pass the file change handler
+                    />
 
-                  {feedbackVisible[fileName] && (
-                    <div className="mt-2">
-                      <Input.TextArea
-                        value={feedbackText[fileName] || ''}
-                        onChange={(e) => setFeedbackText((prev) => ({ ...prev, [fileName]: e.target.value }))}
-                        rows={4}
-                        placeholder="Enter your feedback here"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {  // Only triggers if Enter is pressed without Shift
-                            e.preventDefault();  // Prevents adding a new line
-                            handleFeedbackSubmit(fileName);  // Calls the submit function
-                          }
-                        }}
-                      />
-                      <Button 
-                        type="primary" 
-                        onClick={() => handleFeedbackSubmit(fileName)}
-                        style={{ marginTop: "5px" }}
-                      >
-                        Submit Feedback
-                      </Button>
+                    {feedbackVisible[fileName] && (
+                      <div className="mt-2">
+                        <Input.TextArea
+                          value={feedbackText[fileName] || ''}
+                          onChange={(e) => setFeedbackText((prev) => ({ 
+                            ...prev, 
+                            [fileName]: e.target.value 
+                          }))}
+                          rows={4}
+                          placeholder="Enter your feedback here"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleFeedbackSubmit(fileName);
+                            }
+                          }}
+                        />
+                        <Button 
+                          type="primary" 
+                          onClick={() => handleFeedbackSubmit(fileName)}
+                          style={{ marginTop: "5px" }}
+                        >
+                          Submit Feedback
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <Tooltip title="I like this analysis">
+                        <Button 
+                          type="text" 
+                          icon={<img src="/like.png" alt="Thumbs Up" style={{ width: 20, height: 20 }} />} 
+                          onClick={() => onThumbsUp(fileName)} 
+                          style={{ color: '#4CAF50' }} 
+                        />
+                      </Tooltip>
+
+                      <Tooltip title="I don't like this analysis">
+                        <Button 
+                          type="text" 
+                          icon={<img src="/dislike.png" alt="Thumbs Down" style={{ width: 20, height: 20 }} />} 
+                          onClick={() => onThumbsDown(fileName)} 
+                          style={{ color: '#F44336' }} 
+                        />
+                      </Tooltip>
+
+                      <Tooltip title="Give Feedback">
+                        <Button 
+                          type="text" 
+                          icon={<img src="/review.png" alt="Feedback" style={{ width: 20, height: 20 }} />} 
+                          onClick={() => toggleFeedback(fileName)} 
+                          style={{ color: '#4CAF50' }} 
+                        />
+                      </Tooltip>
+
+                      <Tooltip title="Copy">
+                        <Button 
+                          type="text" 
+                          icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
+                          onClick={() => handleCopy(fileName, filteredData[fileName])} 
+                          style={{ color: '#F44336' }} 
+                        />
+                      </Tooltip>
                     </div>
-                  )}
-                  {/* Thumbs up/down buttons */}
-                  <div className="flex justify-end mt-2 space-x-2">
-                    <Tooltip title="I like this analysis">
-                    <Button 
-                      type="text" 
-                      icon={<img src="/like.png" alt="Thumbs Up" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => onThumbsUp(fileName)} 
-                      style={{ color: '#4CAF50' }} 
-                    />
-                    </Tooltip>
-
-                    <Tooltip title="I don't like this analysis">
-                    <Button 
-                      type="text" 
-                      icon={<img src="/dislike.png" alt="Thumbs Down" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => onThumbsDown(fileName)} 
-                      style={{ color: '#F44336' }} 
-                    />
-                    </Tooltip>
-
-                    <Tooltip title="Give Feedback">
-                    <Button 
-                      type="text" 
-                      icon={<img src="/review.png" alt="Feedback" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => toggleFeedback(fileName)} 
-                      style={{ color: '#4CAF50' }} 
-                    />
-                    </Tooltip>
-
-                    <Tooltip title="Copy">
-                    <Button 
-                      type="text" 
-                      icon={<img src="/copy.png" alt="Copy" style={{ width: 20, height: 20 }} />} 
-                      onClick={() => handleCopy(fileName, filteredData[fileName])} 
-                      style={{ color: '#F44336' }} 
-                    />
-                    </Tooltip>
                   </div>
-
-                  
                 </div>
               </React.Fragment>
             )
           ))
         )}
       </div>
+      
+      {quickActionPosition && (
+        <QuickActions
+          position={quickActionPosition}
+          showBrainstorm={false}
+          onExplain={() => {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            
+            const container = range.startContainer.parentElement?.closest('.file-analysis-container');
+            let contextText = '';
+            let fileName = '';
+            
+            if (container) {
+              fileName = container.getAttribute('data-filename');
+              contextText = filteredData[fileName];
+            } else {
+              contextText = filteredData[Object.keys(filteredData)[0]];
+            }
+            
+            window.getSelection().removeAllRanges();
+            setQuickActionPosition(null);
+            setSelectedText('');
+            
+            setExplanationData({
+              text: selectedText,
+              contextText: contextText,
+              explanation: "",
+              position: {
+                x: rect.left,
+                y: rect.top
+              }
+            });
+            setIsExplaining(true);
+            
+            generateExplanation(
+              selectedText,
+              contextText,
+              {
+                x: rect.left,
+                y: rect.top
+              }
+            );
+          }}
+        />
+      )}
+      
+      {explanationData && (
+        <ExplanationCard
+          explanation={explanationData.explanation}
+          position={explanationData.position}
+          onClose={() => setExplanationData(null)}
+          onCancel={handleCancel}
+          isLoading={isExplaining}
+          onRegenerate={() => {
+            generateExplanation(
+              explanationData.text,
+              explanationData.contextText,
+              explanationData.position
+            );
+          }}
+        />
+      )}
     </div>
   );
 }, (prevProps, nextProps) => {

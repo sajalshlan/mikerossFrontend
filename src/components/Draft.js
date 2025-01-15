@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button, Input, Spin, Typography, message, Tooltip } from 'antd';
-import { CloseOutlined, SendOutlined, CopyOutlined } from '@ant-design/icons';
+import { CloseOutlined, SendOutlined, CopyOutlined, FileWordOutlined } from '@ant-design/icons';
 import { performAnalysis } from '../api';
 import ToggleSwitch from './common/ToggleSwitch';
 import MobileToggleSwitch from './common/MobileToggleSwitch';
+import { Document, Packer, TextRun, Paragraph as DocxParagraph } from 'docx';
 
 const { Title, Paragraph } = Typography;
 
@@ -19,25 +20,14 @@ const Draft = ({
   useSelectedFiles, 
   setUseSelectedFiles, 
   isClosing,
-  isWaitingForResponse,
-  setIsWaitingForResponse
+  isWaitingForResponse,  // New prop
+  setIsWaitingForResponse,  // New prop
 }) => {
   const draftResultRef = useRef(null);
   const textAreaRef = useRef(null);
   const previousTextsLengthRef = useRef(Object.keys(extractedTexts).length);
   const lastDocChangeRef = useRef(0);
   const latestMessageRef = useRef(null);
-
-  // Initial tip message
-  useEffect(() => {
-    if (draftHistory.length === 0) {
-      setDraftHistory([{
-        type: 'tip',
-        content: 'Changing file selection will update the conversation context',
-        timestamp: new Date().toLocaleTimeString()
-      }]);
-    }
-  }, []);
 
   // Document change tracking
   useEffect(() => {
@@ -101,17 +91,7 @@ const Draft = ({
           .filter(msg => !msg.type.includes('system') && !msg.type.includes('tip'))
           .slice(-5);
 
-        console.log(`[Draft] 📄 Files included: ${indexedTexts.length}`);
-        console.log(`[Draft] 📄 Draft history: ${recentHistory.map(item => `${item.type}: ${item.content}`).join('\n\n')}`);
-        console.log(`[Draft] 📄 Current query: ${draftQuery}`);
-
-        // Get custom prompt from localStorage
-        const savedPrompts = localStorage.getItem('customPrompts');
-        const customPrompts = savedPrompts ? JSON.parse(savedPrompts) : {};
-        const customPrompt = customPrompts['draft'] || null;
-
-        const result = await performAnalysis(
-          'draft', 
+        const result = await performAnalysis('draft', 
           `${indexedTexts}\n\n` +
           `Previous Drafts (last ${recentHistory.length} items):\n${recentHistory
             .map(item => `${item.type}: ${item.content}`)
@@ -120,7 +100,6 @@ const Draft = ({
           fileName,
           null,  // Add null for onProgress
           null,  // Add null for signal
-          customPrompt
         );
         
         if (result) {
@@ -229,6 +208,63 @@ const Draft = ({
     }
   };
 
+  const handleDownloadAsWord = async (content) => {
+    try {
+      // Create paragraphs with TextRun
+      const doc = new Document({
+        creator: "Draft Assistant",
+        description: "Generated document",
+        title: "Draft Document",
+        sections: [{
+          properties: {},
+          children: content.split('\n').map(line => {
+            // Skip empty lines
+            if (line.trim() === '') return null;
+
+            // Handle bold text markers
+            const parts = line.split(/(\*\*.*?\*\*)/g);
+            
+            return new DocxParagraph({
+              children: parts.map(part => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  return new TextRun({
+                    text: part.slice(2, -2),
+                    bold: true
+                  });
+                }
+                return new TextRun({
+                  text: part || ' '  // Space for empty parts
+                });
+              }),
+              spacing: {
+                after: 200,
+                line: 276,
+                lineRule: 'auto'
+              }
+            });
+          }).filter(para => para !== null)  // Remove any null paragraphs
+        }]
+      });
+
+      // Generate blob and download
+      Packer.toBlob(doc).then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'draft.docx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        message.success('Document downloaded successfully');
+      });
+
+    } catch (error) {
+      console.error('Failed to generate Word document:', error);
+      message.error('Failed to generate Word document');
+    }
+  };
+
   return (
     <div className={`fixed inset-0 md:inset-auto md:bottom-12 md:right-16 md:w-[600px] md:h-[600px] bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 transition-opacity duration-300 ease-in-out ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
       <header className="p-4 text-white flex justify-between items-center rounded-t-2xl" style={{
@@ -306,17 +342,17 @@ const Draft = ({
                     ? 'bg-blue-500 text-white' 
                     : 'bg-white border border-blue-100 text-gray-800'
                 }`}>
-                  <div className="flex flex-col">
-                    <div className="break-words text-sm leading-relaxed">
-                      {item.type === 'result' ? renderDraftContent(item.content) : item.content}
+                  <div className="break-words text-sm leading-relaxed flex-grow">
+                    {item.type === 'result' ? renderDraftContent(item.content) : item.content}
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <div className={`text-xs ${
+                      item.type === 'query' ? 'text-blue-200' : 'text-gray-500'
+                    }`}>
+                      {item.timestamp}
                     </div>
-                    <div className="flex justify-between items-center mt-2">
-                      <div className={`text-xs ${
-                        item.type === 'query' ? 'text-blue-200' : 'text-gray-500'
-                      }`}>
-                        {item.timestamp}
-                      </div>
-                      {item.type === 'result' && (
+                    {item.type === 'result' && (
+                      <div className="flex gap-2">
                         <Tooltip title="Copy">
                           <Button
                             type="text"
@@ -325,8 +361,16 @@ const Draft = ({
                             className="text-gray-500 hover:text-blue-600"
                           />
                         </Tooltip>
-                      )}
-                    </div>
+                        <Tooltip title="Download as Word">
+                          <Button
+                            type="text"
+                            icon={<FileWordOutlined />}
+                            onClick={() => handleDownloadAsWord(item.content)}
+                            className="text-gray-500 hover:text-blue-600"
+                          />
+                        </Tooltip>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

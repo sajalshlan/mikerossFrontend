@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import { Button, Input, Spin, Tooltip } from 'antd';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
-import { performAnalysis } from '../api';
+import { chat, performAnalysis } from '../api';
 import ToggleSwitch from './common/ToggleSwitch';
 import MobileToggleSwitch from './common/MobileToggleSwitch';
+import { wrapReferences } from './common/ContentRenderer';  // Import the function
 
 const ChatWidget = ({ 
   extractedTexts, 
@@ -16,10 +17,14 @@ const ChatWidget = ({
   setUseSelectedFiles, 
   isClosing,
   isWaitingForResponse,
-  setIsWaitingForResponse
+  setIsWaitingForResponse,
+  setActiveFile,
+  brainstormText,
+  setBrainstormText
 }) => {
   const chatMessagesRef = useRef(null);
   const latestMessageRef = useRef(null);
+  const inputRef = useRef(null);
   const previousTextsLengthRef = useRef(Object.keys(extractedTexts).length);
   const lastDocChangeRef = useRef(0); // Track when documents last changed
 
@@ -56,6 +61,12 @@ const ChatWidget = ({
     scrollToLatestMessage();
   }, [chatMessages]);
 
+  useEffect(() => {
+    if (brainstormText && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [brainstormText]);
+
   const scrollToLatestMessage = () => {
     if (latestMessageRef.current) {
       latestMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -65,21 +76,26 @@ const ChatWidget = ({
   const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (chatInput.trim() && !isWaitingForResponse) {
-      const newUserMessage = { 
-        role: 'user', 
-        content: chatInput,
-        timestamp: new Date().toLocaleTimeString()
-      };
-      setChatMessages(prev => [...prev, newUserMessage]);
-      setChatInput('');
-      setIsWaitingForResponse(true);
-
       try {
+        window.selectedText = brainstormText;
+        
+        const newUserMessage = { 
+          role: 'user', 
+          content: chatInput,
+          referenceText: brainstormText,
+          timestamp: new Date().toLocaleTimeString()
+        };
+
+        setChatMessages(prev => [...prev, newUserMessage]);
+        setChatInput('');
+        setBrainstormText('');
+        setIsWaitingForResponse(true);
+
+        // Get document context from selected or all files
         const textsToUse = extractedTexts;
-        const fileName = Object.keys(extractedTexts)[0];
-        const indexedTexts = Object.entries(textsToUse).map(([fileName, content], index) => 
-          `[${index + 1}] ${fileName}:\n${content}`
-        ).join('\n\n\n\n');
+        const documentContext = Object.entries(textsToUse).map(([fileName, content]) => 
+          `[${fileName}]:\n${content}`
+        ).join('\n\n');
 
         // Only include messages since the last document change, excluding doc change messages
         const messagesAfterDocChange = chatMessages
@@ -87,34 +103,20 @@ const ChatWidget = ({
           .filter(msg => !msg.isInitialTip && msg.content !== 'Conversation context updated');
         
         const recentMessages = messagesAfterDocChange.slice(-10);
-        
-        const chatHistory = recentMessages.length < messagesAfterDocChange.length 
-          ? `[Earlier conversation omitted...]\n\n${recentMessages
-              .map(msg => `${msg.role}: ${msg.content}`)
-              .join('\n\n')}`
-          : recentMessages
-              .map(msg => `${msg.role}: ${msg.content}`)
-              .join('\n\n');
 
-        console.log(`[ChatWidget] 📄 Files included: ${indexedTexts.length}`);
-        console.log(`[ChatWidget] 📄 Chat history: ${chatHistory}`);
-        console.log(`[ChatWidget] 📄 Current query: ${newUserMessage.content}`);
+        console.log('Chat Request Data:', {
+          message: chatInput,
+          documentContext: documentContext,
+          chatHistory: recentMessages,
+          referencedText: brainstormText
+        });
         
-        // Get custom prompt from localStorage
-        const savedPrompts = localStorage.getItem('customPrompts');
-        const customPrompts = savedPrompts ? JSON.parse(savedPrompts) : {};
-        const customPrompt = customPrompts['ask'] || null;
-
-        // Modified performAnalysis call with all required parameters
-        const result = await performAnalysis(
-          'ask', 
-          `${indexedTexts}\n\n` +
-          `Previous Conversation (last ${recentMessages.length} messages):\n${chatHistory}\n\n` +
-          `Current Query: ${newUserMessage.content}`,
-          fileName,
-          null,  // onProgress parameter
-          null,  // signal parameter
-          customPrompt
+        // Call new chat endpoint
+        const result = await chat(
+          chatInput,
+          documentContext,
+          recentMessages,
+          brainstormText
         );
         
         if (result) {
@@ -136,6 +138,7 @@ const ChatWidget = ({
         }]);
       } finally {
         setIsWaitingForResponse(false);
+        window.selectedText = null;
       }
     }
   };
@@ -147,7 +150,6 @@ const ChatWidget = ({
     return paragraphs.map((paragraph, pIndex) => {
       // Check if this is a numbered list section
       if (paragraph.includes('1.') && paragraph.includes('2.')) {
-        // Split into list items, keeping the numbers
         const items = paragraph.split(/(?=\d+\.\s)/).filter(Boolean);
         
         return (
@@ -156,7 +158,7 @@ const ChatWidget = ({
               const itemContent = item.replace(/^\d+\.\s/, '').trim();
               return (
                 <li key={itemIndex} value={itemIndex + 1} className="pl-2">
-                  {renderInlineFormatting(itemContent)}
+                  {wrapReferences(itemContent, setActiveFile)}
                 </li>
               );
             })}
@@ -165,22 +167,33 @@ const ChatWidget = ({
       }
       
       // Regular paragraph
-      return <p key={pIndex} className="mb-4">{renderInlineFormatting(paragraph)}</p>;
+      return <p key={pIndex} className="mb-4">{wrapReferences(paragraph, setActiveFile)}</p>;
     });
   };
-
-  const renderInlineFormatting = (text) => {
-    const parts = text.split(/(\*\*.*?\*\*|`.*?`|\[[\d]+\])/g);
-    return parts.map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="text-blue-600 font-semibold">{part.slice(2, -2)}</strong>;
-      } else if (part.startsWith('`') && part.endsWith('`')) {
-        return <code key={index} className="bg-gray-200 text-red-600 px-1 rounded">{part.slice(1, -1)}</code>;
-      } else if (part.match(/^\[[\d]+\]$/)) {
-        return <span key={index} className="text-blue-600 font-medium">{part}</span>;
-      }
-      return part;
-    });
+  // Add this component for the reference UI
+  const ReferenceBox = ({ text }) => {
+    if (!text) return null;
+    
+    const truncatedText = text.length > 100 
+      ? text.substring(0, 100) + '...' 
+      : text;
+    
+    return (
+      <div className="mx-4 mb-2 p-3 bg-gray-50 rounded-lg border border-gray-200 relative">
+        <button 
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setBrainstormText('');
+          }}
+          className="absolute -top-2 -right-2 w-5 h-5 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center shadow-sm transition-colors duration-200"
+        >
+          <CloseOutlined className="text-gray-500 text-xs" />
+        </button>
+        <div className="absolute -bottom-2 left-4 w-4 h-4 bg-gray-50 border-b border-r border-gray-200 transform rotate-45"></div>
+        <p className="text-sm text-gray-600 m-0">{truncatedText}</p>
+      </div>
+    );
   };
 
   return (
@@ -263,6 +276,15 @@ const ChatWidget = ({
                       ? 'bg-blue-500 text-white' 
                       : 'bg-white border border-blue-100 text-gray-800'
                   }`}>
+                    {message.referenceText && (
+                      <div className="mb-2 p-2 bg-white rounded text-sm border border-white border-opacity-20">
+                        <p className="text-blue-500 m-0">
+                          {message.referenceText.length > 50 
+                            ? message.referenceText.substring(0, 50) + '...' 
+                            : message.referenceText}
+                        </p>
+                      </div>
+                    )}
                     <div className="break-words text-sm leading-relaxed">
                       {renderMessageContent(message.content)}
                     </div>
@@ -283,9 +305,12 @@ const ChatWidget = ({
           </div>
         )}
       </div>
+
       <footer className="bg-blue-50 p-4 rounded-b-2xl border-t border-blue-100">
+        {brainstormText && <ReferenceBox text={brainstormText} />}
         <form onSubmit={handleChatSubmit} className="flex">
           <Input
+            ref={inputRef}
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Type your question here..."

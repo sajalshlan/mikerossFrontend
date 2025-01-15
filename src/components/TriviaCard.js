@@ -4,31 +4,17 @@ import { Card, Typography } from 'antd';
 const { Text, Title } = Typography;
 
 const triviaData = [
-  // Corporate Law Facts
-  { title: "Corporate Trivia", fact: "The first modern corporation, the Dutch East India Company, was established in 1602 and was the first to issue stocks." },
-  { title: "Did You Know?", fact: "Delaware, with less than 1% of the US population, is home to 68% of Fortune 500 companies due to its corporate-friendly laws." },
-  { title: "Corporate History", fact: "The concept of 'limited liability' was first introduced in Sweden in 1655, revolutionizing business law." },
-  { title: "Corporate Milestone", fact: "The world's largest corporate merger was between Vodafone and Mannesmann in 2000, valued at $180 billion." },
-  { title: "Business Law", fact: "The term 'corporation sole' originated in the 15th century to protect church property under English law." },
-
-  // Funny Law Facts
-  { title: "Quirky Law", fact: "In Vermont, it's illegal to whistle underwater. Yes, someone actually made this a law!" },
-  { title: "Legal Humor", fact: "The shortest will ever probated simply read 'All to wife.' It was accepted by the court in 1967." },
-  { title: "Strange Law", fact: "In Arizona, it's illegal for donkeys to sleep in bathtubs due to a 1924 incident involving a merchant's donkey." },
-  { title: "Funny Statute", fact: "In Rhode Island, it's illegal to challenge someone to a duel or accept a dueling challenge. Probably for the best!" },
-  { title: "Legal Oddity", fact: "In Seattle, it's illegal to carry a concealed weapon over 6 feet in length. The shorter ones are fine, apparently." },
-
-  // Cornelia Sorabji Facts
-  { title: "Pioneer", fact: "Cornelia Sorabji was India's first female lawyer and the first woman to graduate from Bombay University." },
-  { title: "Breaking Barriers", fact: "In 1892, Sorabji became the first woman to study law at Oxford University, though she couldn't formally graduate until 1922." },
-  { title: "Legal Champion", fact: "Sorabji fought for the rights of purdahnashins - women forbidden by custom from communicating with the outside male world." },
-  { title: "Did You Know?", fact: "Cornelia Sorabji wrote several books including 'India Calling' and 'India Recalled', documenting her unique experiences." },
-  { title: "Social Reform", fact: "Despite facing discrimination, Sorabji helped over 600 women and orphans fight legal battles free of charge between 1904 and 1923." },
-  { title: "Historical Note", fact: "Sorabji was the first woman to practice law in both India and Britain, opening doors for future generations." },
-  { title: "Legal Legacy", fact: "The Cornelia Sorabji Scholarship at Oxford University continues to support Indian women studying law." },
-  { title: "Family History", fact: "Cornelia's father, Reverend Sorabji Karsedji, was a key figure in convincing Bombay University to admit women." },
-  { title: "Inspiration", fact: "Florence Nightingale helped fund Cornelia Sorabji's education at Oxford after learning about her aspirations." },
-  { title: "Achievement", fact: "In 1904, Sorabji became the first woman to be appointed as a legal advisor to the Court of Wards in Bengal." }
+  // Document Interaction
+  { title: "Select & Learn", fact: "Simply select any text in your document to instantly get explanations or start a focused brainstorming session about that specific section." },
+  { title: "Multi-Document Analysis", fact: "Choose multiple documents from the sidebar and generate comparative summaries, risk analyses, or conflict checks with just one click." },
+  { title: "Smart Chat", fact: "Chat naturally with your documents - select specific text to ask focused questions or discuss the entire document with full context awareness." },
+  { title: "Instant Explanations", fact: "Highlight any legal term, clause, or section to get immediate, context-aware explanations in seconds." },
+  
+  // Document Analysis
+  { title: "Quick Summaries", fact: "Select one or more files from your sidebar and get instant AI-generated summaries - from brief overviews to detailed analyses." },
+  { title: "Risk Scanning", fact: "Upload your documents and let Cornelia automatically highlight potential risks, obligations, and critical clauses that need your attention." },
+  { title: "Conflict Detection", fact: "Check for conflicts across multiple agreements by selecting the documents you want to compare - Cornelia will identify inconsistencies automatically." },
+  
 ];
 
 const TriviaCard = React.memo(() => {
@@ -36,14 +22,16 @@ const TriviaCard = React.memo(() => {
 
   return (
     <Card 
-      className="bg-blue-50 border border-blue-100 shadow-sm hover:shadow-md transition-shadow duration-300"
+      className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
       style={{ 
         width: '100%',
         maxWidth: '800px',
         height: '400px',
         margin: '0 auto',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden'
       }}
       bodyStyle={{
         flex: 1,
@@ -51,16 +39,35 @@ const TriviaCard = React.memo(() => {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '3rem'
+        padding: '4rem',
+        position: 'relative',
+        zIndex: 1
       }}
     >
       <div className="flex flex-col items-center justify-center space-y-8 w-full">
-        <Title level={3} className="text-blue-600 text-center m-0">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500" />
+        <Title 
+          level={3} 
+          className="text-blue-700 text-center m-0 font-bold tracking-wide"
+          style={{ 
+            fontSize: '2rem',
+            textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+          }}
+        >
           {randomTrivia.title}
         </Title>
-        <Text className="text-gray-700 text-xl text-center max-w-2xl">
+        <Text 
+          className="text-gray-700 text-center max-w-2xl leading-relaxed"
+          style={{ 
+            fontSize: '1.25rem',
+            lineHeight: '1.8',
+            fontWeight: '400',
+            letterSpacing: '0.2px'
+          }}
+        >
           {randomTrivia.fact}
         </Text>
+        <div className="absolute bottom-0 right-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-400" />
       </div>
     </Card>
   );

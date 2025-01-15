@@ -1,11 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FloatButton, Tooltip, Button } from 'antd';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { MessageOutlined, FileTextOutlined, CloseOutlined, SettingOutlined } from '@ant-design/icons';
+import { FloatButton, Tooltip } from 'antd';
 import ChatWidget from './ChatWidget';
 import Draft from './Draft';
 import PromptPanel from './PromptPanel';
 
-const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) => {
+const MagicEffect = forwardRef(({ 
+  extractedTexts, 
+  allExtractedTexts, 
+  isSiderCollapsed, 
+  setActiveFile,
+  brainstormText,
+  tourRefs
+}, ref) => {
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isDraftVisible, setIsDraftVisible] = useState(false);
   const [isChatClosing, setIsChatClosing] = useState(false);
@@ -15,17 +22,19 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
   const [draftHistory, setDraftHistory] = useState([]);
   const [draftQuery, setDraftQuery] = useState('');
   const [draftResult, setDraftResult] = useState('');
-  const [useSelectedFiles, setUseSelectedFiles] = useState(true);
+  const [useSelectedFiles, setUseSelectedFiles] = useState(false);
   const [isFloatGroupOpen, setIsFloatGroupOpen] = useState(false);
   const [isWaitingForChatResponse, setIsWaitingForChatResponse] = useState(false);
   const [isWaitingForDraftResponse, setIsWaitingForDraftResponse] = useState(false);
   const [isPromptPanelVisible, setIsPromptPanelVisible] = useState(false);
+  const [localBrainstormText, setLocalBrainstormText] = useState(null);
 
   const floatButtonRef = useRef(null);
 
   const toggleChat = () => {
     if (isChatVisible && !isChatClosing) {
       setIsChatClosing(true);
+      setLocalBrainstormText(null);
     } else {
       setIsChatVisible(true);
       setIsDraftVisible(false);
@@ -87,6 +96,15 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
     };
   }, []);
 
+  useEffect(() => {
+    if (brainstormText) {
+      setLocalBrainstormText(brainstormText);
+      setIsChatVisible(true);
+      setIsDraftVisible(false);
+      setIsDraftClosing(false);
+    }
+  }, [brainstormText]);
+
   const magicWandIcon = isChatVisible || isDraftVisible 
   ? <CloseOutlined />
   : <img src="/magic-wand2.svg" alt="Magic Wand" style={{ width: '34px', height: '24px' }} />;
@@ -94,34 +112,15 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
 
   return (
     <>
-      <Button
-        type="primary"
-        icon={<SettingOutlined />}
-        onClick={() => setIsPromptPanelVisible(true)}
-        style={{
-          position: 'fixed',
-          right: 80,
-          bottom: 24,
-          zIndex: 1000,
-          display: !isSiderCollapsed ? 'none' : 'flex'
-        }}
-      >
-        Prompt Panel
-      </Button>
-      
-      <PromptPanel 
-        visible={isPromptPanelVisible}
-        onClose={() => setIsPromptPanelVisible(false)}
-      />
-      
       <div 
-        ref={floatButtonRef}
         style={{ 
           opacity: !isSiderCollapsed ? 0 : 1,
           pointerEvents: !isSiderCollapsed ? 'none' : 'auto',
         }}
       >
         <FloatButton.Group
+        ref={tourRefs.magicEffectRef}
+
           trigger="hover"
             type="primary"
             style={{ 
@@ -129,6 +128,7 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
               bottom: 24,
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
+            z
             className="float-button-group"
             onClick={handleMainButtonClick}
             icon={
@@ -174,6 +174,9 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
           isClosing={isChatClosing}
           isWaitingForResponse={isWaitingForChatResponse}
           setIsWaitingForResponse={setIsWaitingForChatResponse}
+          setActiveFile={setActiveFile}
+          brainstormText={localBrainstormText}
+          setBrainstormText={setLocalBrainstormText}
         />
       )}
       {isDraftVisible && (
@@ -195,6 +198,6 @@ const MagicEffect = ({ extractedTexts, allExtractedTexts, isSiderCollapsed }) =>
       )}
     </>
   );
-};
+});
 
 export default MagicEffect;

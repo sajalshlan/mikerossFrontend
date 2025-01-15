@@ -1,0 +1,340 @@
+import React, { useState, useEffect } from 'react';
+import { Table, Card, Select, Space, Spin, DatePicker, Tabs } from 'antd';
+const { TabPane } = Tabs;
+const { Option } = Select;
+
+const TimingStats = ({ data }) => (
+  <div className="grid grid-cols-2 gap-2 text-sm">
+    <div>
+      <p className="text-gray-600">Avg Time:</p>
+      <p className="font-medium">{data?.avg_time || '0s'}</p>
+    </div>
+    <div>
+      <p className="text-gray-600">Median Time:</p>
+      <p className="font-medium">{data?.median_time || '0s'}</p>
+    </div>
+    <div>
+      <p className="text-gray-600">Max Time:</p>
+      <p className="font-medium">{data?.max_time || '0s'}</p>
+    </div>
+    <div>
+      <p className="text-gray-600">Min Time:</p>
+      <p className="font-medium">{data?.min_time || '0s'}</p>
+    </div>
+  </div>
+);
+
+const LogsTable = ({ logs, selectedOrg, selectedUser }) => {
+  const columns = [
+    {
+      title: 'Timestamp',
+      dataIndex: 'timestamp',
+      key: 'timestamp',
+    },
+    {
+      title: 'Endpoint',
+      dataIndex: 'endpoint',
+      key: 'endpoint',
+    },
+    {
+      title: 'Organization',
+      dataIndex: 'organization',
+      key: 'organization',
+      filteredValue: selectedOrg ? [selectedOrg] : null,
+      onFilter: (value, record) => record.organization === value,
+    },
+    {
+      title: 'User',
+      dataIndex: 'user',
+      key: 'user',
+      filteredValue: selectedUser ? [selectedUser] : null,
+      onFilter: (value, record) => record.user === value,
+    },
+    {
+      title: 'Method',
+      dataIndex: 'method',
+      key: 'method',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status_code',
+      key: 'status_code',
+      render: (status) => (
+        <span className={`px-2 py-1 rounded ${
+          status === 200 ? 'bg-green-100 text-green-800' : 
+          status >= 400 ? 'bg-red-100 text-red-800' : 
+          'bg-yellow-100 text-yellow-800'
+        }`}>
+          {status}
+        </span>
+      ),
+    },
+    {
+      title: 'Execution Time',
+      dataIndex: 'execution_time',
+      key: 'execution_time',
+      sorter: (a, b) => parseFloat(a.execution_time) - parseFloat(b.execution_time),
+    },
+  ];
+
+  return (
+    <Table 
+      columns={columns}
+      dataSource={logs?.map(log => ({ ...log, key: log.id }))}
+      pagination={{ pageSize: 10 }}
+      className="border-gray-100 shadow-sm"
+      scroll={{ x: true }}
+    />
+  );
+};
+
+const Stats = () => {
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [selectedOrg, setSelectedOrg] = useState('');
+  const [selectedUser, setSelectedUser] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const endpointDisplayNames = {
+    'upload_file/': 'File Uploads',
+    'perform_analysis/': 'Document Analysis',
+    'perform_conflict_check/': 'Conflict Checks',
+    'chat/': 'Chat Interactions',
+    'brainstorm_chat/': 'Brainstorming Sessions',
+    'explain_text/': 'Text Explanations'
+  };
+
+  const getEndpointName = (endpoint) => {
+    const endpointName = endpoint.split('/api/').pop() || endpoint;
+    return endpointDisplayNames[endpointName] || endpointName;
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, [selectedOrg, selectedUser, selectedDate]);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      let url = `${process.env.REACT_APP_API_BASE_URL}/api_summary/`;
+      const params = new URLSearchParams();
+      
+      if (selectedOrg) params.append('organization', selectedOrg);
+      if (selectedUser) params.append('user', selectedUser);
+      if (selectedDate) params.append('date', selectedDate.format('DD-MM-YYYY'));
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log(data);
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columns = [
+    {
+      title: 'Organization',
+      dataIndex: 'organization',
+      key: 'organization',
+    },
+    {
+      title: 'User',
+      dataIndex: 'user',
+      key: 'user',
+    },
+    {
+      title: 'Total Calls',
+      dataIndex: 'total_calls',
+      key: 'total_calls',
+      sorter: (a, b) => a.total_calls - b.total_calls,
+    },
+    {
+      title: 'Avg. Execution Time',
+      dataIndex: 'avg_execution_time',
+      key: 'avg_execution_time',
+    },
+  ];
+
+  const transformDataForTable = () => {
+    if (!stats?.organizations) return [];
+    
+    return Object.entries(stats.organizations).flatMap(([orgName, orgData]) =>
+      Object.entries(orgData.users).map(([userName, userData]) => ({
+        key: `${orgName}-${userName}`,
+        organization: orgName,
+        user: userName,
+        total_calls: userData.total_calls,
+        avg_execution_time: userData.avg_execution_time,
+      }))
+    );
+  };
+
+  const handleOrgChange = (value) => {
+    setSelectedOrg(value);
+    if (!value) {
+      setSelectedUser('');
+    }
+  };
+
+  return (
+    <div className="p-2 md:p-6 bg-white">
+      <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-800">Cornelia Usage Statistics</h1>
+      
+      <div className="mb-4 md:mb-6">
+        <Space 
+          className="w-full flex flex-col md:flex-row gap-2 md:overflow-x-auto pb-2"
+          size="small"
+        >
+          <DatePicker 
+            onChange={(date) => setSelectedDate(date)} 
+            format="DD-MM-YYYY"
+            className="h-[40px] w-full md:w-auto md:min-w-[150px]"
+          />
+          <Select
+            placeholder="Select Organization"
+            allowClear
+            onChange={handleOrgChange}
+            className="h-[40px] w-full md:w-auto md:min-w-[200px]"
+          >
+            {stats?.organizations && 
+              Object.keys(stats.organizations).map(org => (
+                <Option key={org} value={org}>{org}</Option>
+              ))
+            }
+          </Select>
+          <Select
+            placeholder="Select User"
+            allowClear
+            onChange={setSelectedUser}
+            className="h-[40px] w-full md:w-auto md:min-w-[200px]"
+            value={selectedUser}
+          >
+            {stats?.organizations && selectedOrg && 
+              Object.keys(stats.organizations[selectedOrg]?.users || {}).map(user => (
+                <Option key={user} value={user}>{user}</Option>
+              ))
+            }
+          </Select>
+        </Space>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <Spin size="large" />
+        </div>
+      ) : (
+        <Tabs defaultActiveKey="overview" className="mt-4">
+          <TabPane tab="Overview" key="overview">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card className="shadow-sm border-gray-100">
+                <h3 className="text-gray-600">Total API Calls</h3>
+                <p className="text-2xl text-gray-800">{stats?.overview?.total_api_calls || 0}</p>
+              </Card>
+              <Card className="shadow-sm border-gray-100">
+                <h3 className="text-gray-600">Average Execution Time</h3>
+                <p className="text-2xl text-gray-800">{stats?.overview?.average_execution_time || '0s'}</p>
+              </Card>
+              <Card className="shadow-sm border-gray-100">
+                <h3 className="text-gray-600">Peak Hour</h3>
+                <p className="text-2xl text-gray-800">{stats?.overview?.peak_hour || 'N/A'}</p>
+              </Card>
+            </div>
+            
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">API Endpoint Usage</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {stats?.endpoint_distribution ? (
+                  Object.entries(stats.endpoint_distribution).map(([endpoint, data]) => (
+                    <Card key={endpoint} className="shadow-sm border-gray-100">
+                      <h3 className="text-gray-600 text-sm mb-2">
+                        {getEndpointName(endpoint)}
+                      </h3>
+                      
+                      {!selectedOrg && (
+                        <>
+                          <p className="text-2xl font-semibold text-gray-800">
+                            {data?.count?.toLocaleString() || 0} calls
+                          </p>
+                          <p className="text-sm text-gray-500 mb-2">
+                            {data?.percentage || '0%'}
+                          </p>
+                        </>
+                      )}
+                      
+                      <div className={!selectedOrg ? "border-t pt-2 mt-2" : ""}>
+                        {selectedUser ? (
+                          data.organizations && 
+                          Object.entries(data.organizations)
+                            .filter(([orgName]) => orgName === selectedOrg)
+                            .map(([orgName, orgData]) => (
+                              orgData.users && 
+                              Object.entries(orgData.users)
+                                .filter(([username]) => username === selectedUser)
+                                .map(([username, userData]) => (
+                                  <div key={username}>
+                                    <p className="font-medium text-sm mb-2">
+                                      {username} ({userData.count} calls, {userData.percentage})
+                                    </p>
+                                    <TimingStats data={userData} />
+                                  </div>
+                                ))
+                            ))
+                        ) : selectedOrg ? (
+                          data.organizations && 
+                          Object.entries(data.organizations)
+                            .filter(([orgName]) => orgName === selectedOrg)
+                            .map(([orgName, orgData]) => (
+                              <div key={orgName}>
+                                <p className="font-medium text-sm mb-2">
+                                  {orgName} ({orgData.count} calls, {orgData.percentage})
+                                </p>
+                                <TimingStats data={orgData} />
+                              </div>
+                            ))
+                        ) : (
+                          <div>
+                            <p className="font-medium text-sm mb-2">Global Timing Stats</p>
+                            <TimingStats data={data} />
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-gray-600">No endpoint data available</p>
+                )}
+              </div>
+            </div>
+
+            <Table 
+              columns={columns} 
+              dataSource={transformDataForTable()} 
+              pagination={{ pageSize: 10 }}
+              className="border-gray-100 shadow-sm"
+            />
+          </TabPane>
+          
+          <TabPane tab="API Logs" key="logs">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">API Call Logs</h2>
+              <LogsTable 
+                logs={stats?.logs} 
+                selectedOrg={selectedOrg}
+                selectedUser={selectedUser}
+              />
+            </div>
+          </TabPane>
+        </Tabs>
+      )}
+    </div>
+  );
+};
+
+export default Stats; 

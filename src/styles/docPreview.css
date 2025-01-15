@@ -1,0 +1,43 @@
+.docx-content {
+  line-height: 1.6;
+  font-family: Arial, sans-serif;
+  color: #333;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.docx-content h1, .docx-content h2, .docx-content h3 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.docx-content p {
+  margin-bottom: 1em;
+}
+
+.docx-content * {
+    color: #333; /* Ensure all text is black */
+  }
+  
+.docx-content ul, .docx-content ol {
+  margin-left: 20px;
+  margin-bottom: 1em;
+}
+
+.docx-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+}
+
+.docx-content th, .docx-content td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.docx-content th {
+  background-color: #f2f2f2;
+}
