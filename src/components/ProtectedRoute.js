@@ -1,14 +1,25 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isTokenExpired, getTokens } from '../services/auth';
 
 const ProtectedRoute = ({ children }) => {
     const { user } = useAuth();
     const tokens = getTokens();
+    const location = useLocation();
 
-    if (!user || !tokens || isTokenExpired(tokens.access)) {
-        return <Navigate to="/login" />;
+    const isAuthenticated = user && tokens && !isTokenExpired(tokens.access);
+
+    if (!isAuthenticated) {
+        return <Navigate to="/" state={{ from: location }} replace />;
+    }
+
+    if (location.pathname === '/login' && isAuthenticated) {
+        return <Navigate to="/analyzer" replace />;
+    }
+
+    if (location.pathname === '/' && isAuthenticated) {
+        return <Navigate to="/analyzer" replace />;
     }
 
     return children;

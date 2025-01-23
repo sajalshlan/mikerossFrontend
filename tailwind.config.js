@@ -12,7 +12,10 @@ module.exports = {
       },
       animation: {
         'slide-up': 'slide-up 0.3s ease-out',
-      }
+      },
+      fontFamily: {
+        'quicksand': ['Quicksand', 'sans-serif'],
+      },
     },
   },
   variants: {},
