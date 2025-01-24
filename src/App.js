@@ -5,6 +5,7 @@ import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import LegalAnalyzer from './components/LegalAnalyzer';
 import Logout from './components/Logout';
+import LandingPage from './components/LandingPage/LandingPage.tsx';
 
 function App() {
     return (
@@ -14,13 +15,14 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/logout" element={<Logout />} />
                     <Route
-                        path="/"
+                        path="/analyzer"
                         element={
                             <ProtectedRoute>
                                 <LegalAnalyzer />
                             </ProtectedRoute>
                         }
                     />
+                    <Route path="/" element={<LandingPage />} />
                 </Routes>
             </BrowserRouter>
         </AuthProvider>
